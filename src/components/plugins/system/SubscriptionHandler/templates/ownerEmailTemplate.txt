@@ -1,0 +1,14 @@
+<subject>New comment to your entry: {postTitle} ({blogTitle})</subject>
+<emailbody>New comment added to entry: {postTitle}
+{postLink}
+
+-------------------------------------------------------------------
+{commentContent}
+
+-------------------------------------------------------------------
+By: {commentCreatorName} ({commentCreatorEmail}) {commentCreatorWebsite}
+
+Edit: {adminUrl}comment_edit.cfm?id={commentId}
+
+{notes}
+</emailbody>

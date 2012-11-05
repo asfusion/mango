@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="org.mangoblog.plugins.PluginHelper" name="Plugin Helper" version="1.0" 
+provider-name="AsFusion" class="PluginHelper.Handler">
+<description><![CDATA[
+Adds utilities for plugins
+]]>
+</description>
+
+  <requiresVersion match="greaterOrEqual">1.5</requiresVersion>
+  <listens>
+  	<event name="pluginLoaded" type="asynch" priority="100" />
+  	<event name="mainPagesNav" type="synch" priority="5" />
+  	<event name="mainPostsNav" type="synch" priority="5" />
+    <event name="mainNav" type="synch" priority="5" />
+  </listens>
+</plugin>

@@ -1,0 +1,18 @@
+<subject>New comments at {blogTitle}</subject>
+<emailbody><header>New comments added to blog {blogTitle} </header>
+<repeat>
+
+-------------------------------------------------------------------
+Entry: {postTitle} 
+{postLink}
+By:  {commentCreatorName}
+Date: {commentCreatedOn}
+
+{commentContent}
+
+</repeat>
+<footer>
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+To unsubscribe or change subscription options: {settingsLink}</footer>
+</emailbody>

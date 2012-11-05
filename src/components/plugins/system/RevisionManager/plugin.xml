@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="org.mangoblog.plugins.RevisionManager" name="Revision Manager" version="1.2" 
+provider-name="AsFusion" class="RevisionManager.Handler">
+<description><![CDATA[
+Keeps versions of posts and pages
+]]>
+</description>
+
+  <requiresVersion match="greaterOrEqual">1.4</requiresVersion>
+  <listens>
+  	<event name="afterPostUpdate" type="synch" priority="5" />
+  	<event name="afterPageUpdate" type="synch" priority="5" />
+  	<event name="afterPostDelete" type="asynch" priority="5" />
+  	<event name="afterPageDelete" type="asynch" priority="5" />
+  	<event name="beforeAdminPostContentEnd" type="synch" priority="5" />
+  	<event name="beforeAdminPageContentEnd" type="synch" priority="5" />
+  	<event name="versioner-showRevision" type="synch" priority="5" />
+  	<event name="versioner-restoreRevision" type="synch" priority="5" />
+  </listens>
+</plugin>

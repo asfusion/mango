@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="org.mangoblog.plugins.SearchIndexer" name="Search Indexer" version="1.1" 
+	provider-name="Mango" class="SearchIndexer.Indexer">
+<description>Manages indexes for searches. Used when searches use Verity.</description>	
+ 
+  <listens>
+  	<event name="afterPostAdd" type="asynch" priority="5" />
+  	<event name="afterPageAdd" type="asynch" priority="5" />
+  	<event name="afterPostUpdate" type="asynch" priority="5" />
+  	<event name="afterPageUpdate" type="asynch" priority="5" />
+  	<event name="afterPostDelete" type="asynch" priority="5" />
+  	<event name="afterPageDelete" type="asynch" priority="5" />
+  	<event name="searchIndexer-reindex" type="asynch" priority="5" />
+  	<event name="searchIndexer-optimize" type="asynch" priority="5" />
+  </listens>
+</plugin>

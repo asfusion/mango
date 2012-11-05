@@ -1,0 +1,63 @@
+<?xml version="1.0" ?>
+<icons>
+	<basepath>assets/filethumbnails/images/</basepath>
+	
+	<icon extension="default" url="default.png"/>
+	
+	<icon extension="doc" url="doc.png"/>
+	<icon extension="docx" url="doc.png"/>
+	<icon extension="DOC" url="doc.png"/>
+	<icon extension="DOCX" url="doc.png"/>
+	
+	<icon extension="eps" url="eps.png"/>
+	<icon extension="EPS" url="eps.png"/>	
+	
+	<icon extension="fla" url="flash.png"/>
+	<icon extension="FLA" url="flash.png"/>
+	
+	<icon extension="ai" url="illustrator.png"/>
+	<icon extension="AI" url="illustrator.png"/>
+	
+	<icon extension="id" url="indesign.png"/>
+	<icon extension="idd" url="indesign.png"/>
+	<icon extension="ID" url="indesign.png"/>
+	<icon extension="IDD" url="indesign.png"/>
+	
+	<icon extension="jpg" url="jpg.png"/>
+	<icon extension="jpeg" url="jpg.png"/>
+	<icon extension="JPG" url="jpg.png"/>
+	<icon extension="JPEG" url="jpg.png"/>
+	
+	<icon extension="mp3" url="mp3.png"/>
+	<icon extension="MP3" url="mp3.png"/>
+	
+	<icon extension="mpeg" url="mpeg.png"/>
+	<icon extension="MPEG" url="mpeg.png"/>
+	
+	<icon extension="pdf" url="pdf.png"/>
+	<icon extension="PDF" url="pdf.png"/>
+	
+	<icon extension="psd" url="photoshop.png"/>
+	<icon extension="PSD" url="photoshop.png"/>
+	
+	<icon extension="qxp" url="quark.png"/>
+	<icon extension="QXP" url="quark.png"/>
+	
+	<icon extension="sitx" url="sitx.png"/>
+	<icon extension="sit" url="sitx.png"/>
+	<icon extension="SITX" url="sitx.png"/>
+	<icon extension="SIT" url="sitx.png"/>
+	
+	<icon extension="swf" url="swf.png"/>
+	<icon extension="swc" url="swf.png"/>
+	<icon extension="SWF" url="swf.png"/>
+	<icon extension="SWC" url="swf.png"/>
+	
+	<icon extension="tiff" url="tiff.png"/>
+	<icon extension="tif" url="tiff.png"/>
+	<icon extension="TIFF" url="tiff.png"/>
+	<icon extension="TIF" url="tiff.png"/>
+	
+	<icon extension="zip" url="zip.png"/>
+	<icon extension="ZIP" url="zip.png"/>
+</icons>

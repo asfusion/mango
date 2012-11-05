@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="org.mangoblog.plugins.Links" name="Favorite Links" version="1.1" provider-name="AsFusion" class="Links.Handler">
+<description>Maintains a list of favorite links</description>
+<requiresVersion match="greaterOrEqual">0.2</requiresVersion>
+  <listens>
+  	<event name="getFavoriteLinks" type="synch" priority="5" />
+	<event name="getFavoriteLinksByCategory" type="synch" priority="5" />
+    <event name="getFavoriteLinkCategories" type="synch" priority="5" />
+	<event name="getFavoriteLink" type="synch" priority="5" />
+  	<event name="linksNav" type="synch" priority="5" />
+  	<event name="links-showLinksSettings" type="synch" priority="5" />
+  	<event name="links-editLinkSettings" type="synch" priority="5" />
+  	<event name="links-editLinkCategorySettings" type="synch" priority="5" />
+  	<event name="links-deleteLink" type="synch" priority="5" />
+  	<event name="links-deleteLinkCategory" type="synch" priority="5" />
+  </listens>
+</plugin>

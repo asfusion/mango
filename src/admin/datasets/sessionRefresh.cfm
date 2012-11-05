@@ -1,0 +1,1 @@
+<cfheader name="Expires" value="#GetHttpTimeString(now())#">

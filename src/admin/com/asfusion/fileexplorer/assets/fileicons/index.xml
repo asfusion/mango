@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<icons>
+	<basepath>assets/fileicons/images/</basepath>
+	
+	<icon extension="default" url="unk.jpg"/>
+	
+	<icon extension="pdf" url="pdf.jpg"/>
+	<icon extension="cfc" url="cfc.jpg"/>	
+	<icon extension="doc" url="doc.jpg"/>
+	<icon extension="swf" url="swf.jpg"/>
+	<icon extension="cfm" url="cfm.jpg"/>
+	<icon extension="ai" url="ai.jpg"/>
+	<icon extension="zip" url="zip.jpg"/>
+	<icon extension="jar" url="jar.jpg"/>
+	<icon extension="js" url="js.jpg"/>
+	<icon extension="mdb" url="mdb.jpg"/>
+	<icon extension="psd" url="psd.jpg"/>
+	<icon extension="jpg" url="jpg.jpg"/>
+	<icon extension="png" url="png.jpg"/>
+	<icon extension="ppt" url="ppt.jpg"/>
+	<icon extension="pub" url="pub.jpg"/>
+	<icon extension="txt" url="txt.jpg"/>
+	<icon extension="xls" url="xls.jpg"/>
+</icons>

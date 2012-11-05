@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="org.mangoblog.plugins.SubscriptionHandler" name="Subscription Handler" version="1.2" 
+	provider-name="Mango" class="SubscriptionHandler.Handler">
+<description>Manages subscriptions to comments and posts</description>	
+ <!--  <runtime>
+      <library name="library.jar"></library>
+   </runtime>
+   <requires>
+     <import plugin="" version="1" match="greaterOrEqual" optional="true"/>
+   </requires>
+  -->	
+  
+  <listens>
+  	<event name="afterCommentAdd" type="asynch" priority="5" />
+  	<event name="afterCommentUpdate" type="asynch" priority="5" />
+  	<event name="beforeCommentAdd" type="synch" priority="5" />
+  	<event name="subscriptionSettings" type="synch" priority="5" />
+  	<event name="applySubscriptionSettings" type="synch" priority="5" />  	
+  	<event name="sendDigestSubscriptions" type="asynch" priority="100" />  	
+  	<event name="settingsNav" type="synch" priority="5" />
+  	<event name="showSubscriptionsHandlerSettings" type="synch" priority="5" />
+  </listens>
+  
+</plugin>

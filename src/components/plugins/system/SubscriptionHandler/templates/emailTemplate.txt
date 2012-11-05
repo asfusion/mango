@@ -1,0 +1,12 @@
+<subject>New comment for entry: {postTitle} ({blogTitle})</subject>
+<emailbody>New comment added to entry: {postTitle}
+{postLink}
+
+-------------------------------------------------------------------
+{commentContent}
+
+-------------------------------------------------------------------
+By: {commentCreatorName}
+
+To unsubscribe or change subscription options: {settingsLink}
+</emailbody>

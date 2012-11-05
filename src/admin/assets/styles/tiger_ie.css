@@ -1,0 +1,23 @@
+#wrapper {
+	margin-top: 0;
+}
+
+
+#footer {
+	display: none;
+}
+#wrapper h2.pageTitle {
+	margin: 0 -1em;
+}
+
+#innercontainer h2.pageTitle {
+	margin: 0;
+}
+
+h2.pageTitle {
+	margin:0;
+}
+
+table {
+	width: auto;
+}
