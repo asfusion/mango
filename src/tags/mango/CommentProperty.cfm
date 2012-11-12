@@ -99,6 +99,10 @@ function fullLeft(str, count) {
 	<cfset prop = currentComment.getCreatorName() />
 </cfif>
 
+<cfif attributes.email>
+	<cfset prop = currentComment.getCreatorEmail() />
+</cfif>
+
 <cfif attributes.content>
 	<cfset prop = currentComment.getContent() />
 </cfif>
