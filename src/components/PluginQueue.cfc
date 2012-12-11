@@ -165,7 +165,7 @@
 		<cfargument name="type" type="string" required="false" default="" />
 		<cfargument name="message" type="any" required="false" default="#structnew()#" />
 		
-		<cfreturn createObject("component","events.#arguments.type#Event").init(name,arguments.data,arguments.message) />
+		<cfreturn createObject("component","events.#arguments.type#Event").init( arguments.name,arguments.data,arguments.message) />
 	</cffunction>
 	
 </cfcomponent>

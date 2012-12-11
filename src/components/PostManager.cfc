@@ -235,7 +235,7 @@
 			<cfset event = variables.pluginQueue.createEvent("getPostById",eventObj,"Collection") />
 			<cfset event = variables.pluginQueue.broadcastEvent(event) />
 			
-			<cfreturn posts[1] />
+			<cfreturn event.collection[1] />
 		</cfif>
 	</cffunction>
 
@@ -266,7 +266,7 @@
 		<cfset event = variables.pluginQueue.createEvent("getPostsByDate",eventObj,"Collection") />
 		<cfset event = variables.pluginQueue.broadcastEvent(event) />		
 		
-		<cfreturn posts />
+		<cfreturn event.collection />
 	</cffunction>	
 
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->	
@@ -338,7 +338,7 @@
 		<cfset event = variables.pluginQueue.createEvent("getPostsByCustomField",eventObj,"Collection") />
 		<cfset event = variables.pluginQueue.broadcastEvent(event) />
 		
-		<cfreturn orderedPosts />
+		<cfreturn event.collection />
 	</cffunction>
 
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
@@ -400,7 +400,7 @@
 		<cfset event = variables.pluginQueue.createEvent("getPostsByAuthor",eventObj,"Collection") />
 		<cfset event = variables.pluginQueue.broadcastEvent(event) />
 		
-		<cfreturn posts />
+		<cfreturn event.collection />
 	</cffunction>
 
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
@@ -466,7 +466,7 @@
 		<cfset event = variables.pluginQueue.createEvent("getPostsByIds",eventObj,"Collection") />
 		<cfset event = variables.pluginQueue.broadcastEvent(event) />
 		
-		<cfreturn posts />
+		<cfreturn event.collection />
 	</cffunction>
 
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->	
@@ -520,7 +520,7 @@
 		<cfset event = variables.pluginQueue.createEvent("getPosts",eventObj,"Collection") />
 		<cfset event = variables.pluginQueue.broadcastEvent(event) />
 		
-		<cfreturn posts />
+		<cfreturn event.collection />
 	</cffunction>
 	
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
@@ -565,7 +565,7 @@
 		<cfset event = variables.pluginQueue.createEvent("getPostsByKeyword",eventObj,"Collection") />
 		<cfset event = variables.pluginQueue.broadcastEvent(event) />	
 		
-		<cfreturn posts />
+		<cfreturn event.collection />
 	</cffunction>
 	
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->

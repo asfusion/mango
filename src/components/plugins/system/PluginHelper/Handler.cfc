@@ -3,6 +3,8 @@
 <cfset variables.queues = structnew() />
 <cfset variables.queues["post"] = createobject("component","Queue") />
 <cfset variables.queues["page"] = createobject("component","Queue") />
+<cfset variables.queues["secondarypage"] = createobject("component","Queue") />
+<cfset variables.queues["secondarypost"] = createobject("component","Queue") />
 			
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
 	<cffunction name="handleEvent" hint="Asynchronous event handling" access="public" output="false" returntype="any">
@@ -28,7 +30,11 @@
 					<cfset local.panel.icon = local.path & data.pluginDescriptor.package & "/" & local.panel.icon />
 				</cfif>
 				<cfset local.admin.addCustomPanel(local.panel) />
-				<cfset variables.queues[local.panel.entryType].addElement(local.panel, -local.panel.order) />
+				<cfif local.panel.showInMenu EQ "primary">
+					<cfset variables.queues[local.panel.entryType].addElement(local.panel, -local.panel.order) />
+				<cfelseif local.panel.showInMenu EQ "secondary">
+					<cfset variables.queues['secondary' & local.panel.entryType].addElement(local.panel, -local.panel.order) />
+				</cfif>
 				
 			</cfloop>
 		</cfif>
@@ -45,11 +51,16 @@
 		<cfset var local 		= structnew() />
 		<cfset var manager		= getManager() />
 
-		<cfif (eventName EQ "mainPagesNav" OR eventName EQ "mainPostsNav") AND manager.isCurrentUserLoggedIn()>
+		<cfif (eventName EQ "mainPagesNav" OR eventName EQ "mainPostsNav" OR eventName EQ "postsNav" OR eventName EQ "pagesNav") 
+				AND manager.isCurrentUserLoggedIn()>
 			<cfif eventName EQ "mainPagesNav">
 				<cfset local.queue = variables.queues['page'] />
 			<cfelseif eventName EQ "mainPostsNav">
 				<cfset local.queue = variables.queues['post'] />
+			<cfelseif eventName EQ "postsNav">
+				<cfset local.queue = variables.queues['secondarypost'] />
+			<cfelseif eventName EQ "pagesNav">
+				<cfset local.queue = variables.queues['secondarypage'] />
 			</cfif>
 
 			<cfif local.queue.getTotalElements() GT 0>

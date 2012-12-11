@@ -11,6 +11,8 @@ Adds utilities for plugins
   	<event name="pluginLoaded" type="asynch" priority="100" />
   	<event name="mainPagesNav" type="synch" priority="5" />
   	<event name="mainPostsNav" type="synch" priority="5" />
+  	<event name="pagesNav" type="synch" priority="5" />
+  	<event name="postsNav" type="synch" priority="5" />
     <event name="mainNav" type="synch" priority="5" />
   </listens>
 </plugin>
