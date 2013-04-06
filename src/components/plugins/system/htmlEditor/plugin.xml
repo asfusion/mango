@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin id="org.mangoblog.plugins.HmltEditor" name="HTML Editor" version="1.0" provider-name="AsFusion" class="htmlEditor.Handler">
+<description>Gives choices for HTML editing in admin</description>
+<requiresVersion match="greaterOrEqual">1.7</requiresVersion>
+  <listens>
+  	<event name="beforeAdminHeaderEnd" type="synch" priority="5" />
+  </listens>
+</plugin>

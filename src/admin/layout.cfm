@@ -25,8 +25,6 @@
 	<![endif]-->
 	<link href="assets/styles/custom.css" rel="stylesheet" type="text/css" />
 	
-	<cfinclude template="editorSettings.cfm">
-	
 	<script type="text/javascript" src="assets/scripts/spry/xpath.js"></script>
 	<script type="text/javascript" src="assets/scripts/spry/SpryData.js"></script>
 	<mangoAdmin:Event name="beforeAdminHeaderEnd">
