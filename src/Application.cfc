@@ -1,6 +1,6 @@
 <cfcomponent displayname="Application">
 	<cfscript>
-		this.name = "mango_#right(hash(GetDirectoryFromPath(GetCurrentTemplatePath())),50)#_v1_6";
+		this.name = "mango_#right(hash(GetDirectoryFromPath(GetCurrentTemplatePath())),50)#_v1_7";
 		this.setclientcookies="yes";
 		this.sessionmanagement="yes";
 		this.sessiontimeout= CreateTimeSpan(0,0,60,0);
@@ -17,6 +17,8 @@
 		else {
 			variables.componentsPath = "components.";
 		}
+		//file explorer fix until we change file explorer
+		this.wssettings.version.publish = "1";
 	</cfscript>
 	
 	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
