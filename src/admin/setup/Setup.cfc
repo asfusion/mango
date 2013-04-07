@@ -8,7 +8,7 @@
 	<cfset variables.defaults["skin"] = "cutline"/>
 	<cfset variables.defaults["categoryName"] = "default"/>
 	<cfset variables.defaults["categoryTitle"] = "Default"/>
-	<cfset variables.defaults["systemPlugins"] = "SubscriptionHandler,Links,Statistics,PodManager,RevisionManager,AssetManager,PluginHelper"/>
+	<cfset variables.defaults["systemPlugins"] = "SubscriptionHandler,Links,Statistics,PodManager,RevisionManager,AssetManager,PluginHelper,htmlEditor"/>
 	<cfset variables.defaults["userPlugins"] = "cfformprotect,formRememberer,colorcoding,linkify,paragraphFormatter"/>
 			
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->
@@ -113,7 +113,7 @@
 			<cfset result.message =  "" />
 		<cftry>
 			<cfset admin = variables.blog.getAdministrator()>
-			<cfset result = admin.newAuthor(arguments.username,arguments.password,arguments.name,arguments.email,'','','administrator') />
+			<cfset result = admin.newAuthor(arguments.username,arguments.password,arguments.name,arguments.email,'','','','administrator') />
 
 			<cfset result.status = result.message.getstatus() EQ "success">
 			<cfset result.message = result.message.getText() />

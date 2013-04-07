@@ -581,4 +581,5 @@ UNION ALL	SELECT 'system/plugins', 'directory','{componentsDirectory}plugins/',N
 UNION ALL	SELECT 'system/plugins', 'path','plugins.',NULL
 UNION ALL	SELECT 'system/skins', 'path','',NULL
 UNION ALL	SELECT 'system/skins', 'url','',NULL
+UNION ALL 	SELECT 'system/admin/htmleditor', 'editor','ckeditor',NULL
 </cfquery>

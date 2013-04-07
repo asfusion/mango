@@ -340,6 +340,7 @@
 			<cfset data.description = arguments.formFields.description>
 			<cfset data.shortdescription = arguments.formFields.shortdescription />
 			<cfset data.role = arguments.formFields.role />
+			<cfset data.picture = arguments.formFields.picture />
 			
 			<cfset result = variables.administrator.newAuthor(argumentCollection=data) />
 		

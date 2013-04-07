@@ -395,6 +395,7 @@ INSERT INTO #prefix#setting(path, name, value, blog_id)
 		('system/urls', 'admin','',NULL),
 		('system/engine/logging', 'level','warning',NULL),
 		('system/engine', 'enableThreads','0',NULL),
+		('system/admin/htmleditor', 'editor','ckeditor',NULL),
 		('system/skins', 'directory','{baseDirectory}skins/',NULL),
 		('system/skins', 'path','',NULL),
 		('system/skins', 'url','',NULL),

@@ -121,6 +121,7 @@
 											arguments.authorizedUser.email,
 											"",
 											"",
+											"",
 											role.id, 
 											true) />
 			<cfreturn admin.getAuthor(result.newAuthor.id) />
