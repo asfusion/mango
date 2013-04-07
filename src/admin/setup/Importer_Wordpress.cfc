@@ -182,7 +182,7 @@ goes on because it can take a long time to import all the data
 					<cfif NOT structkeyexists(authorkeys,author)>
 						<li>Username: #author# - Password: password</li>	
 						<cfset result = administrator.newAuthor(author,"password",author,arguments.email
-								,'','','administrator') />				
+								,'','','','administrator') />				
 						<cfscript>
 							key = result.newAuthor.getId();
 							if (len(key)){

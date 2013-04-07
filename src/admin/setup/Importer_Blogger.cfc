@@ -182,7 +182,7 @@ This component was created based on the Importer_Wordpress.cfc
 					authorEmail		=	blogPosts[i].Author.email.xmlText;
 					if(NOT structkeyexists(authorkeys,author))
 						{
-							result = administrator.newAuthor(authorEmail,"password",author,authorEmail,'','','administrator');
+							result = administrator.newAuthor(authorEmail,"password",author,authorEmail,'','','','administrator');
 							key = result.newAuthor.getId();
 							if (len(key))
 								{authorkeys[author] = key;}	

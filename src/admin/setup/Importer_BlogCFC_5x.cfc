@@ -161,7 +161,7 @@ goes on because it can take a long time to import all the data
 			<cfoutput query="originalQuery">
 		<!---		<cftry> ---><li>#username#</li>
 					<cfset result = administrator.newAuthor(username,password,username,
-									GetProfileString(variables.iniFile, arguments.profile, "owneremail"),'','','administrator') />
+									GetProfileString(variables.iniFile, arguments.profile, "owneremail"),'','','','administrator') />
 		
 					<cfscript>
 						key = result.newAuthor.getId();
