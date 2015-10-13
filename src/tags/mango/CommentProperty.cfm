@@ -10,6 +10,7 @@
 <cfparam name="attributes.time" default="false">
 <cfparam name="attributes.timeformat" default="short">
 <cfparam name="attributes.entryLink" default="false">
+<cfparam name="attributes.entryTitle" default="false">
 <cfparam name="attributes.excerptChars" type="string" default="">
 <cfparam name="attributes.ifhasurl" default="false">
 <cfparam name="attributes.ifNothasurl" default="false">
@@ -138,6 +139,13 @@ function fullLeft(str, count) {
 			<cfset request.blog_basepath = request.blog.getBasePath() />
 		</cfif>
 		<cfset prop = request.blog_basepath & entry.getUrl() />
+	</cfif>	
+</cfif>
+
+<cfif attributes.entryTitle>
+	<cfset entry = currentComment.getEntry() />
+	<cfif NOT isvalid("string", entry)>
+		<cfset prop =  entry.getTitle() />
 	</cfif>	
 </cfif>
 

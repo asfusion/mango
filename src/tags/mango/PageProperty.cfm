@@ -53,6 +53,7 @@
 	</cfif>
 	
 	<cfif attributes.ifIsAncestorOfCurrentPage>
+		<cfset parents = ''/>
 		<cfif structkeyexists(request.externalData,"pageName")>
 			<cftry>
 				<cfset isAuthor = structkeyexists(request.externalData,"preview") and request.blogManager.isCurrentUserLoggedIn() />

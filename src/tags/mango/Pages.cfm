@@ -2,6 +2,8 @@
 <cfparam name="attributes.from" type="numeric" default="1">
 <cfparam name="attributes.count" type="numeric" default="-1">
 <cfparam name="attributes.parentPage" type="string" default="-1">
+<cfparam name="attributes.customField" type="string" default="">
+<cfparam name="attributes.customFieldValue" type="string" default="">
 <cfparam name="attributes.ifCountGT" type="string" default="">
 <cfparam name="attributes.ifCountLT" type="string" default="">
 <cfparam name="attributes.recurse" type="boolean" default="true">
@@ -10,7 +12,9 @@
 <!--- starting tag --->
 <cfif thisTag.executionMode EQ "start">
 	<cfset ancestorlist = listdeleteat(getbasetaglist(),1) />
-	<cfif attributes.parentPage EQ "-1">
+	<cfif len( attributes.customField )>
+		<cfset pages = request.blogManager.getPagesManager().getPagesByCustomField(attributes.customField,attributes.customFieldValue)/>
+	<cfelseif attributes.parentPage EQ "-1">
 		<!--- inside a page, just look for children --->
 		<cfif listfindnocase(ancestorlist,"cf_page")>
 						
@@ -19,6 +23,8 @@
 		<cfelse>
 			<cfset attributes.parentPage = "" />
 		</cfif>
+		<cfset pages = request.blogManager.getPagesManager().getPagesByParent(attributes.parentPage) />
+		
 	<cfelseif attributes.parentPage EQ "firstParent" AND listfindnocase(ancestorlist,"cf_page")>
 		<cfset data = GetBaseTagData("cf_page")/>
 		<cfset currentPage = data.currentPage />
@@ -28,9 +34,12 @@
 		<cfelse>
 			<cfset attributes.parentPage = currentPage.getId() />
 		</cfif>
+		
+		<cfset pages = request.blogManager.getPagesManager().getPagesByParent(attributes.parentPage) />
+	<cfelse>
+		<cfset pages = request.blogManager.getPagesManager().getPagesByParent(attributes.parentPage) />
 	</cfif>
 	
-	<cfset pages = request.blogManager.getPagesManager().getPagesByParent(attributes.parentPage) />
 	 <cfif attributes.count EQ -1>
 		<cfset attributes.count = arraylen(pages) />
 	</cfif>

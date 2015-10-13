@@ -41,7 +41,7 @@
 			<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
 	</cfif>
 	
-	<cfif len(attributes.ifCurrentCountLT) AND currentItemCount GTE attributes.ifCurrentCountGT>
+	<cfif len(attributes.ifCurrentCountLT) AND currentItemCount GTE attributes.ifCurrentCountLT>
 		<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
 	</cfif>
 	

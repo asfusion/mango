@@ -62,7 +62,6 @@
 					config.contentsCss = '#local.basePath#skins/#local.blog.getSkin()#/#local.skin.adminEditorCss#';
 					</cfif>
 					config.filebrowserBrowseUrl= '#local.blog.getSetting('urls').admin#assets/editors/ckeditor/plugins/asffileexplorer/fileexplorer.cfm';
-	 				config.baseHref = "#local.fileUrl#";
 					config.filebrowserWindowWidth = '640';
 	 				config.filebrowserWindowHeight = '480';
 					config.image_previewText = ' ';
