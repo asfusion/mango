@@ -269,7 +269,7 @@ div#warning {
 
 <p class="infomessage">
 	You are about to install Mango Blog.<br />
-	You will need to have a database (MS SQL or MySQL) already created (it can be an empty database).
+	You will need to have a database (MS SQL, MySQL, or H2) already created (it can be an empty database).
 </p>
 
 <cfif len(error)>
@@ -311,6 +311,7 @@ div#warning {
 			<label class="option"><input type="radio" value="mssql" name="dbtype" <cfif dbType EQ "mssql">checked="checked"</cfif> class="required" /> MS SQL 2000</label>
 			<label class="option"><input type="radio" value="mssql_2005" name="dbtype" <cfif dbType EQ "mssql_2005">checked="checked"</cfif> class="required" /> MS SQL 2005</label>
 			<label class="option"><input type="radio" value="mysql" name="dbtype" <cfif dbType EQ "mysql">checked="checked"</cfif> class="required" /> MySQL</label>
+			<label class="option"><input type="radio" value="h2db" name="dbtype" <cfif dbType EQ "h2db">checked="checked"</cfif> class="required" /> H2 Database</label>
 			</span>
 		</p>
 
