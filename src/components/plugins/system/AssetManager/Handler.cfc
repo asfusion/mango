@@ -9,9 +9,8 @@
 		<cfargument name="preferences" type="any" required="true" />
 						
 			<cfset super.init(arguments.mainManager, arguments.preferences) />
-			<cfset initSettings(allowedDomains="flickr.com,picasa.com", fileType='jpg', quality=90) />
+			<cfset initSettings(allowedDomains="flickr.com,picasa.com", fileType='jpg', quality=0.9) />
 		<cfreturn this/>
-		
 	</cffunction>
 	
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
@@ -62,7 +61,7 @@
 							<cffile action="readbinary" file="#local.assets.directory##local.filename#" variable="local.filecontent">
 							<cfset data.message.setData(local.filecontent) />
 						</cfif>
-						<cfcatch type="any"><cfset data.message.setData(cfcatch.message) /></cfcatch>
+						<cfcatch type="any"><cfset data.message.setData( cfcatch.message & ' ' & cfcatch.detail ) /></cfcatch>
 					</cftry>
 				<cfelse>
 					<cfset data.message.setData(local.error) />
@@ -81,7 +80,6 @@
 		<cfargument name="resize" type="boolean" required="false" default="true" />
 		
 		<cfset var local = structnew() />
-		<cfset var imageComponent = createObject("component","Image") />
 		<cfset var fileExtension = getSetting('fileType') />
 		<cfset var name = "#hash(arguments.source)#_#arguments.width#x#arguments.height#_#arguments.resize#.#fileExtension#" />
 		
@@ -97,34 +95,37 @@
 			<cfif isvalid('url',arguments.source)>
 				<!--- check to see if we are allowed to get images from this domain --->
 				<cfif domainAllowed(arguments.source)>
-					<cfset imageComponent.readImageFromURL(arguments.source) />
+					<cfset imageComponent = imageRead(arguments.source )/>
 				<cfelse>
-					<cfthrow type="NOT_ALLOWED" detail="Domain not allowed">
+					<cfthrow type="NOT_ALLOWED" message="Domain not allowed">
 				</cfif>
 			<cfelse>
-				<cfset imageComponent.readImage(arguments.source) /> 
+				<cfset imageComponent = imageRead(arguments.source ) />
 			</cfif>
 			
 			<!--- figure whether we should resize and crop, just crop or leave as is --->
 			<cfset local.initialHeight = imageComponent.getHeight() />
 			<cfset local.initialWidth = imageComponent.getWidth() />
+			<cfset local.scaleWidth = arguments.width />
+			<cfset local.scaleHeight = arguments.height />
 			<cfif arguments.height EQ 0>
 				<cfset arguments.height = local.initialHeight />
+				<cfset local.scaleHeight = '' />
 			</cfif>
 			<cfif arguments.width EQ 0>
 				<cfset arguments.width = local.initialWidth />
+				<cfset local.scaleWidth = '' />
 			</cfif>
 			<cfif local.initialHeight GT arguments.height OR local.initialWidth GT arguments.width>
 				<cfif arguments.resize>
 					<cfset local.percentage = min(max(arguments.height/local.initialHeight, arguments.width/local.initialWidth),1) * 100 />
-					<cfset imageComponent.scalePercent(local.percentage, local.percentage) />
+					<cfset imageComponent.scaleToFit( local.scaleWidth, local.scaleHeight ) />
 				</cfif>
-				<cfset imageComponent.setImageSize(min(arguments.width, local.initialWidth), min(arguments.height, local.initialHeight), "middleCenter") />
 			</cfif>
 			
 			<!--- before writing the image, check to see if we need to clear the cache --->
 			<cfset checkCache(local.destination) />
-			<cfset imageComponent.writeImage(local.destination & name, fileExtension, getSetting('quality')) /> 
+			<cfset imagewrite( imageComponent, local.destination & name, getSetting('quality')) >
 		</cfif>
 		
 		<cfreturn local.cacheFolder & name />
