@@ -2,6 +2,7 @@
 	<cfscript>
 		this.name = "mango_#right(hash(GetDirectoryFromPath(GetCurrentTemplatePath())),50)#_v1_7";
 		this.setclientcookies="yes";
+		this.setDomainCookies="no";
 		this.sessionmanagement="yes";
 		this.sessiontimeout= CreateTimeSpan(0,0,60,0);
 
