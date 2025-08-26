@@ -18,6 +18,7 @@
 	<cfset this.skin = "" />
 	<cfset this.basePath = "" />
 	<cfset this.charset = "" />
+	<cfset this.locale = "" />
 	<cfset this.plugins = "" />
 	<cfset this.systemplugins = "" />
 	<cfset this.settings = structnew() />
@@ -104,6 +105,16 @@
 	<cffunction name="setCharset" access="public" output="false" returntype="void">
 		<cfargument name="charset" type="string" required="true" />
 		<cfset this.charset = arguments.charset />
+		<cfreturn />
+	</cffunction>
+
+	<cffunction name="getLocale" access="public" output="false" returntype="string">
+		<cfreturn this.locale />
+	</cffunction>
+
+	<cffunction name="setLocale" access="public" output="false" returntype="void">
+		<cfargument name="locale" type="string" required="true" />
+		<cfset this.locale = arguments.locale />
 		<cfreturn />
 	</cffunction>
 
@@ -198,15 +209,16 @@
 		<cfargument name="myClone" required="false" default="#createObject('component','Blog')#">
 		
 		<cfscript>
-			arguments.myClone.Id = this.id;
-			arguments.myClone.Title = this.title;
-			arguments.myClone.Skin = this.skin;
-			arguments.myClone.Url = this.url;
-			arguments.myClone.BasePath = this.basePath;
-			arguments.myClone.Description = this.description;
-			arguments.myClone.Tagline = this.tagline;
-			arguments.myClone.Charset = this.charset;
-			arguments.myClone.Settings = this.settings;
+			arguments.myClone.id = this.id;
+			arguments.myClone.title = this.title;
+			arguments.myClone.skin = this.skin;
+			arguments.myClone.url = this.url;
+			arguments.myClone.basePath = this.basePath;
+			arguments.myClone.description = this.description;
+			arguments.myClone.tagline = this.tagline;
+			arguments.myClone.charset = this.charset;
+			arguments.myClone.settings = this.settings;
+			arguments.myClone.locale = this.locale;
 		</cfscript>
 		<cfreturn arguments.myClone />
 	</cffunction>

@@ -18,6 +18,7 @@
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 <cffunction name="getByID" output="false" hint="Gets a query with only one record corresponding tor ID" access="public" returntype="query">
 	<cfargument name="id" required="true" type="string" hint="Primary key"/>
+	<cfargument name="activeOnly" required="false" default="true" type="boolean" hint="Returned only active users"/>
 
 	<cfset var q_getByID = "" />
 	
@@ -29,6 +30,9 @@
 				INNER JOIN #variables.prefix#author_blog as author_blog
 				ON author.id = author_blog.author_id
 		WHERE author.id = <cfqueryparam value="#arguments.id#" cfsqltype="CF_SQL_VARCHAR" maxlength="35"/>
+		<cfif arguments.activeOnly>
+			AND author.active = 1
+		</cfif>
 	</cfquery>
 
 	<cfreturn q_getByID />
@@ -123,6 +127,26 @@
 	<cfreturn q_getByUsername />
 </cffunction>
 
+<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+	<cffunction name="getByUsernameOrEmail" output="false" access="public" returntype="query">
+		<cfargument name="username" required="true" type="string" />
+
+		<cfset var q_getByUsername = "" />
+
+		<cfquery name="q_getByUsername" datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
+			SELECT	author.id, author.username, author.password, author.name, author.email,
+			author.description, author.shortdescription, author.picture, author.alias,
+			author.active, author_blog.role, author_blog.blog_id
+			FROM	#variables.prefix#author as author
+		INNER JOIN #variables.prefix#author_blog as author_blog
+		ON author.id = author_blog.author_id
+		WHERE ( username = <cfqueryparam value="#arguments.username#" cfsqltype="CF_SQL_VARCHAR" maxlength="50"/> OR email =
+			<cfqueryparam value="#arguments.username#" cfsqltype="CF_SQL_VARCHAR" /> )
+		</cfquery>
+
+		<cfreturn q_getByUsername />
+	</cffunction>
+
 
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 <cffunction name="getByAlias" output="false" access="public" returntype="query">
@@ -144,8 +168,9 @@
 </cffunction>
 	
 	<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
-<cffunction name="getByemail" output="false" access="public" returntype="query">
-		<cfargument name="email" required="true" type="string" hint="Email"/>
+<cffunction name="getByEmail" output="false" access="public" returntype="query">
+	<cfargument name="email" required="true" type="string" hint="Email"/>
+	<cfargument name="onlyActive" required="false" default="true" type="string" />
 
 	<cfset var q_author = "" />
 	
@@ -157,6 +182,9 @@
 				INNER JOIN #variables.prefix#author_blog as author_blog
 				ON author.id = author_blog.author_id
 		WHERE email = <cfqueryparam value="#arguments.email#" cfsqltype="CF_SQL_VARCHAR" maxlength="255"/>
+		<cfif arguments.onlyActive>
+			AND active = 1
+		</cfif>
 	ORDER BY name
 	</cfquery>
 

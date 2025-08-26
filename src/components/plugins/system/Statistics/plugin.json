@@ -1,0 +1,16 @@
+{
+  "id": "asfusion.Statistics",
+  "name": "Blog Statistics",
+  "version": "1.0",
+  "provider": "AsFusion",
+  "class":"Statistics.Handler",
+  "description": "Maintains general statistics",
+  "requires": [
+    {
+    "engine": {
+      "version": 1.8,
+      "match": "greaterOrEqual"
+     }
+  }
+  ]
+}

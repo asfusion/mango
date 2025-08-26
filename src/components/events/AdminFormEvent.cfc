@@ -34,6 +34,9 @@
 			<cfif structkeyexists(arguments.data,"status")>
 				<cfset this.status = arguments.data.status />
 			</cfif>
+			<cfif structkeyexists(arguments.data,"display")>
+				<cfset this.display = arguments.data.display />
+			</cfif>
 		</cfif>
 		<cfset this.data = arguments.data />
 	</cffunction>

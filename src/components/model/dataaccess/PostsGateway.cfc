@@ -15,7 +15,7 @@
 		<cfreturn this />
 </cffunction>
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 <cffunction name="getByID" output="false" hint="Gets a query with only one record corresponding tor ID" access="public" returntype="query">
 	<cfargument name="id" required="true" type="string" hint="Primary key"/>
 	<cfargument name="adminMode" required="false" default="false" type="boolean" hint="Whether to include drafts and future posts"/>
@@ -23,7 +23,7 @@
 	<cfreturn getByIds(idslist=arguments.id,adminMode=arguments.adminMode) />
 </cffunction>
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 <cffunction name="getAll" output="false" hint="Gets all the records" access="public" returntype="query">
 	<cfargument name="blogid" type="string" required="false" default="default" />
 	<cfargument name="adminMode" required="false" default="false" type="boolean" hint="Whether to include drafts and future posts"/>
@@ -32,7 +32,7 @@
 
 	<cfquery name="q_getAll" datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
 		SELECT	entry.id, entry.name, entry.title, entry.content, entry.excerpt, entry.author_id,
-				entry.comments_allowed, entry.trackbacks_allowed, entry.status, entry.last_modified, entry.blog_id,
+				entry.comments_allowed, entry.status, entry.last_modified, entry.blog_id,
 				post.posted_on AS posted_on, category.name AS category_name, author.name AS author,
         		entry_custom_field.field_value AS field_value, author.email AS author_email, entry_custom_field.id AS field_id, 
         		entry_custom_field.name AS field_name, category.id AS category_id, category.title AS category_title, 
@@ -231,7 +231,7 @@
 	
 		<cfquery name="q_getByDate" datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
 			SELECT     entry.id, entry.name, entry.title, entry.content, entry.excerpt, entry.author_id,
-				entry.comments_allowed, entry.trackbacks_allowed, entry.status, entry.last_modified, entry.blog_id,
+				entry.comments_allowed, entry.status, entry.last_modified, entry.blog_id,
 				post.posted_on AS posted_on, category.name AS category_name, author.name AS author,
                       entry_custom_field.field_value AS field_value, author.email AS author_email, entry_custom_field.id AS field_id, 
                       entry_custom_field.name AS field_name, category.id AS category_id, category.title AS category_title, 
@@ -626,7 +626,7 @@
 	</cfif>
 	<cfquery name="q_getByIds" datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
 		SELECT     entry.id, entry.name, entry.title, entry.content, entry.excerpt, entry.author_id,
-				entry.comments_allowed, entry.trackbacks_allowed, entry.status, entry.last_modified, entry.blog_id,
+				entry.comments_allowed, entry.status, entry.last_modified, entry.blog_id,
 				post.posted_on AS posted_on, category.name AS category_name, author.name AS author,
                       entry_custom_field.field_value AS field_value, author.email AS author_email, entry_custom_field.id AS field_id, 
                       entry_custom_field.name AS field_name, category.id AS category_id, category.title AS category_title, 

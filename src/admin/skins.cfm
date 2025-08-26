@@ -1,4 +1,4 @@
-<cfsilent>
+<<cfsilent>
 	<cfimport prefix="mangoAdmin" taglib="tags">
 	<cfparam name="error" default="">
 	<cfparam name="message" default="">
@@ -24,107 +24,159 @@
 	<cfset skins = request.administrator.getSkins() />
 	<cfset currentAuthor = request.blogManager.getCurrentUser() />
 	<cfset currentRole = currentAuthor.getCurrentRole(blog.getId())/>
+
+	<cfset skinSettings = blog.getSetting('skins') />
+	<cfset currentSkin = request.administrator.getSkin( skin ) />
+	<cfset currentTemplates = request.administrator.getCurrentTemplates() />
+	<cfset breadcrumb = [ { 'link' = 'skins.cfm', 'title' = "Design" },
+	{ 'title' = "Theme chooser" } ] />
 </cfsilent>
-<cf_layout page="Themes" title="Themes">
-	<div id="wrapper">
-		<cfif listfind(currentRole.permissions, "manage_themes")
-				OR listfind(currentRole.permissions, "set_themes")>
-		<div id="submenucontainer">
-		
-		</div>
-	
-		<div id="content">
-		<h2 class="pageTitle">Current theme</h2>
-		
-			<div id="innercontent">
-			<cfif len(error)>
-				<p class="error"><cfoutput>#error#</cfoutput></p>
-			</cfif>
-			<cfif len(message)>
-				<p class="message"><cfoutput>#message#</cfoutput></p>
-			</cfif>
 
-<cfoutput>
-<table>
-<cfloop from="1" to="#arraylen(skins)#" index="i">
-<script type="text/javascript">
-var skinUpdate#i# = new Spry.Data.XMLDataSet("datasets/downloadableSkins.cfm?action=checkUpdates&skin=#skins[i].id#", "skin");
-</script>
-	<cfif skins[i].id EQ skin>
-	<tr><th colspan="2">#skins[i].name#</th></tr>
-	<tr><td><img src="#request.administrator.getBlog().getUrl()#skins/#skins[i].id#/#skins[i].thumbnail#"></td><td><p>#skins[i].description#</p>
-	<ul><li><strong>Author</strong>: 
-		<cfif len(skins[i].authorUrl)><a href="#skins[i].authorUrl#">#skins[i].author#</a>
-		<cfelse>#skins[i].author#</cfif></li>
-		<cfif len(skins[i].designAuthor)><li><strong>Designer</strong>: <cfif len(skins[i].designAuthorUrl)><a href="#skins[i].designAuthorUrl#">#skins[i].designAuthor#</a>
-		<cfelse>#skins[i].designAuthor#</cfif></li></cfif>
-		<cfif len(skins[i].license)><li><strong>License: </strong>#skins[i].license#</li></cfif>
-		<cfif len(skins[i].version)><li><strong>Version: </strong>#skins[i].version#</li></cfif>
-	</ul>
-	
-	<div spry:region="skinUpdate#i#">
-		<div spry:state="error"></div>
-		<div spry:state="ready" spry:repeat="skinUpdate#i#">
-			<p class="warning" spry:if="'{hasupdates}' == 1">There is an update available for this theme. <a href="{downloadUrl}">Download</a></p></div>
-	</div>
-	</td></tr>
+<cf_layout page="Themes" title="Design" hierarchy="#breadcrumb#">
+
+	<nav class="nav navbar-dashboard navbar-dark flex-column flex-sm-row mb-4">
+		<a href="skins.cfm" class="active nav-link">
+			<span class="sidebar-icon">
+				<i class="bi icon icon-xs"></i>
+			</span>
+			<span class="sidebar-text">Themes</span>
+		</a>
+	<cfif arraylen( currentSkin.settings )>
+		<a href="skins_settings.cfm" class="nav-link">
+			<span class="sidebar-icon">
+				<i class="bi icon icon-xs"></i>
+			</span>
+			<span class="sidebar-text">Theme settings</span>
+		</a>
 	</cfif>
-</cfloop>  
-</table>
+	<cfif arraylen( currentTemplates )>
+		<cfoutput>
+			<cfloop array="#currentTemplates#" item="templateitem">
+					<a href="skins_settings.cfm?template=#templateitem.template#" class="nav-link">
+					<span class="sidebar-icon">
+				<i class="bi icon icon-xs"></i>
+			</span>
+				<span class="sidebar-text">#templateitem.label# settings</span>
+				</a>
+			</cfloop>
+		</cfoutput>
+	</cfif>
+		<mangoAdmin:SecondaryMenuEvent name="skinsNav" includewrapper="false" />
+	</nav>
+	<cfif listfind(currentRole.permissions, "manage_themes") OR listfind(currentRole.permissions, "set_themes")>
+		<cfoutput>
+			<cfif len(message)><div class="alert alert-success" role="alert">#message#</div></cfif>
+			<cfif len(error)><div class="alert alert-danger" role="alert">#error#</div></cfif>
 
-<h2 class="sectionTitle">Available themes</h2>
+			<div class="row">
+			<cfloop from="1" to="#arraylen(skins)#" index="i">
+				<cfif skins[i].id EQ skin>
+						<div class="col-xl-3 col-md-6 mb-4" x-data="{ hasUpdate: false, fetch() {
+     			 	fetch( 'datasets/downloadableSkins.cfm?action=checkUpdates&skin=#skins[i].id#' )
+                            .then((response) => response.json())
+                            .then((data) => {
+                                this.hasUpdate = data.updated;
+                            });
+     			 	}
+				}" x-init="fetch()">
+					<div class="card shadow border-0 text-center p-0">
+							<img class="card-img-top rounded-top" src="#request.administrator.getBlog().getUrl()#skins/#skins[i].id#/#skins[i].thumbnail#">
+					<div class="card-body">
+					<h4 class="card-title h3">#skins[i].name# <cfif len(skins[i].version)><span class="badge bg-info">#skins[i].version#</cfif></h4>
+					<template x-if="hasUpdate">
+					<div class="alert alert-secondary mt-3">There is an update available for this theme. <a class="btn btn-outline-primary mt-1" href="#cgi.script_name#?action=download&amp;skin=#skins[i].id#">Download</a></div>
+					</template>
+					</div>
+						<div class="card-body text-white bg-gray-600 rounded-bottom">Current theme</div>
 
-<table>
-<cfloop from="1" to="#arraylen(skins)#" index="i">	
-	<cfif skins[i].id NEQ skin><!--- exclude current skin --->
-	<tr><th>#skins[i].name#</th><th><a href="#cgi.script_name#?action=set&amp;skin=#skins[i].id#">Use this theme</a></th></tr><tr><td><img src="#request.administrator.getBlog().getUrl()#skins/#skins[i].id#/#skins[i].thumbnail#"></td><td><p>#skins[i].description#</p>
-	<ul><li><strong>Author</strong>: 
-		<cfif len(skins[i].authorUrl)><a href="#skins[i].authorUrl#">#skins[i].author#</a>
-		<cfelse>#skins[i].author#</cfif></li>
-		<cfif len(skins[i].designAuthor)><li><strong>Designer</strong>: <cfif len(skins[i].designAuthorUrl)><a href="#skins[i].designAuthorUrl#">#skins[i].designAuthor#</a>
-		<cfelse>#skins[i].designAuthor#</cfif></li></cfif>
-		<cfif len(skins[i].license)><li><strong>License: </strong>#skins[i].license#</li></cfif>
-		<cfif len(skins[i].version)><li><strong>Version: </strong>#skins[i].version#</li></cfif>
-	</ul>
-	<br />
-	<div spry:region="skinUpdate#i#">
-		<div spry:state="error"></div>
-		<div spry:state="ready" spry:repeat="skinUpdate#i#">
-			<p class="warning" spry:if="'{hasupdates}' == 1">There is an update available for this theme. <a href="{downloadUrl}">Download</a></p></div>
-	</div>
-	
-	<a href="#cgi.script_name#?action=delete&amp;skin=#skins[i].id#" class="deleteButton">Delete this theme</a>
-	</td></tr>
-	<tr><td colspan="2">&nbsp;</td></tr>
-</cfif>
-</cfloop>  
-</table>
+					</div>
+					</div>
+				</cfif>
+			</cfloop>
+			<cfloop from="1" to="#arraylen(skins)#" index="i">
+				<cfif skins[i].id NEQ skin><!--- exclude current skin --->
+						<div class="col-xl-3 col-md-6" x-data="{ hasUpdate: false, fetch() {
+     			 	fetch( 'datasets/downloadableSkins.cfm?action=checkUpdates&skin=#skins[i].id#' )
+                            .then((response) => response.json())
+                            .then((data) => {
+                                this.hasUpdate = data.updated;
+                            });
+     			 	}
+				}" x-init="fetch()">
+					<div class="card shadow border-0 text-center p-0">
+						<img class="card-img-top rounded-top" src="#request.administrator.getBlog().getUrl()#skins/#skins[i].id#/#skins[i].thumbnail#">
+					<div class="card-body">
+					<h4 class="card-title h3">#skins[i].name# <cfif len(skins[i].version)><span class="badge bg-info">#skins[i].version#</cfif></h4>
+					</div>
+					<div class="card-footer">
+							<a href="#cgi.script_name#?action=set&amp;skin=#skins[i].id#" class="btn btn-sm btn-primary d-inline-flex align-items-center me-2">Use this theme</a>
+							<a class="btn btn-sm btn-outline-danger deleteButton" href="#cgi.script_name#?action=delete&amp;skin=#skins[i].id#">Delete</a>
+					<template x-if="hasUpdate">
+					<div class="alert alert-secondary mt-3">There is an update available for this theme. <a class="btn btn-outline-primary mt-1" href="#cgi.script_name#?action=download&amp;skin=#skins[i].id#">Download</a></div>
+					</template>
+					</div>
+					</div>
+					</div>
+				</cfif>
+			</cfloop>
+			</div>
 
-<cfif listfind(currentRole.permissions, "manage_themes")>
-<h2 class="sectionTitle">Download themes</h2>
-<script type="text/javascript">
-var dsDownloadSkins = new Spry.Data.XMLDataSet("datasets/downloadableSkins.cfm", "skins/skin");
-</script>
+			<cfif listfind(currentRole.permissions, "manage_themes")>
+				<hr />
+				<h2 class="h4 m-4">Download themes</h2>
+				<div x-data="data()">
+					<div class="d-flex justify-content-center">
+						<div class="pt-4" x-show="loading">
+							<div class="spinner-border" role="status">
+							</div>
+						</div>
+					</div>
+					<div class="row" x-show="!loading">
+						<template x-for="item in skins" >
+							<div class="col-xl-3 col-md-6 ">
+								<div class="card shadow border-0 text-center p-0 mb-5">
+									<img class="card-img-top rounded-top"  :src="item.thumbnail">
+									<div class="card-body">
+										<h4 class="card-title h3" x-text="item.name"></h4>
+									</div>
+									<div class="card-footer">
+										<a @click="download( item.id )" class="btn btn-sm btn-primary d-inline-flex align-items-center me-2">Download</a>
+									</div>
+								</div>
+							</div>
+						</template>
+					</div>
+				</div>
+			</cfif>
+		</cfoutput>
 
-<div id="downloadSkins" spry:region="dsDownloadSkins">
-	<div spry:state="loading">Gettings themes...</div>
-	<div class="skinBox" spry:state="ready" spry:repeat="dsDownloadSkins">
-		<h3>{name}</h3>
-		<img src="{thumbnail}"><br />
-		<span class="download"><a href="#cgi.script_name#?action=download&amp;skin={id}">Download</a></span> | <a href="http://www.mangoblog.org/demo/?skin={id}" _target="_blank">Demo</a>
-	</div>
-</div>
-</cfif>
-<br />
-
-</cfoutput>
-
-</div>
-</div>
-<cfelse><!--- not authorized --->
-<div id="content"><div id="innercontent">
-<p class="infomessage">Your role does not allow editing themes</p>
-</div></div>
-</cfif>
-</div>
+	<cfelse><!--- not authorized --->
+		<div class="alert alert-info" role="alert">Your role does not allow editing themes</div>
+	</cfif>
 </cf_layout>
+<script type="text/javascript">
+	function data() {
+		return {
+			skins: [],
+			loading: false,
+			init() {
+				this.fetchData();
+			},
+			fetchData( ) {
+				this.loading = true;
+				fetch(`datasets/downloadableSkins.cfm`)
+						.then((res) => res.json())
+						.then((data) => {
+							this.skins = data;
+							this.loading = false;
+						});
+			},
+			download( id ){
+				window.location.href = 'skins.cfm?action=download&skin=' + id;
+			}
+		}
+	};
+	function updates() {
+
+	}
+</script>

@@ -33,6 +33,16 @@
 <cfparam name="attributes.includeBasePath" default="true">
 
 <cfif thisTag.executionmode is 'start'>
+	<cfscript>function ParagraphFormat2(str) {
+//first make Windows style into Unix style
+		str = replace(str,chr(13)&chr(10),chr(10),"ALL");
+//now make Macintosh style into Unix style
+		str = replace(str,chr(13),chr(10),"ALL");
+//now fix tabs
+		str = replace(str,chr(9),"&nbsp;&nbsp;&nbsp;","ALL");
+//now return the text formatted in HTML
+		return replace(str,chr(10),"<br />","ALL");
+	}</cfscript>
 
 <cfif attributes.format EQ "default">
 	<cfif attributes.body OR attributes.excerpt OR attributes.link>
@@ -163,14 +173,13 @@
 	<cfif attributes.currentCount>
 		<cfset prop = currentItemCount />
 	</cfif>
-	
-	<cfif attributes.format EQ "xml">
-		<cfoutput>#xmlformat(prop)#</cfoutput>
-	<cfelseif attributes.format EQ "escapedHtml">
-		<cfoutput>#htmleditformat(prop)#</cfoutput>
-	<cfelse>
-		<cfoutput>#prop#</cfoutput>
+
+	<cfif attributes.format EQ "paragraph">
+		<cfset prop = ParagraphFormat2( prop ) />
+		<cfelseif attributes.format EQ "escapedHtml">
+		<cfset prop = htmleditformat( prop )>
 	</cfif>
+	<cfoutput>#prop#</cfoutput>
 
 </cfif>
 

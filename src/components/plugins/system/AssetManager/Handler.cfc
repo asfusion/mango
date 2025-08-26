@@ -1,4 +1,6 @@
 <cfcomponent extends="org.mangoblog.plugins.BasePlugin">
+
+	<cfset this.events = [ { 'name' = 'assetManager-getThumb', 'type' = 'sync', 'priority' = '1' }] />
 	
 	<cfset variables.maxCacheSize = 250 /><!--- in number of files --->
 	<cfset variables.package = "org/mangoblog/plugins/AssetManager"/>
@@ -82,10 +84,11 @@
 		<cfset var local = structnew() />
 		<cfset var fileExtension = getSetting('fileType') />
 		<cfset var name = "#hash(arguments.source)#_#arguments.width#x#arguments.height#_#arguments.resize#.#fileExtension#" />
-		
+		<cfset var image = {} />
+
 		<cfset local.cacheFolder = "__thumbnails/_cache/" />
 		<cfset local.destination = arguments.directory & local.cacheFolder />
-		
+
 		<cfif NOT directoryexists(local.destination)>
 			<cfdirectory action="create" directory="#local.destination#">
 		</cfif>
@@ -95,17 +98,17 @@
 			<cfif isvalid('url',arguments.source)>
 				<!--- check to see if we are allowed to get images from this domain --->
 				<cfif domainAllowed(arguments.source)>
-					<cfset imageComponent = imageRead(arguments.source )/>
+					<cfset image = imageRead(arguments.source )/>
 				<cfelse>
 					<cfthrow type="NOT_ALLOWED" message="Domain not allowed">
 				</cfif>
 			<cfelse>
-				<cfset imageComponent = imageRead(arguments.source ) />
+				<cfset image = imageRead(arguments.source ) />
 			</cfif>
 			
 			<!--- figure whether we should resize and crop, just crop or leave as is --->
-			<cfset local.initialHeight = imageComponent.getHeight() />
-			<cfset local.initialWidth = imageComponent.getWidth() />
+			<cfset local.initialHeight = image.getHeight() />
+			<cfset local.initialWidth = image.getWidth() />
 			<cfset local.scaleWidth = arguments.width />
 			<cfset local.scaleHeight = arguments.height />
 			<cfif arguments.height EQ 0>
@@ -119,13 +122,13 @@
 			<cfif local.initialHeight GT arguments.height OR local.initialWidth GT arguments.width>
 				<cfif arguments.resize>
 					<cfset local.percentage = min(max(arguments.height/local.initialHeight, arguments.width/local.initialWidth),1) * 100 />
-					<cfset imageComponent.scaleToFit( local.scaleWidth, local.scaleHeight ) />
+					<cfset image.scaleToFit( local.scaleWidth, local.scaleHeight ) />
 				</cfif>
 			</cfif>
 			
 			<!--- before writing the image, check to see if we need to clear the cache --->
 			<cfset checkCache(local.destination) />
-			<cfset imagewrite( imageComponent, local.destination & name, getSetting('quality')) >
+			<cfset imagewrite( image, local.destination & name, getSetting('quality')) >
 		</cfif>
 		
 		<cfreturn local.cacheFolder & name />

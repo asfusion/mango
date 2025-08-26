@@ -304,15 +304,15 @@
 								// @TODO: finish this list
 									
 								if (thisObject.getApproved()) {
-									message.setText('Comment posted');
+									message.setText( variables.mainApp.getInternationalizer().getValue( 'Comment posted' ));
 									variables.postsManager.updateEvent("postUpdated|" & thisObject.getEntryId());
 									variables.pagesManager.updateEvent("commentUpdated|" & thisObject.getEntryId());
 								}
 								else if (thisObject.getRating() EQ -1){
-									message.setText('Comment submitted but it will be reviewed for possible spam.');
+									message.setText(variables.mainApp.getInternationalizer().getValue("comment-badrating"));
 								}
 								else {
-									message.setText('Comment submitted. You need to wait for moderator approval before comment is made public');
+									message.setText( variables.mainApp.getInternationalizer().getValue("comment-moderated"));
 								}
 								variables.itemsCache.clear(thisObject.getEntryId() & "_0");
 								variables.itemsCache.clear(thisObject.getEntryId() & "_1");
@@ -328,7 +328,7 @@
 				
 				if (isDuplicateComment) {
 					message.setStatus("error");
-					message.setText("It looks like you have already posted this comment");
+					message.setText( variables.mainApp.getInternationalizer().getValue("comment-duplicate") );
 				}
 				if (NOT commentAllowed) {
 					message.setStatus("error");

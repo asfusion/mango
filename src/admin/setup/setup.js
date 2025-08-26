@@ -55,14 +55,7 @@ $(function(){
 		}
 	});
 	
-	/*
-	 * ==========================================================================
-	 * Add a "required" text label to all required fields
-	 */
-	$('.required','form').each(function(){
-		var id = $(this).attr('id');
-		if (id.length) $('label[for='+id+']').append(' <span>(required)</span>');
-	});
+
 	
 	
 	/*
@@ -71,8 +64,10 @@ $(function(){
 	 */
 	var validator = $('form').validate({
 		ignore: ":hidden :input",
+		errorElement: 'div',
+		errorClass: 'is-invalid',
 		errorPlacement: function(error, element){
-			error.appendTo(element.parents('p'));
+			error.appendTo(element.parents('div.field-container'));
 		}
 	});
 	

@@ -47,9 +47,22 @@
 	</cfif>
 	
 </cfsilent>
-<cf_layout page="Categories" title="Categories">
-<div id="wrapper">
+<cfset breadcrumb = [ { 'link' = 'posts.cfm', 'title' = "Posts" },
+{ 'title' = 'Categories' } ] />
+<cf_layout page="Posts" title="Categories" hierarchy="#breadcrumb#">
 <cfif listfind(currentRole.permissions, "manage_categories")>
+
+	<cfoutput>
+
+	<cfif len(message)><div class="alert alert-success" role="alert">#message#</div></cfif>
+	<cfif len(error)><div class="alert alert-danger" role="alert">#error#</div></cfif>
+
+	<h4 class="h4">#pagetitle#</h4>
+
+	<mangoAdmin:MenuEvent name="categoriesNav" />
+
+	</cfoutput>
+<!---
 	<div id="submenucontainer">
 		<ul id="submenu">
 			<cfif NOT len(preferences) OR listfind(preferences,"categories_new")>
@@ -59,46 +72,38 @@
 			<mangoAdmin:MenuEvent name="categoriesNav" />
 		</ul>
 	</div>
-	
-	<div id="content">
-		<h2 class="pageTitle"><cfoutput>#pagetitle#</cfoutput></h2>
-		
-		<div id="innercontent">
-		<cfif len(error)>
-			<p class="error"><cfoutput>#error#</cfoutput></p>
-		</cfif>
-		<cfif len(message)>
-			<p class="message"><cfoutput>#message#</cfoutput></p>
-		</cfif>
-		
+	--->
+
 		<cfoutput><form method="post" action="#cgi.SCRIPT_NAME#" name="categoryForm" id="categoryForm">
 
-			<fieldset>
-				<legend>Category</legend>
-				<p>
-					<label for="title">Title</label>
-					<span class="field"><input type="text" id="title" name="title" value="#htmleditformat(title)#" size="30" class="required"/></span>
-				</p>
-				
-				<p>
-					<label for="description">Description</label>
-					<span class="hint">What this category is about. Whether or not this is shown in the blog depends on the skin used</span>
-					<span class="field"><textarea cols="40" rows="4" id="description" name="description">#htmleditformat(description)#</textarea></span>
-				</p>
-			</fieldset>
-			
-			<div class="actions">
-				<input type="submit" class="primaryAction" id="submit" name="submit" value="Save"/>
-				<input type="hidden" name="id" value="#htmleditformat(id)#">
+		<div class="row">
+		<div class="col-12 ">
+		<div class="card card-body border-0 shadow mb-4">
+			<div class="mb-3">
+			<div>
+				<label for="title">Title</label>
+				<input class="form-control" id="title" type="text" name="title" value="#htmleditformat(title)#" placeholder="Enter post title" required>
 			</div>
-			</form></cfoutput>
-		</div>
-	</div>
-<cfelse><!--- not authorized --->
-<div id="content"><div id="innercontent">
-<p class="infomessage">Your role does not allow you to edit categories</p>
-</div></div>
-</cfif>
-</div>
+			</div>
 
+			<div class="mb-3">
+				<label for="description">Description</label>
+				<textarea class="form-control" id="description" name="description" rows="4">#htmleditformat(description)#</textarea>
+
+			<div class="form-text hint">What this category is about. Whether or not this is shown in the blog depends on the skin used</div>
+			</div>
+
+			<div class="mt-3"><button class="btn btn-gray-800 mt-2 animate-up-2" type="submit">Save</button></div>
+
+				<input type="hidden" name="submit" value="Save">
+				<input type="hidden" name="id" value="#htmleditformat(id)#">
+		</div>
+		</div>
+		</div>
+			</form>
+		</cfoutput>
+
+<cfelse><!--- not authorized --->
+	<div class="alert alert-info" role="alert">Your role does not allow you to edit categories</div>
+</cfif>
 </cf_layout>

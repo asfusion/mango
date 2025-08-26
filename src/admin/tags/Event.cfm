@@ -12,7 +12,5 @@
 		<cfset event = pluginQueue.broadcastEvent(event) />
 		<cfoutput>#tostring(event.getOutputData())#</cfoutput>
 	</cfif> 
-
 </cfif>
-
 <cfsetting enablecfoutputonly="false">

@@ -1,16 +1,6 @@
 <cfcomponent name="util" description="Various utilities">
 
  <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
-<cffunction name="invokeComponent" output="false" hint="Private method to invoke a component dynamically" access="private" returntype="void">
-	<cfargument name="component" type="any" required="true" hint="Reference to component object">
-	<cfargument name="method" type="string" required="true" hint="">
-	<cfargument name="parameters" type="struct" required="false" default="#structnew()#" hint="">
-		
-	<cfinvoke component="#arguments.component#" method="#arguments.method#"  argumentcollection="#arguments.parameters#">
-	
-</cffunction>
-
- <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 <cffunction name="makeCleanString" output="false" hint="Creates a nice string to use in URLs" access="public" returntype="string">
 	<cfargument name="stringToClean" type="string" required="true">
 	<cfargument name="maxLength" type="numeric" required="false" default="150">

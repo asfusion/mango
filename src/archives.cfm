@@ -116,12 +116,12 @@
 </cfif>
 
 <cfif structkeyexists(request.externalData,"category")>
-<!--- try to see if maybe the friednly urls are not used and query string is used instead--->
+<!--- try to see if maybe the friendly urls are not used and query string is used instead--->
 	<cfset archiveType = "category" />
 	<cfset data.name = request.externalData.category />
 
 <cfelseif structkeyexists(request.externalData,"term")>
-<!--- try to see if maybe the friednly urls are not used and query string is used instead--->
+<!--- try to see if maybe the friendly urls are not used and query string is used instead--->
 	<cfset archiveType = "search" />
 	<cfset termArray = listtoarray(request.externalData.term,"/") />
 	<cfif arraylen(termArray) GT 0>

@@ -1,179 +1,128 @@
+<cfimport prefix="mangoAdminPartials" taglib="partials">
 <cfparam name="customFormFields" default="#arraynew(1)#">
 <cfparam name="showFields" default="title,content,excerpt,comments_allowed,status,name,categories,customFields,posted_on">
 <cfset currentAuthor = request.blogManager.getCurrentUser() />
-<cfoutput><form method="post" action="#cgi.SCRIPT_NAME#" name="postForm" id="postForm">
-	
+<cfoutput>
 	<input type="hidden" name="id" value="#id#">
 	<input type="hidden" name="panel" value="#panel#">
-<table class="formTable">
-<tr>
-<td>
-<cfif listfind(showFields,'title') OR listfind(showFields,'content') OR listfind(showFields,'excerpt')>
-	<fieldset id="post_main_fields">
-		<legend>Post</legend>
-		<cfif listfind(showFields,'title')>
-			<p>
-				<label for="title">Title</label>
-				<span class="field"><input type="text" id="title" name="title" value="#htmleditformat(title)#" size="50" class="required"/></span>
-			</p>
-		<cfelse>
-			<input type="hidden" name="title" value="#htmleditformat(title)#" />
-		</cfif>
-		<cfif listfind(showFields,'content')>
-			<p>
-				<label for="contentField">Content</label>
-				<span class="field"><textarea cols="50" rows="20" id="contentField" name="content" class="htmlEditor required">#htmleditformat(content)#</textarea></span>
-			</p>
-		<cfelse>
-			<input type="hidden" name="content" value="#htmleditformat(content)#" />
-		</cfif>
-		<cfif listfind(showFields,'excerpt')>
-			<p>
-				<label for="excerpt">Excerpt</label>
-				<span class="hint">Short summary describing post</span>
-				<span class="field"><textarea cols="50" rows="5" id="excerpt" name="excerpt" class="htmlEditor">#htmleditformat(excerpt)#</textarea></span>
-			</p>    
-		<cfelse>
-			<input type="hidden" name="excerpt" value="#htmleditformat(excerpt)#" />
-		</cfif>
-		<cfif listfind(showFields,'name')>
-			<cfif not len(name) or not REFind("^[a-z0-9]+(-[a-z0-9]+)*$",name)>
-				<p>
-					<label for="name">URL-safe title</label>
-					<span class="hint">Define your own URL. Will be auto-generated when published if left blank.</span>
-					<span class="field"><input type="text" id="name" name="name" value="#htmleditformat(name)#" size="50" class="{urlslug:true}"/></span>
-				</p>
+	<input type="hidden" name="owner" value="#panel#" />
+
+	<div class="row">
+		<div class="col-12 col-xl-8">
+			<mangoAdminPartials:postFormBasics showFields="#showFields#" title="#title#" name="#name#" excerpt="#excerpt#" content="#content#"></mangoAdminPartials:postFormBasics>
+		<!---<div class="mt-3">
+			<button class="btn btn-gray-800 mt-2 animate-up-2" type="submit">Save all</button>
+		</div>--->
+
+			<!--- CUSTOM FIELDS CARD --->
+			<cfset customFieldStartingIndex = arraylen( customFields ) + 1 />
+			<cfif listfind(showFields,'customFields')><!--- regular fields ---->
+				<mangoAdminPartials:postFormCustomFields customFields="#customFields#">
+				<cfset customFieldStartingIndex += 1>
+			<cfelse>
+				<cfloop from="1" to="#arraylen(customFields)#" index="i">
+					<input type="hidden" name="customField_#i#" value="#htmleditformat(customFields[i].value)#" />
+					<input type="hidden" name="customFieldKey_#i#" value="#htmleditformat(customFields[i].key)#" />
+					<input type="hidden" name="customFieldName_#i#" value="#htmleditformat(customFields[i].name)#" />
+				</cfloop>
 			</cfif>
+			<!--- END CUSTOM FIELDS CARD --->
+
+			<!--- fields with meta data that are shown in different ways --->
+			<cf_customFormFields entry="#post#" customFormFields="#customFormFields#" startingIndex="#customFieldStartingIndex#">
+		</div><!--- END LEFT COLUMN --->
+
+		<!--- START RIGHT COLUMN --->
+		<div class="col-12 col-xl-4">
+			<cfif listfind(showFields,'posted_on') OR listfind(showFields,'status')>
+		<div class="card card-body border-0 shadow mb-4">
+			<h2 class="h5 mb-4">Publish status</h2>
+
+		<cfif listfind(showFields,'status')>
+					<div class="form-check">
+						<input class="form-check-input" type="radio" value="published" id="published" name="publish" <cfif publish EQ "published">checked="checked"</cfif>>
+						<label class="form-check-label" for="published">Published</label>
+					</div>
+					<div class="form-check">
+						<input class="form-check-input" type="radio" value="draft" id="draft" name="publish" <cfif publish EQ "draft">checked="checked"</cfif>>
+						<label class="form-check-label" for="draft">Draft</label>
+					</div>
+					<!-- End of Radio -->
 		<cfelse>
-			<input type="hidden" name="name" value="#htmleditformat(name)#" />
+				<input type="hidden" name="publish" value="#publish#" />
 		</cfif>
-	</fieldset>
-<cfelse>
+		<cfif listfind(showFields,'posted_on')>
+				<label for="postedOn">Publishing date</label>
+				<input type="text" id="postedOn" name="postedOn" value="#postedOn#" size="18" class="date form-control" />
+	<cfelse>
+				<input type="hidden" name="postedOn" value="#postedOn#" />
+		</cfif>
+	</div>
+	<cfelse>
+	<input type="hidden" name="postedOn" value="#postedOn#" />
+	<input type="hidden" name="publish" value="#publish#" />
+	</cfif>
+			<cfif listfind(showFields,'categories')>
+	<div class="col-12">
+		<div class="card card-body border-0 shadow mb-4">
+			<h2 class="h5 mb-4">Categories</h2>
+			<p class="form-text">File this post under:</p>
+
+		<cfloop from="1" to="#arraylen(categories)#" index="i">
+			<div class="form-check">
+				<input class="form-check-input" type="checkbox" value="#categories[i].getId()#" id="category_#i#" name="category" <cfif listfind(categoriesList,categories[i].getId())>checked="checked"</cfif> />
+				<label class="form-check-label" for="category_#i#">
+			#htmleditformat(categories[i].getTitle())#
+				</label>
+			</div>
+		</cfloop>
+
+		<div>
+			<label for="new_category">New category</label>
+			<input class="form-control" type="text" name="new_category" id="newcategory" />
+		</div>
+
+
+		</div>
+	</div>
+	<cfelse>
+		<input type="hidden" name="category" value="#categoriesList#" />
+	</cfif>
+			<!--- COMMENTS --->
+			<cfif listfind(showFields,'comments_allowed')>
+				<div class="col-12">
+				<div class="card card-body border-0 shadow mb-4">
+					<h2 class="h5 mb-4">Comments</h2>
+
+					<div class="form-check form-switch">
+							<input class="form-check-input" type="checkbox" value="yes" id="allowComments" name="allowComments" <cfif allowComments>checked="checked"</cfif>/>
+						<label class="form-check-label" for="allowComments">Allow comments</label>
+					</div>
+
+				<p class="form-text">Should reader comments be permitted on this post?</p>
+			</div>
+				</div>
+		<cfelse>
+				<input type="hidden" name="allowComments" value="#allowComments#" />
+		</cfif>
+		</div>
+
+	<cfif listfind(showFields,'title') OR listfind(showFields,'content') OR listfind(showFields,'excerpt')>
+	<cfelse>
 	<input type="hidden" name="title" value="#htmleditformat(title)#" />
 	<input type="hidden" name="content" value="#htmleditformat(content)#" />
 	<input type="hidden" name="excerpt" value="#htmleditformat(excerpt)#" />
-</cfif>
-
-
-<cfif listfind(showFields,'customFields')>
-	<cfif arraylen(customFields)>
-	<fieldset id="customFieldsFieldset" class="">
-		<legend>Custom Fields</legend>
-		<cfloop from="1" to="#arraylen(customFields)#" index="i">
-			<p>
-				<label for="customField_#i#">#customFields[i].name# <span>[key: #customFields[i].key#]</span></label>
-				<span class="hint">Enter a blank value to delete this custom field</span>
-				<span class="field">
-					<textarea id="customField_#i#" name="customField_#i#" rows="2" cols="70">#htmleditformat(customFields[i].value)#</textarea>
-					<input type="hidden" name="customFieldKey_#i#" value="#htmleditformat(customFields[i].key)#" />
-					<input type="hidden" name="customFieldName_#i#" value="#htmleditformat(customFields[i].name)#" />
-				</span>
-			</p>
-		</cfloop>
-	</fieldset>
-	<cfelse>
-		<cfset i = 1/>
 	</cfif>
-	
-	<fieldset id="addCustomFieldFieldset" class="">
-		<legend>New custom field</legend>
-		<p style="float:left;margin-bottom:0.5em;">
-			<label for="customFieldName_#i#">Label</label>
-			<span class="field"><input type="text" name="customFieldName_#i#" id="customFieldName_#i#" size="25" class="{required: function(){return $('##customFieldKey_#i#:filled,##customField_#i#:filled').length > 0}}"/></span>
-		</p>
-		<p style="float:left;margin-left:2em;margin-bottom:0.5em;">
-			<label for="customFieldKey_#i#">Key</label>
-			<span class="field"><input type="text" name="customFieldKey_#i#" id="customFieldKey_#i#" size="20" class="{required: function(){return $('##customFieldName_#i#:filled,##customField_#i#:filled').length > 0}}"/></span>
-		</p>
-		<p style="clear:left;margin:0.5em 0;">
-			<label for="customField_#i#">Value</label>
-			<span class="field"><textarea id="customField_#i#" name="customField_#i#" rows="2" cols="70" class="{required: function(){return $('##customFieldName_#i#:filled,##customFieldKey_#i#:filled').length > 0}}"></textarea></span>
-		</p>
-	</fieldset>
-<cfelse>
-	<cfloop from="1" to="#arraylen(customFields)#" index="i">
-		<input type="hidden" name="customField_#i#" value="#htmleditformat(customFields[i].value)#" />
-		<input type="hidden" name="customFieldKey_#i#" value="#htmleditformat(customFields[i].key)#" />
-		<input type="hidden" name="customFieldName_#i#" value="#htmleditformat(customFields[i].name)#" />
-	</cfloop>
-</cfif>
-<cf_customFormFields entry="#post#" customFormFields="#customFormFields#" startingIndex="#i+1#">
-<cfoutput>#tostring(event.getOutputData())#</cfoutput>
 
-<div class="actions">
-		<input type="hidden" name="totalCustomFields" value="#totalCustomFields#" />
-		<input type="hidden" name="panel" value="#panel#" />
-		<input type="hidden" name="owner" value="#panel#" />
-		<input type="submit" class="primaryAction button" id="tfa_submit" name="submit" value="submit"/>
+	<input type="hidden" name="totalCustomFields" value="#totalCustomFields#" />
+</div>
+	<div class="row">
+		<cfoutput>#tostring(event.getOutputData())#</cfoutput>
 	</div>
 
-</td>
-<td>
-<cfif listfind(showFields,'categories')>
-	<fieldset class="sidebox">
-		<legend>Categories</legend>
-		<p>
-			<label>File this post under:</label>
-			<span class="field">
-			<cfloop from="1" to="#arraylen(categories)#" index="i">
-			<input type="checkbox" value="#categories[i].getId()#" id="category_#i#" name="category" <cfif listfind(categoriesList,categories[i].getId())>checked="checked"</cfif>/>
-			<label for="category_#i#">#htmleditformat(categories[i].getTitle())#</label><br />
-			</cfloop>
-			</span>
-		</p>
-
-		<p>
-			<label for="new_category">New category</label>
-			<span class="field"><input type="text" name="new_category" id="newcategory" size="15"></span>
-		</p>
-	</fieldset>
-<cfelse>
-<input type="hidden" name="category" value="#categoriesList#" />
-</cfif>
-
-<cfif listfind(showFields,'comments_allowed')>
-	<fieldset class="sidebox">
-		<legend>Comments</legend>
-		<p>
-			<input type="checkbox" value="yes" id="allowComments" name="allowComments" <cfif allowComments>checked="checked"</cfif>/>
-			<label for="allowComments">Allow comments</label>
-			<span class="hint">Should reader comments be permitted on this post?</span>
-		</p>
-	</fieldset>
-<cfelse>
-	<input type="hidden" name="allowComments" value="#allowComments#" />
-</cfif>
-
-<cfif listfind(showFields,'posted_on') OR listfind(showFields,'status')>
-	<fieldset class="sidebox">
-		<legend>Publish status</legend>
-		<cfif listfind(showFields,'status')>
-		<p>
-			<input type="radio" value="published" id="published" name="publish" <cfif publish EQ "published">checked="checked"</cfif>/>
-			<label for="published">Published</label><br />
-			
-			<input type="radio" value="draft" id="draft" name="publish" <cfif publish EQ "draft">checked="checked"</cfif>/>
-			<label for="draft">Draft</label>
-		</p>
-		<cfelse>
-			<input type="hidden" name="publish" value="#publish#" />
-		</cfif>
-		<cfif listfind(showFields,'posted_on')>
-		<p>
-			<label for="postedOn">Publishing date</label>
-			<span class="field"><input type="text" id="postedOn" name="postedOn" value="#postedOn#" size="18" class="date" /></span>
-		</p>
-		<cfelse>
-			<input type="hidden" name="postedOn" value="#postedOn#" />
-		</cfif>
-	</fieldset>
-<cfelse>
-	<input type="hidden" name="postedOn" value="#postedOn#" />
-	<input type="hidden" name="publish" value="#publish#" />
-</cfif>
-</td>
-</tr>
-</table>
-
-	
-</form></cfoutput>
+	<div class="row">
+		<div class="col-4 col-md-2">
+			<input type="submit" class="btn btn-primary d-inline-flex align-items-center my-3 animate-up-2" name="submit" value="Save" />
+		</div>
+	</div>
+</cfoutput>

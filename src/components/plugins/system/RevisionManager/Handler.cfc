@@ -1,23 +1,19 @@
-<cfcomponent extends="BasePlugin">
+<cfcomponent extends="org.mangoblog.plugins.BasePlugin">
 
-	<cfset variables.id 		= "org.mangoblog.plugins.RevisionManager">
-	<cfset variables.package 	= "org/mangoblog/plugins/revisionManager"/>
+	<cfset variables.id 		= "mangoblog.plugins.RevisionManager">
+	<cfset variables.package 	= "mangoblog/plugins/revisionManager"/>
+	<cfset this.events =
+		[ { 'name' = 'afterPostUpdate', 'type' = 'sync', 'priority' = '5' },
+	{ 'name' = 'afterPageUpdate', 'type' = 'sync', 'priority' = '5' },
+	{ 'name' = 'afterPostDelete', 'type' = 'async', 'priority' = '5' },
+	{ 'name' = 'afterPageDelete', 'type' = 'async', 'priority' = '5' },
+	{ 'name' = 'beforeAdminPostContentEnd', 'type' = 'sync', 'priority' = '5' },
+	{ 'name' = 'beforeAdminPageContentEnd', 'type' = 'sync', 'priority' = '5' },
+	{ 'name' = 'versioner-showRevision', 'type' = 'sync', 'priority' = '5' },
+	{ 'name' = 'versioner-restoreRevision', 'type' = 'async', 'priority' = '5' }
+] />
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
-	<cffunction name="init" access="public" output="false" returntype="any">
-		
-		<cfargument name="mainManager" type="any" required="true" />
-		<cfargument name="preferences" type="any" required="true" />
-						
-			<cfset setManager(arguments.mainManager) />
-			<cfset setPreferencesManager(arguments.preferences) />
-			
-		<cfreturn this/>
-		
-	</cffunction>
-
-
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
+<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="handleEvent" hint="Asynchronous event handling" access="public" output="false" returntype="any">
 		<cfargument name="event" type="any" required="true" />	
 		
@@ -45,8 +41,10 @@
 		<cfset var local 		= structnew() />
 		<cfset var data 		= arguments.event.data />
 		<cfset var manager		= getManager() />
+		<cfset var i18 = variables.mainManager.getInternationalizer()/>
 
 		<cfif (eventName EQ "beforeAdminPostContentEnd" OR eventName EQ "beforeAdminPageContentEnd")  AND manager.isCurrentUserLoggedIn()>
+
 			<!--- get list of revisions --->
 			<cfset local.revisions = getRevisions(data.attributes.item.id) />
 			<cfif local.revisions.recordcount>
@@ -54,8 +52,14 @@
 			<cfset local.revision = structnew() />
 			<cfset local.revision.id = 0 />
 			<cfsavecontent variable="outputData"><cfoutput>
-				<h2>Revisions</h2>
-				<cfinclude template="admin/revisions_table.cfm">
+					<div class=" d-flex justify-content-end">
+						<button class="btn btn-outline-info mb-3" type="button" data-bs-toggle="collapse" data-bs-target="##revisionsTable" aria-expanded="false" aria-controls="revisionsTable"><i class="bi bi-chevron-down"></i> View entry revisions</button>
+					</div>
+				<div class="card collapse" id="revisionsTable">
+				<div class="card-body">
+					<cfinclude template="admin/revisions_table.cfm">
+				</div>
+				</div>
 			</cfoutput>
 			</cfsavecontent>
 			</cfif>

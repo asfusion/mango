@@ -8,7 +8,7 @@
 
 <cfset ancestorlist = getbasetaglist() />	
 	<cfif listfindnocase(ancestorlist,"cf_archives")>
-		<cfset data = GetBaseTagData("cf_archives")/> 
+		<cfset data = getBaseTagData("cf_archives")/>
 		<cfset currentArchive = data.currentArchive>
 		<cfset currentItemCount = data.counter />
 	<cfelseif structkeyexists(request,"archive")>

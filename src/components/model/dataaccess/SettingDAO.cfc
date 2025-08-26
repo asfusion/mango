@@ -18,6 +18,7 @@
 		<cfargument name="name" type="String" required="true" hint="Key with which the specified value is to be associated." />
 		<cfargument name="value" type="String" required="true" hint="Value to be associated with the specified key" />
 		<cfargument name="blog_id" type="String" required="false" default="" hint="Id of blog, can be just an empty string" />
+		<cfargument name="type" type="string" required="false" default="string" />
 
 		<cfscript>
 			var q_insertSetting = "";
@@ -28,12 +29,14 @@
 	
 		<cftry>
 			<cfquery name="q_insertSetting"  datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
-			insert into #variables.prefix#setting(path, name, value, blog_id)
+			insert into #variables.prefix#setting( path, name, value, blog_id, type )
 			values (
 				<cfqueryparam value="#arguments.path#" cfsqltype="CF_SQL_VARCHAR" />,
 				<cfqueryparam value="#arguments.name#" cfsqltype="CF_SQL_VARCHAR" />,
 				<cfqueryparam value="#arguments.value#" cfsqltype="CF_SQL_LONGVARCHAR" />,
-				<cfqueryparam value="#arguments.blog_id#" cfsqltype="CF_SQL_VARCHAR" null="#len(arguments.blog_id) EQ 0#" />)
+				<cfqueryparam value="#arguments.blog_id#" cfsqltype="CF_SQL_VARCHAR" null="#len(arguments.blog_id) EQ 0#" />,
+				<cfqueryparam value="#arguments.type#" cfsqltype="CF_SQL_VARCHAR" />
+				)
 			</cfquery>
 			
 			<cfset returnObj["status"] = true/>

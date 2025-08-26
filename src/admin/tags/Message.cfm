@@ -14,17 +14,15 @@
 					><cfelse><cfsetting enablecfoutputonly="false"><cfexit method="exittag">
 		</cfif>
 	</cfif>
-	<cfif attributes.text>
-		<cfoutput>#request.message.getText()#</cfoutput>
-	</cfif>
 	<cfif attributes.title>
 		<cfoutput>#request.message.getTitle()#</cfoutput>
+	</cfif>
+	<cfif attributes.text>
+		<cfoutput>#request.message.getText()#</cfoutput>
 	</cfif>
 	<cfif attributes.data>
 		<cfoutput>#toString(request.message.getData())#</cfoutput>
 	</cfif>
-
-
 </cfif>
 
 <cfsetting enablecfoutputonly="false">

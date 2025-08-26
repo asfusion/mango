@@ -18,51 +18,62 @@
 	
 	<!--- get categories --->
 	<cfset categories = request.administrator.getCategories() />
-	
+	<cfset breadcrumb = [ { 'link' = 'posts.cfm', 'title' = "Posts" },
+	{ 'title' = 'Categories' } ] />
 </cfsilent>
-<cf_layout page="Categories" title="Categories">
-	<div id="wrapper">
+<cf_layout page="Posts" title="Categories" hierarchy="#breadcrumb#">
 	<cfif listfind(currentRole.permissions, "manage_categories")>
-	<div id="submenucontainer">
-		<ul id="submenu">
-			<cfif NOT len(preferences) OR listfind(preferences,"categories_new")>
-			<li><a href="category.cfm">New Category</a></li>	
-			</cfif>
-			<li><a href="categories.cfm" class="current">Edit Category</a></li>
-			<mangoAdmin:MenuEvent name="categoriesNav" />
-		</ul>
-	</div>
-	
-	<div id="content">
-		<h2 class="pageTitle">All categories</h2>
-		
-		<div id="innercontent">
-		<cfif len(error)>
-			<p class="error"><cfoutput>#error#</cfoutput></p>
-		</cfif>
-		<cfif len(message)>
-			<p class="message"><cfoutput>#message#</cfoutput></p>
-		</cfif>
-		
 		<cfoutput>
-		<table cellspacing="0">
-			<tr><th class="buttonColumn">Edit</th><th>Name</th><th>Delete</th></tr>
-			<cfloop from="1" to="#arraylen(categories)#" index="i">
-				<tr>					
-					<td <cfif NOT i mod 2>class="alternate"</cfif>><a href="category.cfm?id=#categories[i].getId()#" class="editButton">Edit</a></td>
-					<td <cfif NOT i mod 2>class="alternate"</cfif>>#xmlformat(categories[i].getTitle())#</td>
-					<td <cfif NOT i mod 2>class="alternate"</cfif>><a href="categories.cfm?action=delete&amp;id=#categories[i].getId()#"  class="deleteButton">Delete</a></td>
-				</tr>
-			</cfloop>
-		</table>
-		</cfoutput>
-		
+
+		<cfif len(message)><div class="alert alert-success" role="alert">#message#</div></cfif>
+		<cfif len(error)><div class="alert alert-danger" role="alert">#error#</div></cfif>
+
+		<div class="table-settings mb-4">
+			<div class="row align-items-center justify-content-between">
+				<div class="col-4 col-md-2 ">
+				<cfif NOT len(preferences) OR listfind(preferences,"categories_new")>
+						<button class="btn btn-secondary" type="button"><a href="category.cfm"><i class="bi bi-plus"></i>New Category</a></button>
+				</cfif>
+				</div>
+			</div>
 		</div>
-	</div>
+
+		<h4 class="h4">All categories</h4>
+
+		<mangoAdmin:MenuEvent name="categoriesNav" />
+
+
+		<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
+			<div class="card card-body border-0 shadow table-wrapper table-responsive">
+			<table class="table table-hover">
+				<thead>
+				<tr>
+					<th class="border-gray-200">Name</th>
+					<th class="border-gray-200">Actions</th>
+				</tr>
+				</thead>
+				<tbody>
+				<!-- Item -->
+				<cfloop from="1" to="#arraylen(categories)#" index="i">
+				<tr>
+					<td>
+						<a href="category.cfm?id=#categories[i].getId()#" class="fw-bold">#xmlformat(categories[i].getTitle())#</a>
+					</td>
+					<td>
+						<a href="category.cfm?id=#categories[i].getId()#" class="editButton"><button class="btn btn-outline-tertiary btn-sm" type="button">Edit</button></a>
+						<a href="categories.cfm?action=delete&amp;id=#categories[i].getId()#"  class="deleteButton"><button class="btn btn-outline-danger btn-sm" type="button">Delete</button></a>
+					</td>
+			</tr>
+		</cfloop>
+
+		</tbody>
+		</table>
+
+		</div>
+		</div>
+		</cfoutput>
+
 <cfelse><!--- not authorized --->
-<div id="content"><div id="innercontent">
-<p class="infomessage">Your role does not allow you to edit categories</p>
-</div></div>
+<div class="alert alert-info" role="alert">Your role does not allow you to edit categories</div>
 </cfif>
-</div>
 </cf_layout>

@@ -1,7 +1,7 @@
 <cfcomponent displayname="Application">
 	<cfscript>
-		this.name = "mango_#right(hash(GetDirectoryFromPath(GetCurrentTemplatePath())),50)#_v1_7";
-		this.setclientcookies="yes";
+		this.name = "mango_#right(hash(GetDirectoryFromPath(GetCurrentTemplatePath())),50)#_v1_8";
+		this.setclientcookies="no";
 		this.sessionmanagement="yes";
 		this.sessiontimeout= CreateTimeSpan(0,0,60,0);
 
@@ -17,8 +17,6 @@
 		else {
 			variables.componentsPath = "components.";
 		}
-		//file explorer fix until we change file explorer
-		this.wssettings.version.publish = "1";
 	</cfscript>
 	
 	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
@@ -61,6 +59,8 @@
 			
 			<cftry>
 				<cfset request.blogManager = application.blogFacade.getMango()/>
+				<cfset request.i18n = request.blogmanager.getInternationalizer()>
+				<cfset request.blogManager.getInternationalizer().setRequest() />
 				<cfcatch type="database">
 					<cfset StructDelete(this,"onError") />
 					<cfset request.message = createObject("component",variables.componentsPath & "Message") />
@@ -74,27 +74,34 @@
 					<cfabort>
 					</cfcatch>
 			</cftry>
+
+			<cfset var authorizer = request.blogManager.getAuthorizer() />
+			<cfset authorizer.checkToken() />
 			<cfif structkeyexists(url,"logout")>
-				<cfset request.blogManager.getAuthorizer().unauthorize() />
+				<cfset authorizer.unauthorize() />
 			</cfif>
 			
 			<cfif structkeyexists(form,"login")>
-				<cfset isAuthor = request.blogManager.getAuthorizer().authorize(form.username,form.password) />
+				<cfparam name="form.remember" default="0" />
+				<cfset isAuthor = authorizer.authorize(form.username,form.password, form.remember ) />
 				<cfif NOT isAuthor>
 					<cfset request.errormsg = "Invalid login, please try again." />
 					<cfset request.username = form.username />
 				</cfif>
 			</cfif>
-			
+
 			<cfsetting showdebugoutput="false">
 			
 			<cfset blog = request.blogManager.getBlog() />
-			<cfset isAdmin = findNoCase(blog.getSetting('urls').admin,arguments.targetPage)/>
-			<cfif isAdmin AND NOT ( request.blogManager.isCurrentUserLoggedIn() AND
-					listFind(request.blogManager.getCurrentUser().getCurrentrole(blog.getId()).permissions, "access_admin") )>
+			<cfset isAdmin = findNoCase(blog.getSetting('urls').admin,arguments.targetPage) />
+			<cfif isAdmin AND ( ( NOT ( request.blogManager.isCurrentUserLoggedIn() AND
+					listFind(request.blogManager.getCurrentUser().getCurrentrole(blog.getId()).permissions, "access_admin"))) OR
+					findNoCase( 'login_forgot.cfm', arguments.targetPage ))>
 				<cfset request.administrator = request.blogManager.getAdministrator() />
-				<cfinclude template="admin/login.cfm">
-				<cfreturn false>
+				<cfif NOT findNoCase( 'login_forgot.cfm', arguments.targetPage ) AND  NOT findNoCase( 'login_reset.cfm', arguments.targetPage )>
+					<cfinclude template="admin/login.cfm">
+					<cfreturn false>
+				</cfif>
 			<cfelseif isAdmin>
 				<!--- until we get error handling in the admin, remove onError method --->
 				<cfset StructDelete(this,"onError") />
@@ -108,18 +115,7 @@
 		<cfreturn true>
 	</cffunction>
 
-<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
-	<cffunction name="onSessionEnd">
-	   <cfargument name = "SessionScope" required="true" />
-	   <cfargument name = "AppScope" required="true" />	 
-	</cffunction>	
-
-<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
-<cffunction name="onApplicationEnd" returnType="void">
-   <cfargument name="ApplicationScope" required="true" />
-</cffunction>	
-	
-<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="onError" returnType="void">
 		<cfargument name="Exception" required="true" />
 		<cfargument name="EventName" type="String" required="true"/>

@@ -1,0 +1,16 @@
+{
+  "id": "org.mangoblog.plugins.SearchIndexer",
+  "name": "Search Indexer",
+  "version": "1.2",
+  "provider": "AsFusion",
+  "class":"SearchIndexer.Indexer",
+  "description": "Manages indexes for searches. Used when searches use Verity.",
+  "requires": [
+    {
+      "engine": {
+        "version": 1.8,
+        "match": "greaterOrEqual"
+      }
+    }
+  ]
+}

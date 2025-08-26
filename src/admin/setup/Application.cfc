@@ -6,15 +6,11 @@
 	<cfscript>
 		this.name = "setup";
 		this.setclientcookies="No";
-		this.sessionmanagement="no";	
+		this.sessionmanagement="no";
+
+		this.mappings['/org/mangoblog'] = expandPath('../../')& "components";
 	</cfscript>
 	
-	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
-	<cffunction name="OnApplicationStart" output="false">
-		
-	</cffunction>
-	
-
 	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="onRequestStart" returnType="boolean" output="false">
 		<cfargument type="String" name="targetPage" required="true" />

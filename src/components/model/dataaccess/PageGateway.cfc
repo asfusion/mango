@@ -24,21 +24,25 @@
 	
 	<cfquery name="q_post" datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
 		SELECT	entry.id, entry.name, entry.title, entry.content, entry.excerpt, entry.author_id,
-				entry.comments_allowed, entry.trackbacks_allowed, entry.status, entry.last_modified, entry.blog_id,
-				author.name AS author, author.email AS author_email, entry_custom_field.id AS field_id, entry_custom_field.name AS field_name, 
+				entry.comments_allowed, entry.status, entry.last_modified, entry.blog_id,
+				author.name AS author, author.email AS author_email, entry_custom_field.id AS field_id, entry_custom_field.name AS field_name,
                 entry_custom_field.field_value AS field_value,
-				page.template, page.parent_page_id, page.hierarchy, page.sort_order
-		FROM 
-				#variables.prefix#entry_custom_field as entry_custom_field RIGHT OUTER JOIN             
-                #variables.prefix#author as author INNER JOIN
-                #variables.prefix#entry as entry ON author.id = entry.author_id INNER JOIN
-                #variables.prefix#page as page ON entry.id = page.id ON entry_custom_field.entry_id = entry.id
+				page.template, page.parent_page_id, page.hierarchy, page.sort_order,
+				COUNT(comment.id) AS comment_count
+		FROM
+			#variables.prefix#entry as entry
+			INNER JOIN #variables.prefix#author as author ON author.id = entry.author_id
+			INNER JOIN #variables.prefix#page as page ON entry.id = page.id
+			LEFT OUTER JOIN #variables.prefix#entry_custom_field as entry_custom_field ON entry.id = entry_custom_field.entry_id
+			LEFT OUTER JOIN #variables.prefix#comment as comment ON entry.id = comment.entry_id
 		WHERE entry.id = <cfqueryparam value="#arguments.id#" cfsqltype="CF_SQL_VARCHAR" maxlength="35"/>
 		<cfif NOT adminMode>
 			 AND entry.status = 'published'
 		</cfif>
+		GROUP BY page.id, entry_custom_field.id
 	</cfquery>
-	<cfreturn addCommentCount(q_post) />
+
+	<cfreturn q_post />
 </cffunction>
 
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
@@ -50,23 +54,26 @@
 
 	<cfquery name="q_pageGatewayGetAll" datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
 		SELECT	entry.id, entry.name, entry.title, entry.content, entry.excerpt, entry.author_id,
-				entry.comments_allowed, entry.trackbacks_allowed, entry.status, entry.last_modified, entry.blog_id,
+				entry.comments_allowed, entry.status, entry.last_modified, entry.blog_id,
 				author.name AS author, author.email AS author_email, entry_custom_field.id AS field_id, entry_custom_field.name AS field_name, 
                 entry_custom_field.field_value AS field_value,
-				page.template, page.parent_page_id, page.hierarchy, page.sort_order
-			FROM 
-				#variables.prefix#entry_custom_field as entry_custom_field RIGHT OUTER JOIN             
-                #variables.prefix#author as author INNER JOIN
-                #variables.prefix#entry as entry ON author.id = entry.author_id INNER JOIN
-                #variables.prefix#page as page ON entry.id = page.id ON entry_custom_field.entry_id = entry.id
-			WHERE entry.blog_id = <cfqueryparam value="#arguments.blogid#" cfsqltype="cf_sql_varchar"/>
+				page.template, page.parent_page_id, page.hierarchy, page.sort_order,
+				COUNT(comment.id) AS comment_count
+		FROM
+			#variables.prefix#entry as entry
+			INNER JOIN #variables.prefix#author as author ON author.id = entry.author_id
+			INNER JOIN #variables.prefix#page as page ON entry.id = page.id
+			LEFT OUTER JOIN #variables.prefix#entry_custom_field as entry_custom_field ON entry.id = entry_custom_field.entry_id
+			LEFT OUTER JOIN #variables.prefix#comment as comment ON entry.id = comment.entry_id
+		WHERE entry.blog_id = <cfqueryparam value="#arguments.blogid#" cfsqltype="cf_sql_varchar"/>
 		<cfif NOT adminMode>
 			 AND entry.status = 'published'
 		</cfif>
-	 ORDER BY parent_page_id,sort_order, title
+		GROUP BY page.id, entry_custom_field.id
+		ORDER BY parent_page_id,sort_order, title
 	</cfquery>
 	
-	<cfreturn addCommentCount(q_pageGatewayGetAll) />
+	<cfreturn q_pageGatewayGetAll />
 </cffunction>
 
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
@@ -79,15 +86,17 @@
 	
 	<cfquery name="q_getByParent" datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
 		SELECT	entry.id, entry.name, entry.title, entry.content, entry.excerpt, entry.author_id,
-				entry.comments_allowed, entry.trackbacks_allowed, entry.status, entry.last_modified, entry.blog_id,
-				author.name AS author, author.email AS author_email, entry_custom_field.id AS field_id, entry_custom_field.name AS field_name, 
+				entry.comments_allowed, entry.status, entry.last_modified, entry.blog_id,
+				author.name AS author, author.email AS author_email, entry_custom_field.id AS field_id, entry_custom_field.name AS field_name,
                 entry_custom_field.field_value AS field_value,
-				page.template, page.parent_page_id, page.hierarchy, page.sort_order
-			FROM 
-				#variables.prefix#entry_custom_field as entry_custom_field RIGHT OUTER JOIN             
-                #variables.prefix#author as author INNER JOIN
-                #variables.prefix#entry as entry ON author.id = entry.author_id INNER JOIN
-                #variables.prefix#page as page ON entry.id = page.id ON entry_custom_field.entry_id = entry.id
+				page.template, page.parent_page_id, page.hierarchy, page.sort_order,
+		COUNT(comment.id) AS comment_count
+		FROM
+			#variables.prefix#entry as entry
+			INNER JOIN #variables.prefix#author as author ON author.id = entry.author_id
+			INNER JOIN #variables.prefix#page as page ON entry.id = page.id
+			LEFT OUTER JOIN #variables.prefix#entry_custom_field as entry_custom_field ON entry.id = entry_custom_field.entry_id
+			LEFT OUTER JOIN #variables.prefix#comment as comment ON entry.id = comment.entry_id
 		<cfif len(arguments.parent_id)>
 		WHERE page.parent_page_id = <cfqueryparam value="#arguments.parent_id#" cfsqltype="CF_SQL_VARCHAR" maxlength="35"/>
 		<cfelse>
@@ -97,9 +106,10 @@
 			 AND entry.status = 'published'
 		</cfif>
 			AND entry.blog_id = <cfqueryparam value="#arguments.blogid#" cfsqltype="cf_sql_varchar"/>
+		GROUP BY page.id, entry_custom_field.id
 		ORDER BY sort_order, title
 	</cfquery>
-	<cfreturn addCommentCount(q_getByParent) />
+	<cfreturn q_getByParent />
 </cffunction>
 
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
@@ -159,23 +169,26 @@
 	
 	<cfquery name="q_getByName" datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
 		SELECT	entry.id, entry.name, entry.title, entry.content, entry.excerpt, entry.author_id,
-				entry.comments_allowed, entry.trackbacks_allowed, entry.status, entry.last_modified, entry.blog_id,
+				entry.comments_allowed, entry.status, entry.last_modified, entry.blog_id,
 				author.name AS author, author.email AS author_email, entry_custom_field.id AS field_id, entry_custom_field.name AS field_name, 
                 entry_custom_field.field_value AS field_value,
-				page.template, page.parent_page_id, page.hierarchy, page.sort_order
-			FROM 
-				#variables.prefix#entry_custom_field as entry_custom_field RIGHT OUTER JOIN             
-                #variables.prefix#author as author INNER JOIN
-                #variables.prefix#entry as entry ON author.id = entry.author_id INNER JOIN
-                #variables.prefix#page as page ON entry.id = page.id ON entry_custom_field.entry_id = entry.id
+				page.template, page.parent_page_id, page.hierarchy, page.sort_order,
+				COUNT(comment.id) AS comment_count
+			FROM
+				#variables.prefix#entry as entry
+				INNER JOIN #variables.prefix#author as author ON author.id = entry.author_id
+				INNER JOIN #variables.prefix#page as page ON entry.id = page.id
+				LEFT OUTER JOIN #variables.prefix#entry_custom_field as entry_custom_field ON entry.id = entry_custom_field.entry_id
+				LEFT OUTER JOIN #variables.prefix#comment as comment ON entry.id = comment.entry_id
 		WHERE entry.name = <cfqueryparam value="#arguments.name#" cfsqltype="CF_SQL_VARCHAR" maxlength="150"/>
 		AND entry.blog_id = <cfqueryparam value="#arguments.blogid#" cfsqltype="cf_sql_varchar"/>
 		<cfif NOT adminMode>
 			 AND entry.status = 'published'
 		</cfif>
+		GROUP BY page.id, entry_custom_field.id
 	</cfquery>
 
-	<cfreturn addCommentCount(q_getByName) />
+	<cfreturn q_getByName />
 </cffunction>
 	
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
@@ -187,24 +200,27 @@
 	<cfset var q_getByAuthor = "" />
 	<cfquery name="q_getByAuthor" datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
 		SELECT	entry.id, entry.name, entry.title, entry.content, entry.excerpt, entry.author_id,
-				entry.comments_allowed, entry.trackbacks_allowed, entry.status, entry.last_modified, entry.blog_id,
-				author.name AS author, author.email AS author_email, entry_custom_field.id AS field_id, entry_custom_field.name AS field_name, 
-                entry_custom_field.field_value AS field_value,
-				page.template, page.parent_page_id, page.hierarchy, page.sort_order
-			FROM 
-				#variables.prefix#entry_custom_field as entry_custom_field RIGHT OUTER JOIN             
-                #variables.prefix#author as author INNER JOIN
-                #variables.prefix#entry as entry ON author.id = entry.author_id INNER JOIN
-                #variables.prefix#page as page ON entry.id = page.id ON entry_custom_field.entry_id = entry.id
+			entry.comments_allowed, entry.status, entry.last_modified, entry.blog_id,
+			author.name AS author, author.email AS author_email, entry_custom_field.id AS field_id, entry_custom_field.name AS field_name,
+			entry_custom_field.field_value AS field_value,
+			page.template, page.parent_page_id, page.hierarchy, page.sort_order,
+			COUNT(comment.id) AS comment_count
+			FROM
+			#variables.prefix#entry as entry
+			INNER JOIN #variables.prefix#author as author ON author.id = entry.author_id
+			INNER JOIN #variables.prefix#page as page ON entry.id = page.id
+			LEFT OUTER JOIN #variables.prefix#entry_custom_field as entry_custom_field ON entry.id = entry_custom_field.entry_id
+			LEFT OUTER JOIN #variables.prefix#comment as comment ON entry.id = comment.entry_id
 		WHERE entry.blog_id =  <cfqueryparam value="#arguments.blogid#" cfsqltype="cf_sql_varchar"/>
 		AND entry.author_id = <cfqueryparam value="#arguments.author_id#" cfsqltype="cf_sql_varchar" maxlength="35"/>
 		<cfif NOT adminMode>
 			 AND entry.status = 'published'
 		</cfif>
+		GROUP BY page.id, entry_custom_field.id
 		ORDER BY sort_order, title
 	</cfquery>
 
-	<cfreturn addCommentCount(q_getByAuthor) />
+	<cfreturn q_getByAuthor/>
 </cffunction>
 
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
@@ -217,16 +233,11 @@
 	<cfset var q_getByCustomField  = "">
 	
 	<cfquery name="q_getByCustomField" datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
-		SELECT	entry.id, entry.name, entry.title, entry.content, entry.excerpt, entry.author_id,
-				entry.comments_allowed, entry.trackbacks_allowed, entry.status, entry.last_modified, entry.blog_id,
-				author.name AS author, author.email AS author_email, entry_custom_field.id AS field_id, entry_custom_field.name AS field_name, 
-                entry_custom_field.field_value AS field_value,
-				page.template, page.parent_page_id, page.hierarchy, page.sort_order
-			FROM 
-				#variables.prefix#entry_custom_field as entry_custom_field RIGHT OUTER JOIN
-                #variables.prefix#author as author INNER JOIN
-                #variables.prefix#entry as entry ON author.id = entry.author_id INNER JOIN
-                #variables.prefix#page as page ON entry.id = page.id ON entry_custom_field.entry_id = entry.id
+		SELECT	entry.id
+		FROM
+				#variables.prefix#entry as entry
+			INNER JOIN #variables.prefix#page as page ON entry.id = page.id
+			LEFT OUTER JOIN #variables.prefix#entry_custom_field as entry_custom_field ON entry.id = entry_custom_field.entry_id
 		WHERE entry.blog_id =  <cfqueryparam value="#arguments.blogid#" cfsqltype="cf_sql_varchar"/>
 		AND entry_custom_field.id = <cfqueryparam value="#arguments.customField#" cfsqltype="cf_sql_varchar" maxlength="255" />
 		<cfif len(arguments.customFieldValue)>
@@ -235,10 +246,9 @@
 		<cfif NOT adminMode>
 			 AND entry.status = 'published'
 		</cfif>
-		ORDER BY sort_order, title
 	</cfquery>
 
-	<cfreturn addCommentCount(q_getByCustomField) />
+	<cfreturn getByIds( valueList( q_getByCustomField.id )) />
 </cffunction>
 
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
@@ -255,7 +265,7 @@
 	
 	<cfquery name="q_post" datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
 		SELECT	entry.id, entry.name, entry.title, entry.content, entry.excerpt, entry.author_id,
-				entry.comments_allowed, entry.trackbacks_allowed, entry.status, entry.last_modified, entry.blog_id,
+				entry.comments_allowed, entry.status, entry.last_modified, entry.blog_id,
 				author.name AS author, author.email AS author_email, entry_custom_field.id AS field_id, entry_custom_field.name AS field_name, 
                 entry_custom_field.field_value AS field_value
 			FROM 
@@ -276,5 +286,43 @@
 
 	<cfreturn addCommentCount(q_post) />
    </cffunction>
+
+<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<cffunction name="getByIds" output="false" hint="Gets all the records" access="public" returntype="query">
+		<cfargument name="idslist" required="false" default="" type="string" hint="list with ids"/>
+		<cfargument name="idsQuery" required="false" default="#querynew("key")#" type="query" hint="query with ids (key)"/>
+
+		<cfset var q_getByIds = "" />
+		<cfset var ids = "" />
+
+		<cfif len(arguments.idsList)>
+			<cfset ids = arguments.idsList />
+		<cfelse>
+			<cfset ids = valueList(arguments.idsQuery.key) />
+		</cfif>
+<!--- prevent the IN clause to fail if the ids where empty --->
+		<cfif NOT listlen(ids)>
+			<cfset ids = "0" />
+		</cfif>
+		<cfquery name="q_getByIds" datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
+			SELECT	entry.id, entry.name, entry.title, entry.content, entry.excerpt, entry.author_id,
+			entry.comments_allowed, entry.status, entry.last_modified, entry.blog_id,
+			author.name AS author, author.email AS author_email, entry_custom_field.id AS field_id, entry_custom_field.name AS field_name,
+			entry_custom_field.field_value AS field_value,
+			page.template, page.parent_page_id, page.hierarchy, page.sort_order,
+			COUNT(comment.id) AS comment_count
+			FROM
+				#variables.prefix#entry as entry
+				INNER JOIN #variables.prefix#author as author ON author.id = entry.author_id
+				INNER JOIN #variables.prefix#page as page ON entry.id = page.id
+				LEFT OUTER JOIN #variables.prefix#entry_custom_field as entry_custom_field ON entry.id = entry_custom_field.entry_id
+				LEFT OUTER JOIN #variables.prefix#comment as comment ON entry.id = comment.entry_id
+			WHERE entry.id IN (<cfqueryparam value="#ids#" list="true" />)
+			GROUP BY page.id, entry_custom_field.id
+			ORDER BY sort_order, title
+		</cfquery>
+
+		<cfreturn q_getByIds />
+	</cffunction>
 
 </cfcomponent>

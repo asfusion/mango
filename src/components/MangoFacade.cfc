@@ -23,7 +23,9 @@
 		<cfelse>
 			<cfthrow type="MissingConfigFile" errorcode="MissingConfigFile" detail="Configuration file could not be read">
 		</cfif>
-		
+
+		<cfset arguments.id = preferences.get("/","id", arguments.id ) />
+
 		<cfset facadeComponent = preferences.get("generalSettings/facade","component",'') />
 		<cfif NOT len(facadeComponent)>
 			<cfset variables.configFile = arguments.configFile />

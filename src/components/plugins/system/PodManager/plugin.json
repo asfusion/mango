@@ -1,0 +1,16 @@
+{
+  "id": "mangoblog.plugins.PodManager",
+  "name": "Pod Manager",
+  "version": "1.2",
+  "provider": "AsFusion",
+  "class":"PodManager.Handler",
+  "description": "Manages pods",
+  "requires": [
+    {
+      "engine": {
+        "version": 1.8,
+        "match": "greaterOrEqual"
+      }
+    }
+  ]
+}

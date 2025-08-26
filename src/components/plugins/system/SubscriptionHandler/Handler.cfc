@@ -1,7 +1,19 @@
-<cfcomponent>
+<cfcomponent extends="org.mangoblog.plugins.BasePlugin">
 		
 	<cfset variables.id = "org.mangoblog.plugins.SubscriptionHandler">
 	<cfset variables.package = "org/mangoblog/plugins/SubscriptionHandler"/>
+
+	<cfset this.events =
+		[ { 'name' = 'afterCommentAdd', 'type' = 'async', 'priority' = '5' },
+	{ 'name' = 'afterCommentUpdate', 'type' = 'async', 'priority' = '5' },
+	{ 'name' = 'beforeCommentAdd', 'type' = 'sync', 'priority' = '5' },
+	{ 'name' = 'subscriptionSettings', 'type' = 'sync', 'priority' = '5' },
+	{ 'name' = 'applySubscriptionSettings', 'type' = 'sync', 'priority' = '5' },
+	{ 'name' = 'sendDigestSubscriptions', 'type' = 'async', 'priority' = '100' },
+	{ 'name' = 'settingsNav', 'type' = 'sync', 'priority' = '5' },
+	{ 'name' = 'showSubscriptionsHandlerSettings', 'type' = 'sync', 'priority' = '5' }
+		] />
+
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="init" access="public" output="false" returntype="any">
 		<cfargument name="mainManager" type="any" required="true" />
@@ -14,29 +26,6 @@
 		<cfreturn this/>
 	</cffunction>
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
-	<cffunction name="getName" access="public" output="false" returntype="string">
-		<cfreturn variables.name />
-	</cffunction>
-
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
-	<cffunction name="setName" access="public" output="false" returntype="void">
-		<cfargument name="name" type="string" required="true" />
-		<cfset variables.name = arguments.name />
-	</cffunction>
-
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
-	<cffunction name="getId" access="public" output="false" returntype="any">
-		<cfreturn variables.id />
-	</cffunction>
-
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
-	<cffunction name="setId" access="public" output="false" returntype="void">
-		<cfargument name="id" type="any" required="true" />
-		<cfset variables.id = arguments.id />
-		<cfset variables.package = replace(variables.id,".","/","all") />
-	</cffunction>
-	
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="setup" hint="This is run when a plugin is activated" access="public" output="false" returntype="boolean">
 		<cfset var blogUrl = variables.manager.getBlog().getUrl() />
@@ -103,8 +92,7 @@
 					<cfset postid = comment.getEntryId()>
 					<cfset addresses = gateway.getByEntry(postid,"comments","instant") />
 					<cfset authorGateway = variables.manager.getAuthorsManager() />
-					
-					
+
 					<cftry>
 					<cfset thisEntry = variables.manager.getPostsmanager().getPostById(postid)>
 					<cfset found = true />

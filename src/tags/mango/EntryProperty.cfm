@@ -1,0 +1,156 @@
+<cfsetting enablecfoutputonly="true">
+<!--- common tag for both pages and posts, can be used outside a page or post and won't error out but neither output anything --->
+<cfparam name="attributes.id" default="false">
+<cfparam name="attributes.name" default="false">
+<cfparam name="attributes.title" default="false">
+<cfparam name="attributes.body" default="false">
+<cfparam name="attributes.excerpt" default="false">
+<cfparam name="attributes.commentcount" default="false">
+<cfparam name="attributes.link" default="false">
+<cfparam name="attributes.permalink" default="false">
+<cfparam name="attributes.customfield" default="">
+
+<!--- IF attributes --->
+<cfparam name="attributes.ifcommentsallowed" default="false">
+<cfparam name="attributes.ifnotcommentsallowed" default="false">
+<cfparam name="attributes.ifhasExcerpt" default="false">
+<cfparam name="attributes.ifnothasExcerpt" default="false">
+<cfparam name="attributes.ifCommentCountGT" type="string" default="">
+<cfparam name="attributes.ifCommentCountLT" type="string" default="">
+<cfparam name="attributes.ifHasCustomField" type="string" default="">
+<cfparam name="attributes.ifNotHasCustomField" type="string" default="">
+<cfparam name="attributes.ifCustomFieldEQ" type="string" default="">
+<cfparam name="attributes.ifIsPage" type="string" default="">
+<cfparam name="attributes.ifIsPost" type="string" default="">
+
+<cfparam name="attributes.format" default="default">
+<cfparam name="attributes.includeBasePath" default="true">
+
+<cfif thisTag.executionmode is 'start'>
+	<cfscript>function ParagraphFormat2(str) {
+//first make Windows style into Unix style
+		str = replace(str,chr(13)&chr(10),chr(10),"ALL");
+//now make Macintosh style into Unix style
+		str = replace(str,chr(13),chr(10),"ALL");
+//now fix tabs
+		str = replace(str,chr(9),"&nbsp;&nbsp;&nbsp;","ALL");
+//now return the text formatted in HTML
+		return replace(str,chr(10),"<br />","ALL");
+	}</cfscript>
+
+<cfif attributes.format EQ "default">
+	<cfif attributes.body OR attributes.excerpt OR attributes.link>
+		<cfset attributes.format = 'plain' />
+	<cfelse>
+		<cfset attributes.format = 'escapedHtml' />
+	</cfif>
+</cfif>
+
+<cfset ancestorlist = getbasetaglist() />
+
+<cfif listfindnocase( ancestorlist,"cf_post" )>
+	<cfset data = getBaseTagData( "cf_post", 1 ) />
+	<cfset currentPost = data.currentPost />
+<cfelseif listfindnocase( ancestorlist,"cf_page" )>
+	<cfset data = GetBaseTagData("cf_page",1)/>
+	<cfset currentPost = data.currentPage />
+<cfelse>
+	<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
+</cfif>
+
+<cfset prop = "" />
+
+	<cfif attributes.ifhasExcerpt AND NOT len(currentPost.getExcerpt())>
+		<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
+	</cfif>
+	
+	<cfif attributes.ifnothasExcerpt AND len(currentPost.getExcerpt())>
+		<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
+	</cfif>			
+	
+	<cfif attributes.ifcommentsallowed AND NOT currentPost.getCommentsAllowed()>
+		<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
+	</cfif>
+	
+	<cfif attributes.ifnotcommentsallowed AND currentPost.getCommentsAllowed()>
+		<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
+	</cfif>
+	
+	<cfif len(attributes.ifCommentCountGT) AND currentPost.getCommentCount() LTE attributes.ifCommentCountGT>
+		<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
+	</cfif>
+	
+	<cfif len(attributes.ifCommentCountLT) AND currentPost.getCommentCount() GTE attributes.ifCommentCountLT>
+		<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
+	</cfif>
+	
+	<cfif len(attributes.ifHasCustomField) AND NOT currentPost.customFieldExists(attributes.ifHasCustomField)>
+		<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
+	</cfif>
+	
+	<cfif len(attributes.ifNotHasCustomField) AND currentPost.customFieldExists(attributes.ifNotHasCustomField)>
+		<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
+	</cfif>
+	
+	<cfif len(attributes.ifCustomFieldEQ) AND (NOT currentPost.customFieldExists(attributes.ifHasCustomField) 
+			OR currentPost.getCustomField(attributes.ifHasCustomField).value NEQ attributes.ifCustomFieldEQ)>
+		<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
+	</cfif>
+	
+	<cfif attributes.title>		
+		<cfset prop = currentPost.getTitle() />
+	</cfif>
+	
+	<cfif attributes.body>				
+		<cfset prop = currentPost.getContent() />
+	</cfif>
+	
+	<cfif attributes.permalink>				
+		<cfset prop = currentPost.getPermalink() />
+	</cfif>
+	
+	<cfif attributes.commentcount>
+		<cfset prop = currentPost.getCommentCount() />
+	</cfif>
+	
+	<cfif attributes.id>
+		<cfset prop = currentPost.getId() />
+	</cfif>
+	
+	<cfif attributes.name>
+		<cfset prop = currentPost.getName() />
+	</cfif>
+	
+	<cfif attributes.excerpt>
+		<cfset prop = currentPost.getExcerpt() />
+	</cfif>
+	
+	<cfif attributes.link>
+		<cfset prop = currentPost.getUrl() />
+		<cfif attributes.includeBasePath>
+			<cfif NOT structkeyexists(request, "blog_basepath")>
+				<cfif NOT structkeyexists(request,"blog")>
+					<cfset request.blog = request.blogManager.getBlog()/>
+				</cfif>
+				<cfset request.blog_basepath = request.blog.getBasePath() />
+			</cfif>
+			<cfset prop = request.blog_basepath & prop/>
+		</cfif>
+	</cfif>
+	
+	<cfif len(attributes.customfield)>
+		<cfif currentPost.customFieldExists(attributes.customfield)>
+		<cfset prop = currentPost.getCustomField(attributes.customfield).value />
+		</cfif>
+	</cfif>
+
+	<cfif attributes.format EQ "paragraph">
+		<cfset prop = ParagraphFormat2( prop ) />
+		<cfelseif attributes.format EQ "escapedHtml">
+		<cfset prop = htmleditformat( prop )>
+	</cfif>
+	<cfoutput>#prop#</cfoutput>
+
+</cfif>
+
+<cfsetting enablecfoutputonly="false">

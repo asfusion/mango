@@ -389,7 +389,7 @@
 
 <!---::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
 <!--- Edit functions --->
-	<cffunction name="addPage" access="package" output="false" returntype="struct">
+	<cffunction name="addPage" access="public" output="false" returntype="struct">
 		<cfargument name="page" required="true" type="any">
 		<cfargument name="rawData" required="true" type="struct">
 		<cfargument name="user" required="false" type="any">
@@ -612,7 +612,7 @@
 	</cffunction>
 
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
-	<cffunction name="editCustomField" access="package" output="false" returntype="any">
+	<cffunction name="editCustomField" access="public" output="false" returntype="any">
 		<cfargument name="pageId" required="true" type="any">
 		<cfargument name="customField" required="true" type="struct">
 		

@@ -1,8 +1,8 @@
 <cfcomponent output="false">
 
 	<cfproperty name="label" type="string" />
-	<cfproperty name="entryType" type="string" default="post" />
-	<cfproperty name="showInMenu" type="string" default="secondary" />
+	<cfproperty name="type" type="string" default="post" />
+	<cfproperty name="showInMenu" type="string" default="primary" />
 	<cfproperty name="template" type="string" />
 	<cfproperty name="link" type="string" />
 	<cfproperty name="order" type="numeric" default="1" />
@@ -12,25 +12,26 @@
 	<cfscript>
 		this.id = "";
 		this.label = "";
-		this.entryType = "post";
-		this.showInMenu = "secondary";
+		this.type = "post";
+		this.showInMenu = "primary";//primary, secondary, newitem
 		this.standardFields = structnew();
 		this.customFields = arraynew(1);
 		this.address = "";
 		this.order = 1;
 		this.icon = '';
-		this.goTo = "list";	
+		this.iconImage = '';
+		this.goTo = "list";	//list, new
 		this.template = '';
 		this.requiresPermission = '';
 	</cfscript>
 	
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="init" access="public" output="false" returntype="any">		
-		<cfargument name="entryType" type="string" default="post" />
+		<cfargument name="type" type="string" default="post" />
 		
 		<cfscript>
-			this.entryType = arguments.entryType;
-			if (this.entryType EQ 'post')
+			this.type = arguments.type;
+			if (this.type EQ 'post')
 				this.label = 'Posts';
 			else
 				this.label = 'Pages';
@@ -49,7 +50,7 @@
 			this.standardFields['excerpt'].value = '';
 			this.standardFields['comments_allowed'] = structnew();
 			this.standardFields['comments_allowed'].show = true;
-			this.standardFields['comments_allowed'].value = this.entryType EQ 'post';
+			this.standardFields['comments_allowed'].value = this.type EQ 'post';
 			this.standardFields['status'] = structnew();
 			this.standardFields['status'].show = true;
 			this.standardFields['status'].value = 'published';
@@ -75,13 +76,6 @@
 		<cfreturn this />
 	</cffunction>
 
-
-<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
-	<cffunction name="serializeToXML" access="public" output="false" returntype="xml">
-
-		<cfreturn />
-	</cffunction>
-
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="initFromXML" access="public" output="false" returntype="void">
 		<cfargument name="xml" type="String" required="true" />
@@ -94,12 +88,17 @@
 		<cftry>
 			<cfset xmlData = xmlparse(xml).customPanel />
 			<cfset this.id = xmlData.xmlAttributes.id />
-			<cfset this.entryType = xmlData.xmlAttributes.type />
+			<cfset this.type = xmlData.xmlAttributes.type />
 			<cfset this.showInMenu = xmlData.xmlAttributes.showInMenu />
 			<cfset this.order = xmlData.xmlAttributes.order />
 			<cfset this.goTo = xmlData.xmlAttributes.goTo />
 			<cfset this.label = xmlData.xmlAttributes.label />
-			<cfset this.icon = xmlData.xmlAttributes.icon />
+			<cfif structKeyExists( xmlData.xmlAttributes, 'icon' )>
+				<cfset this.icon = xmlData.xmlAttributes.icon />
+			</cfif>
+			<cfif structKeyExists( xmlData.xmlAttributes, 'iconImage' )>
+				<cfset this.iconImage = xmlData.xmlAttributes.iconImage />
+			</cfif>
 			
 			<cfif structkeyexists(xmlData.xmlAttributes, 'requiresPermission')>
 				<cfset this.requiresPermission = xmlData.xmlAttributes.requiresPermission />
@@ -140,7 +139,7 @@
 			</cfloop>
 			
 			<cfif NOT len(this.address)>
-				<cfset this.address = this.entryType />
+				<cfset this.address = this.type />
 				<cfif this.goTo EQ "list">
 					<cfset this.address = this.address & "s">
 				</cfif>
@@ -150,6 +149,22 @@
 			</cftry>
 		<cfreturn />
 	</cffunction>
+
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+	<cffunction name="initFromJson" access="public" output="false" returntype="void">
+		<cfargument name="panel" type="struct" required="true" />
+
+		<cfset structAppend( this, panel, true )/>
+		<cfif NOT len(this.address )>
+			<cfset this.address = this.type />
+			<cfif this.goTo EQ "list">
+				<cfset this.address = this.address & "s">
+			</cfif>
+			<cfset this.address = "#this.address#.cfm?panel=#this.id#&amp;owner=#this.id#" />
+		</cfif>
+		<cfreturn />
+	</cffunction>
+
 
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="getShowFields" access="public" output="false" returntype="string">
@@ -170,13 +185,14 @@
 			var myClone = createObject('component','AdminCustomPanel');
 			myClone.id = this.id;
 			myClone.label = this.label;
-			myClone.entryType = this.entryType;
+			myClone.type = this.type;
 			myClone.showInMenu = this.showInMenu;
 			myClone.standardFields = duplicate(this.standardFields);
 			myClone.customFields = duplicate(this.customFields);
 			myClone.address = this.address;
 			myClone.order = this.order;
 			myClone.icon = this.icon;
+			myClone.iconImage = this.iconImage;
 			myClone.goTo = this.goTo;
 			myClone.template = this.template;
 			

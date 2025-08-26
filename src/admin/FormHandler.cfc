@@ -300,7 +300,14 @@
 			<cfset data.user = variables.user />
 					
 			<cfset result = variables.administrator.editBlog(argumentCollection=data) />
-			
+
+		<!--- now save admin settings --->
+			<cfset variables.administrator.saveSetting( 'system/admin/htmleditor', 'editor', formFields.editor ) />
+		<cfset variables.administrator.saveSetting( 'system/admin/posts/fields', 'customfields', structKeyExists( formFields, 'post_customfield' ) ? '1' : '0' ) />
+		<cfset variables.administrator.saveSetting( 'system/admin/pages/fields', 'customfields', structKeyExists( formFields, 'page_customfield' ) ? '1' : '0' ) />
+		<cfset variables.administrator.saveSetting( 'system/admin/pages/fields', 'name', structKeyExists( formFields, 'page_name' ) ? '1' : '0'  ) />
+		<cfset variables.administrator.saveSetting( 'system/admin/posts/fields', 'name', structKeyExists( formFields, 'post_name' ) ? '1' : '0'  ) />
+
 		<cfreturn result/>
 	</cffunction>	
 
@@ -595,5 +602,203 @@
 		
 		<cfreturn result/>
 	</cffunction>
+
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+	<cffunction name="handleEditSkinSettings" access="public" output="false" returntype="Any">
+		<cfargument name="formFields" type="struct" required="false" />
+
+		<cfset var result = {} />
+		<cfset var i = "" />
+
+		<cfloop from="1" to="#formFields.total_fields#" index="i">
+			<cfif structKeyExists( formFields, 'setting_#i#_path' ) AND structKeyExists( formFields, 'setting_#i#_key' )>
+				<!--- save the value --->
+			<cfif structKeyExists( formFields, 'setting_#i#_value' ) AND len( formFields[ 'setting_#i#_value' ])>
+				<cfset result = variables.administrator.saveSetting( formFields[ 'setting_#i#_path' ],  formFields[ 'setting_#i#_key' ],  formFields[ 'setting_#i#_value' ] ) />
+			<cfelseif NOT structKeyExists( formFields, 'setting_#i#_value' ) AND
+					formFields[ 'setting_#i#_type' ] EQ "switch">
+				<cfset result = variables.administrator.saveSetting( formFields[ 'setting_#i#_path' ],  formFields[ 'setting_#i#_key' ], 0 ) />
+			<cfelse>
+				<cfset result = variables.administrator.removeSetting( formFields[ 'setting_#i#_path' ],  formFields[ 'setting_#i#_key' ] )>
+			</cfif>
+			</cfif>
+		</cfloop>
+		<cfset result.message.setStatus( "success" ) />
+		<cfset result.message.setText( "Settings updated" ) />
+		<cfreturn result/>
+	</cffunction>
+
+	<cfscript>
+		// ---------------------------------------------------------
+		function handleEditPageBlocks( formFields, delete = ''  ) {
+
+			var pageId = arguments.formFields.id;
+
+			data.rawData = arguments.formFields;
+			var blocks = prepareBlocksForSave( formFields, delete );
+			var result = variables.administrator.setPageCustomField( pageId, { 'key' = 'blocks',
+				name = 'Blocks', value = serializeJSON( blocks )  } );
+			result.blocks = blocks;
+			return result;
+		}
+
+// ---------------------------------------------------------
+		function handleEditPageBlocksParsed( pageId, blocks ) {
+
+			return variables.administrator.setPageCustomField( pageId, { 'key' = 'blocks',
+				name = 'Blocks', value = serializeJSON( blocks )  } );
+		}
+
+		// ---------------------------------------------------------
+		function handleEditTemplateBlocks( formFields, delete = '' ) {
+
+			var pageId = arguments.formFields.id;
+			data.rawData = arguments.formFields;
+			var result = variables.administrator.saveTemplateBlocks( pageId, prepareBlocksForSave( formFields, delete ));
+			result.message.setStatus( "success" );
+			result.message.setText( "Settings updated" );
+
+			return result;
+		}
+
+		//------------------------------------------------
+		private function prepareBlocksForSave( formFields, delete = '' ) {
+
+			//add all blocks first, then populate
+			var blocks = [];
+			var usedBlocks = {};
+			for ( var i = 1; i LTE formFields.block_count; i++ ){
+				var blockId = formFields[ 'block_' & i & '_id' ];
+				var activeName = 'block_' & i & '_active';
+				var active = structKeyExists( formFields, activeName ) ? formFields[ activeName ] : false;//really if the form field is there it is active, but we are doing a double check
+				var block = { "id": blockId, "values": {}, "active" = active, 'internalId' = i };
+				if ( NOT structKeyExists( usedBlocks, blockId )){
+					usedBlocks[ blockId ] = 0;
+				}
+				usedBlocks[ blockId ] = usedBlocks[ blockId ] + 1;
+				arrayAppend( blocks, block );
+			}
+
+			var allPaths = [];
+			for ( var key in formFields ){
+				if ( findNoCase( '_path', key )){
+					arrayAppend( allPaths, left( key, len( key ) - 5 ) );
+				}
+			}
+			for ( var path in allPaths ){
+				var levels = quotedListToArray( formFields[ path & '_path' ] );
+				var baseStruct = blocks[ levels[ 1 ]];
+				arrayDeleteAt( levels, 1 );
+				arrayDeleteAt( levels, 1 );
+
+				var newElement = makeElement( baseStruct.values, levels, formFields[ path & '_value' ], baseStruct.values );
+			}
+
+			var orderedBlocks = [];
+			//reorder based on order field
+			var newIndex = 1;
+			for ( var item in formFields[ 'order' ]){
+				orderedBlocks[ newIndex ] = blocks[ item ];
+				newIndex++;
+			}
+			for ( var block in orderedBlocks ){
+				var hadValues = cleanUpValues( block.values );
+				if ( block.internalId EQ delete ){
+					arraydelete( orderedBlocks, block );
+				}
+				structdelete( block, 'internalId' );
+			}
+
+			return orderedBlocks;
+		}
+
+/**
+* Converts elements in a quoted list to an array.
+*
+* @param theList      The list to parse. (Required)
+* @return Returns an array.
+* @author Anthony Cooper (ant@outsrc.co.uk)
+* @version 1, January 3, 2007
+*/
+		function quotedListToArray(theList) {
+			var items = arrayNew( 1 );
+			var i = 1;
+			var start = 1;
+			var search = structNew();
+			var quoteChar = """";
+
+			while(start LT len(theList)) {
+				search = reFind('(\#quoteChar#.*?\#quoteChar#)|([0-9\.]*)', theList, start, true );
+
+				if (arrayLen(search.LEN) gt 1) {
+					items[i] = mid(theList, search.POS[1], (search.LEN[1])); //Extract string
+					items[i] = reReplace(items[i], '^\#quoteChar#|\#quoteChar#$', "", "All" );     //Remove double quote character
+					start = search.POS[1] + search.LEN[1] + 1;
+					i = i + 1;
+				}
+				else {
+					start = Len( theList );
+				}
+			}
+
+			return items;
+		}
+
+		function makeElement( baseStruct, levels, value ){
+
+			var level = levels[ 1 ];
+			var child = {};
+
+			var hasChildren = arraylen( levels ) GT 1;
+			if ( hasChildren AND isnumeric( levels[ 2 ] )){
+				child = [];
+			}
+
+			if ( hasChildren ){
+				if ( NOT isnumeric( level ) AND NOT structKeyExists( baseStruct, level )){
+					baseStruct[ level ] = child;
+				}
+				if ( isnumeric( level )){
+					if ( isarray(baseStruct) AND arraylen( baseStruct) LT level OR isNull( baseStruct[ level ] ))
+						baseStruct[ level ] = child;
+				}
+				arrayDeleteAt( levels, 1 );
+
+				if ( arraylen( levels )){
+					child = makeElement( baseStruct[ level ], levels, value );
+				}
+			}
+			else {
+				baseStruct[ level ] = value;
+			}
+			return baseStruct;
+		}
+
+		// ------------------------------------------------------------
+		function cleanUpValues( fields ){
+
+			var hasValues = false;
+			for ( var key in fields ) {
+				if ( NOT isArray( fields[ key ] ) ){
+					if ( len( fields[ key ] )){
+						hasValues = true;
+					}
+				}
+				else {
+					if ( arraylen( fields[ key ] ) GT 0 ){
+						for ( var i = arraylen( fields[ key ] ); i GT 0; i--) {
+
+							hasValues = cleanUpValues( fields[ key ][ i ] );
+							if ( not hasValues){
+								arrayDeleteAt( fields[ key ], i );
+							}
+						}
+					}
+				}
+			}
+
+			return hasValues;
+		}
+	</cfscript>
 
 </cfcomponent>

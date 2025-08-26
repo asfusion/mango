@@ -102,12 +102,26 @@
 		</cfif>
 	</cffunction>
 
+<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+	<cffunction name="getAuthorByEmail" access="public" output="false" returntype="any">
+		<cfargument name="email" type="string" required="true" />
+
+		<cfset var authorQuery = variables.accessObject.getByemail( arguments.email ) />
+		<cfset var authors =  packageObjects(authorQuery, 1, 0, false )  />
+
+		<cfif authorQuery.recordcount>
+			<cfreturn authors[1]/>
+		<cfelse>
+			<cfreturn variables.objectFactory.createAuthor()  />
+		</cfif>
+	</cffunction>
+
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
 	<cffunction name="checkCredentials" access="public" output="false" returntype="boolean">	
 		<cfargument name="username" type="string" required="true" />
 		<cfargument name="password" type="string" required="true" />
 		
-		<cfset var authorQuery = variables.accessObject.getByUsername(arguments.username) />
+		<cfset var authorQuery = variables.accessObject.getByUsernameOrEmail(arguments.username) />
 		<cfreturn authorQuery.recordcount AND 
 					authorQuery.password EQ hash(authorQuery.id & arguments.password,"SHA")
 					AND authorQuery.active />
@@ -314,6 +328,14 @@
 		<cfset returnObj.message = message />
 
 		<cfreturn returnObj />
+	</cffunction>
+
+<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+	<cffunction name="updatePassword" access="public" output="false">
+		<cfargument name="id" type="string" required="true" />
+		<cfargument name="password" type="string" required="true" />
+
+		<cfreturn variables.daoObject.updatePassword( arguments.id, arguments.password ) />
 	</cffunction>
 
 </cfcomponent>

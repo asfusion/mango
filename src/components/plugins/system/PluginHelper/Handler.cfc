@@ -1,11 +1,30 @@
-<cfcomponent extends="BasePlugin">
+<cfcomponent extends="org.mangoblog.plugins.BasePlugin">
 
+	<cfset this.events = [
+	{ 'name' = 'pluginLoaded', 'type' = 'async', 'priority' = '100' },
+	{ 'name' = 'mainPagesNav', 'type' = 'sync', 'priority' = '5' },
+	{	'name' = 'mainPostsNav', 'type' = 'sync', 'priority' = '5' },
+	{	'name' = 'pagesNav', 'type' = 'sync', 'priority' = '5' },
+	{	'name' = 'postsNav', 'type' = 'sync', 'priority' = '5' },
+	{	'name' = 'mainNav', 'type' = 'sync', 'priority' = '5' }
+		] />
 <cfset variables.queues = structnew() />
 <cfset variables.queues["post"] = createobject("component","Queue") />
 <cfset variables.queues["page"] = createobject("component","Queue") />
 <cfset variables.queues["secondarypage"] = createobject("component","Queue") />
 <cfset variables.queues["secondarypost"] = createobject("component","Queue") />
-			
+
+	<cffunction name="init" access="public" output="false" returntype="any">
+		<cfargument name="mainManager" type="any" required="true" />
+		<cfargument name="preferences" type="any" required="true" />
+
+		<cfset super.init(arguments.mainManager, arguments.preferences) />
+		<cfset initSkinPanels() />
+
+		<cfreturn this/>
+	</cffunction>
+
+
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
 	<cffunction name="handleEvent" hint="Asynchronous event handling" access="public" output="false" returntype="any">
 		<cfargument name="event" type="any" required="true" />
@@ -26,14 +45,15 @@
 				<cffile action="read" file="#local.pluginPath##data.pluginDescriptor.customPanels[local.i].xmlFile#" variable="local.xml">
 				<cfset local.panel = local.factory.createAdminCustomPanel() />
 				<cfset local.panel.initFromXML(local.xml) />
-				<cfif len(local.panel.icon)>
-					<cfset local.panel.icon = local.path & data.pluginDescriptor.package & "/" & local.panel.icon />
+				<cfif len(local.panel.iconImage)>
+					<cfset local.panel.iconImage = local.path & data.pluginDescriptor.package & "/" & local.panel.iconImage />
 				</cfif>
+
 				<cfset local.admin.addCustomPanel(local.panel) />
 				<cfif local.panel.showInMenu EQ "primary">
-					<cfset variables.queues[local.panel.entryType].addElement(local.panel, -local.panel.order) />
+					<cfset variables.queues[local.panel.type].addElement(local.panel, -local.panel.order) />
 				<cfelseif local.panel.showInMenu EQ "secondary">
-					<cfset variables.queues['secondary' & local.panel.entryType].addElement(local.panel, -local.panel.order) />
+					<cfset variables.queues['secondary' & local.panel.type].addElement(local.panel, -local.panel.order) />
 				</cfif>
 				
 			</cfloop>
@@ -68,11 +88,8 @@
 				<cfloop from="1" to="#arraylen(local.elements)#" index="local.i">
 					<cfif NOT len(local.elements[local.i].requiresPermission) OR (len(local.elements[local.i].requiresPermission) AND 
 						listfind(manager.getCurrentUser().getCurrentrole(manager.getBlog().getId()).permissions, local.elements[local.i].requiresPermission))>
-						<cfset local.link = structnew() />
-						<cfset local.link.owner = local.elements[local.i].id />
-						<cfset local.link.address = local.elements[local.i].address />
-						<cfset local.link.title = local.elements[local.i].label />
-						<cfset local.link.icon = local.elements[local.i].icon />
+						<cfset local.link = { 'owner' = local.elements[local.i].id, 'address' = local.elements[local.i].address,
+								title = local.elements[local.i].label, icon = local.elements[local.i].icon  } />
 						<cfset arguments.event.addLink(local.link)>
 					</cfif>
 				</cfloop>
@@ -83,5 +100,19 @@
 		<cfreturn arguments.event />
 		
 	</cffunction>
+
+	<cfscript>
+		private function initSkinPanels(){
+			var admin = getManager().getAdministrator();
+			var panels = admin.getCustomPanels();
+			for ( var panelId in panels ){//it's a struct
+				var panel = panels[ panelId ];
+				if ( panel.showInMenu EQ "primary" )
+					variables.queues[ panel.type ].addElement( panel, -panel.order );
+				else if ( panel.showInMenu EQ "secondary" )
+					variables.queues['secondary' & panel.type].addElement( panel, -panel.order );
+			}
+		}
+	</cfscript>
 
 </cfcomponent>

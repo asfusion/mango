@@ -7,20 +7,20 @@
 <cfif thisTag.executionMode EQ "start">	
 	
 	<cfswitch expression="#attributes.type#">
-			<cfcase value="month">				
-				<cfset items = request.blogManager.getArchivesManager().getMonthlyArchives()/>
-				<cfset archiveType = "month" />
-			</cfcase>
-			<cfcase value="year">				
-				<cfset items = request.blogManager.getArchivesManager().getYearlyArchives()/>
-				<cfset archiveType = "year" />
-			</cfcase>
-			<cfcase value="day">				
-				<cfset items = request.blogManager.getArchivesManager().getDailyArchives()/>
-				<cfset archiveType = "day" />
-			</cfcase>
-		</cfswitch>
-		
+		<cfcase value="month">
+			<cfset items = request.blogManager.getArchivesManager().getMonthlyArchives()/>
+			<cfset archiveType = "month" />
+		</cfcase>
+		<cfcase value="year">
+			<cfset items = request.blogManager.getArchivesManager().getYearlyArchives()/>
+			<cfset archiveType = "year" />
+		</cfcase>
+		<cfcase value="day">
+			<cfset items = request.blogManager.getArchivesManager().getDailyArchives()/>
+			<cfset archiveType = "day" />
+		</cfcase>
+	</cfswitch>
+
 	 <cfif attributes.count EQ -1>
 		<cfset attributes.count = arraylen(items) />
 	</cfif>

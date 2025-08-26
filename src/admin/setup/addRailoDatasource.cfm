@@ -20,8 +20,8 @@
 		<cfset var sDSN  = "jdbc:sqlserver://{host}:{port}">
 
 	<cfelseif arguments.dbType EQ "mysql">
-		<cfset var sClassName="org.gjt.mm.mysql.Driver">
-		<cfset var sPort = "3306">
+		<cfset var sClassName="com.mysql.cj.jdbc.Driver">
+		<cfset var sPort = "#arguments.port#">
 		<cfset var sDSN  = "jdbc:mysql://{host}:{port}/{database}">
 	</cfif>
 
@@ -30,6 +30,7 @@
 		type="web"
 		password="#arguments.cfadminpassword#"
 		name = "#arguments.datasourcename#"
+		newname = "#arguments.datasourcename#"
 		dsn = "#sDSN#"
 		host = "#arguments.host#"
 		database = "#arguments.dbName#"

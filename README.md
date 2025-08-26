@@ -12,7 +12,7 @@ If you want to download Mango, please use the [zip file](http://mangoblog.riafor
 
 ### Mango Blog is licensed under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html)
 
-Copyright 2012 Laura Arguello
+Copyright 2025 Laura Arguello
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use the files in this package except in compliance with the License. You may obtain a copy of the License at 
 

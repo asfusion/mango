@@ -19,7 +19,7 @@
 		<cfset var qCreate="">
 
 		<cfquery name="qCreate" datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
-			insert into #variables.prefix#blog(id, title, description, tagline, skin, url, charset, basePath)
+			insert into #variables.prefix#blog(id, title, description, tagline, skin, url, charset, basePath, locale )
 			values (
 				<cfqueryparam value="#arguments.bean.getid()#" cfsqltype="CF_SQL_VARCHAR">,
 				<cfqueryparam value="#arguments.bean.gettitle()#" cfsqltype="CF_SQL_VARCHAR" maxlength="150" />,
@@ -28,7 +28,8 @@
 				<cfqueryparam value="#arguments.bean.getskin()#" cfsqltype="CF_SQL_VARCHAR" maxlength="100" />,
 				<cfqueryparam value="#arguments.bean.geturl()#" cfsqltype="CF_SQL_VARCHAR" maxlength="255" />,
 				<cfqueryparam value="#arguments.bean.getcharset()#" cfsqltype="CF_SQL_VARCHAR" maxlength="50" />,
-				<cfqueryparam value="#arguments.bean.getbasePath()#" cfsqltype="CF_SQL_VARCHAR" maxlength="255" />
+				<cfqueryparam value="#arguments.bean.getbasePath()#" cfsqltype="CF_SQL_VARCHAR" maxlength="255" />,
+				<cfqueryparam value="#arguments.bean.getLocale()#" cfsqltype="CF_SQL_VARCHAR" maxlength="10" />
 			)
 		</cfquery>
 
@@ -56,6 +57,7 @@
 				skin = <cfqueryparam value="#arguments.bean.getskin()#" cfsqltype="CF_SQL_VARCHAR" />,
 				url = <cfqueryparam value="#arguments.bean.geturl()#" cfsqltype="CF_SQL_VARCHAR" />,
 				charset = <cfqueryparam value="#arguments.bean.getcharset()#" cfsqltype="CF_SQL_VARCHAR" />,
+				locale = <cfqueryparam value="#arguments.bean.getLocale()#" cfsqltype="CF_SQL_VARCHAR" />,
 				basePath = <cfqueryparam value="#arguments.bean.getbasePath()#" cfsqltype="CF_SQL_VARCHAR" />
 			where id = <cfqueryparam value="#arguments.bean.getid()#" cfsqltype="CF_SQL_VARCHAR">
 		</cfquery>

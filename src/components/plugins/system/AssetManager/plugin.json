@@ -1,0 +1,16 @@
+{
+  "id": "org.mangoblog.plugins.AssetManager",
+  "name": "AssetManager",
+  "version": "1.3",
+  "provider": "AsFusion",
+  "class":"AssetManager.Handler",
+  "description": "Adds utilities for assets such as auto-thumbnail creation",
+  "requires": [
+    {
+    "engine": {
+      "version": 1.8,
+      "match": "greaterOrEqual"
+     }
+  }
+  ]
+}

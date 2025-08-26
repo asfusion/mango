@@ -17,7 +17,7 @@
 
 
 $(function(){
-	
+
 	/*
 	 * ==========================================================================
 	 * For each field that has a hint, set up a help icon to show/hide the hint;
@@ -45,10 +45,10 @@ $(function(){
 	 * ==========================================================================
 	 * Add a "required" text label to all required fields
 	 */
-	$('.required','form').each(function(){
+	/* $('.required','form').each(function(){
 		var id = $(this).attr('id');
 		if (id.length) $('label[for='+id+']').append(' <span>(required)</span>');
-	});
+	});*/
 	
 	/*
 	 * ==========================================================================
@@ -102,7 +102,7 @@ $(function(){
 			error.appendTo(element.parents('p'));
 		}
 	});
-	
+
 	try {
 		validator.focusInvalid = function(){
 			// put focus on tinymce on submit validation
@@ -122,7 +122,7 @@ $(function(){
 			}
 		}
 	} catch (e) {}
-	
+
 	/*
 	 * ==========================================================================
 	 * Additional form validation method for URLs which allows domains such as 'localhost'
@@ -156,6 +156,33 @@ $(function(){
 	$('input','form').each(function(){
 		$(this).addClass($(this).attr('type'));
 	});
+
+
+	$('#filesOpenButton').on('click', function(e){
+		e.preventDefault();console.log('here' + $(this).attr('href'));
+		$('#filesModal').find('.modal-body').load($(this).attr('href'));
+	});
+
+
+	//dragablle
+	var containers = document.querySelectorAll(".draggable-zone");
+
+	var swappable = new Sortable.default(containers, {
+		draggable: ".draggable",
+		handle: ".draggable .draggable-handle",
+		mirror: {
+			appendTo: "body",
+			constrainDimensions: true
+		}
+	});
+
+	swappable.on('sortable:stop', (event) => {
+		const order = document.querySelector("[name=order]");
+		const orderitems = order.value.split(',').filter(element => element.length);
+		array_move(orderitems, event.oldIndex, event.newIndex);
+		order.value = orderitems.join(","); //set the new value in order hidden field.
+	});
+
 });
 
 
@@ -195,45 +222,47 @@ function addLoadEvent(func) {
  * Module to handle assetSelector functionality
  */
 var mango = mango || {};
-	mango.assetSelectorInputName = '';
-	mango.dialogDefined = false;
+mango.assetSelectorInputName = '';
+mango.dialogDefined = false;
+mango.assetDialog;
 
 	mango.addAssetSelectors = function(){
-		//make sure jQuery is available
-		if (typeof(jQuery) == 'undefined'){ alert('mango.addAssetSelectors: Can\'t find jQuery!'); return; }
 		//find each occurrence of <input class="assetSelector">
+
 		$("input.assetSelector").each(function(){
 			var fldname = $(this)[0].name;
 			var newimgid = 'assetSelector_' + fldname;
-			$(this).after('<img src="assets/images/icons/folder_explore.png" id="' + newimgid + '" style="border:0;margin:0 0 0 5px;position:relative;top:3px;" />');
-			
-			$('#' + newimgid).css("cursor", "pointer").click(function(){
-				mango.assetSelectorInputName = fldname;
-				$("#assetSelector").dialog("open");
-				$("#assetSelector").load('assetSelector.cfm?initialPath=' + 
-					escape($("input[name=" + fldname + "]")[0].value) + 
-					' #flashWidget');
+			var newbuttonid = 'button_files_' + fldname;
+
+			$(this).before(
+				'<span class="input-group-text" id="' + newbuttonid + '" ' +
+				'class="btn btn-white d-inline-flex align-items-center" data-bs-toggle="modal" ' +
+			'data-bs-target="#filesModal" href="filemanager/files-modal.cfm?input=' + fldname + '"><i class="bi bi-paperclip"></i> Choose</span>');
+
+			$('#' + newbuttonid).click(function(){
+				$('#filesModal').find('.modal-body').load($(this).attr('href'));
 				return false;
 			});
-			
-			//only define the dialog window once, not once per assetSelector on the page
-			if (!mango.dialogDefined) {
-				$('#assetSelector').dialog({
-					autoOpen: false,
-					width: 770,
-					height: 500,
-					title: "Choose a file..."
-				});
-				mango.dialogDefined = true;
-			}
-
 		});
 	};
 	
-	mango.assetSelectorCallback = function(valu){
-		$("input[name=" + mango.assetSelectorInputName + "]")[0].value = valu;
-		$("#assetSelector").dialog("close");
+	mango.assetSelectorCallback = function(input, valu){
+		$("input[name=" + input + "]")[0].value = valu;
+		$('#filesModal').modal('hide');
 	};
+
+let iconLookup = {
+	zip: 'bi-file-zip',
+	doc: 'bi-file-word',
+	html: 'bi-filetype-html',
+	js: 'bi-filetype-js',
+	pdf: 'bi-file-pdf',
+	txt: 'bi bi-filetype-txt',
+	mp3: 'bi-file-music',
+	avi: 'bi-file-play',
+	mp4: 'bi-file-play'
+
+}
 
 //add an event to run the assetSelector script on page load 
 addLoadEvent(mango.addAssetSelectors);

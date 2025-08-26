@@ -20,57 +20,83 @@
 	<cfset preferences = currentRole.preferences.get("admin","menuItems","") />
 
 </cfsilent>
-<cf_layout page="Users" title="Users">
-<div id="wrapper">
+<cf_layout page="Users" title="#request.i18n.getValue("Users")#">
 <cfif listfind(currentRole.permissions, "manage_users")>
-	<div id="submenucontainer">
-		<ul id="submenu">
-			<cfoutput><li><a href="author.cfm?profile=1">My Profile</a></li></cfoutput>
-			<cfif NOT len(preferences) OR listfind(preferences,"users_new")>
-			<li><a href="author.cfm">New User</a></li>
-			</cfif>
-			<cfif NOT len(preferences) OR listfind(preferences,"users_edit")>
-			<li><a href="authors.cfm" class="current">Edit User</a></li>
-			</cfif>
-			<cfif NOT len(preferences) OR listfind(preferences,"roles")>
-			<li><a href="roles.cfm">Roles</a></li>
-			</cfif>
-			<mangoAdmin:MenuEvent name="authorsNav" />
-		</ul>
-	</div>
-	
-	<div id="content">
-		<h2 class="pageTitle">All Users
-		<span class="search">Search users: <form class="inline-form" action="authors.cfm">
-			<input name="search" id="search"/></form>
-		</span></h2>	
+	<cfoutput>
+		<cfif len(message)><div class="alert alert-success" role="alert">#message#</div></cfif>
+		<cfif len(error)><div class="alert alert-danger" role="alert">#error#</div></cfif>
 
-		<div id="innercontent">
-		<cfif len(error)>
-			<p class="error"><cfoutput>#error#</cfoutput></p>
+	<nav class="nav navbar-dashboard navbar-dark flex-column flex-sm-row mb-4">
+		<a href="author.cfm?profile=1" class="nav-link">#request.i18n.getValue("My Profile")#</a>
+	<cfif listfind(currentRole.permissions, "manage_users")>
+		<cfif NOT len(preferences) OR listfind(preferences,"users_edit")>
+			<a class="nav-link active" href="authors.cfm">#request.i18n.getValue("Users")#</a>
 		</cfif>
-		<cfif len(message)>
-			<p class="message"><cfoutput>#message#</cfoutput></p>
+		<cfif NOT len(preferences) OR listfind(preferences,"roles")>
+				<a class="nav-link" href="roles.cfm">#request.i18n.getValue("Roles")#</a>
 		</cfif>
-		
-		<cfoutput>
-		<div class="pagingLinks">
-			<cfif page NEQ 0>&lt; <a href="authors.cfm?search=#search#&page=#page-1#">Previous</a></cfif>
-			<cfif hasNextPage>&nbsp;&nbsp;<a href="authors.cfm?search=#search#&page=#page+1#">Next </a> &gt;</cfif>
+			<mangoAdmin:MenuEvent name="authorsNav" />
+	</cfif>
+	</nav>
+
+	<div class="table-settings my-4">
+		<div class="row align-items-center justify-content-between">
+		<div class="col-4 col-md-2">
+		<cfif NOT len(preferences) OR listfind(preferences,"users_new")>
+				<button class="btn btn-secondary" type="button"><a href="author.cfm"><i class="bi bi-plus"></i>#request.i18n.getValue("New User")#</a></button>
+		</cfif>
 		</div>
-		<p class="buttonBar"><a href="author.cfm" class="editButton">Create New User</a></p>
-		<table cellspacing="0">
-			<tr><th class="buttonColumn">Edit</th><th>Name</th><th>Email</th><th>Role</th><th>Active</th></tr>
-			<cfloop from="1" to="#arraylen(authors)#" index="i">
-				<tr>
-					<td <cfif NOT i mod 2>class="alternate"</cfif>><a href="author.cfm?id=#authors[i].getId()#" class="editButton">Edit</a></td>
-					<td <cfif NOT i mod 2>class="alternate"</cfif>>#xmlformat(authors[i].getName())#</td>
-					<td <cfif NOT i mod 2>class="alternate"</cfif>>#xmlformat(authors[i].getEmail())#</td>
-					<td <cfif NOT i mod 2>class="alternate"</cfif>>#xmlformat(authors[i].getCurrentRole(currentBlogId).name)#</td>
-					<td <cfif NOT i mod 2>class="alternate"</cfif>><cfif NOT authors[i].active>Not </cfif>Active</td>
-				</tr>
-			</cfloop>
-		</table>
+
+			<div class="col col-md-6 col-lg-3 col-xl-4">
+				<form action="authors.cfm">
+					<div class="input-group me-2 me-lg-3 fmxw-400">
+						<span class="input-group-text"> <i class="bi bi-search icon icon-xs"></i> </span>
+						<input type="text" class="form-control" placeholder="Search users" name="search" id="search">
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+	<h4 class="h4">#request.i18n.getValue("All Users")#</h4>
+
+	<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
+	<div class="card card-body border-0 shadow table-wrapper table-responsive">
+	<table class="table table-hover">
+		<thead>
+		<tr>
+			<th>#request.i18n.getValue("Name")#</th>
+			<th>#request.i18n.getValue("Email")#</th>
+			<th>#request.i18n.getValue("Role")#</th>
+			<th>#request.i18n.getValue("Active")#</th>
+			<th class="border-gray-200">#request.i18n.getValue("Actions")#</th>
+		</tr>
+		</thead>
+	<tbody>
+	<!-- Item -->
+	<cfloop from="1" to="#arraylen(authors)#" index="i">
+		<tr>
+
+			<td><a href="author.cfm?id=#authors[i].getId()#" >#xmlformat(authors[i].getName())#</a></td>
+			<td >#xmlformat(authors[i].getEmail())#</td>
+			<td>#xmlformat(authors[i].getCurrentRole(currentBlogId).name)#</td>
+			<td><cfif NOT authors[i].active>#request.i18n.getValue("Not Active")#<cfelse>#request.i18n.getValue("Active")#</cfif></td>
+			<td>
+				<a href="author.cfm?id=#authors[i].getId()#" class="editButton">#request.i18n.getValue("Edit")#</a>
+			</td>
+			</td>
+		</tr>
+	</cfloop>
+
+	</tbody>
+	</table>
+
+	</div>
+	</div>
+
+
+
+
+
 		<div class="pagingLinks">
 			<cfif page NEQ 0>&lt; <a href="authors.cfm?search=#search#&page=#page-1#">Previous</a></cfif>
 			<cfif hasNextPage>&nbsp;&nbsp;<a href="authors.cfm?search=#search#&page=#page+1#">Next </a> &gt;</cfif>
@@ -80,9 +106,7 @@
 		</div>
 	</div>
 	<cfelse><!--- not authorized --->
-<div id="content"><div id="innercontent">
-<p class="infomessage">Your role does not allow you to manage users</p>
-</div></div>
+	<div class="alert alert-info" role="alert">Your role does not allow you to manage users</div>
 </cfif>
-</div>
+
 </cf_layout>

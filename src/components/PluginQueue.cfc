@@ -46,7 +46,7 @@
 	<cffunction name="addListener" access="public" output="false" returntype="boolean">
 		<cfargument name="plugin" type="any" required="true" /><!--- type any just because we are not using mappings, so we cannot extend from Plugin --->
 		<cfargument name="eventName" type="string" required="true" />
-		<cfargument name="eventType" type="string" required="false" default="synch" hint="synch/asynch" />
+		<cfargument name="eventType" type="string" required="false" default="synch" hint="sync/async" />
 		<cfargument name="priority" type="any" required="false" default="5" />
 		
 		<cfset var id = arguments.plugin.getId() />
@@ -94,7 +94,7 @@
 				
 				<cfloop from="1" to="#arraylen(allPlugins)#" index="i">
 					<cfset thisPlugin = allPlugins[i].plugin />
-					<cfif allPlugins[i].eventType EQ "synch">
+					<cfif allPlugins[i].eventType EQ "synch" OR allPlugins[i].eventType EQ "sync">
 						<cftry>
 							<cfset arguments.event = thisPlugin.processEvent(arguments.event) />
 							<cfcatch type="any">
@@ -108,7 +108,7 @@
 						<cfif NOT arguments.event.continueProcess>
 							<cfbreak>
 						</cfif>
-					<cfelseif allPlugins[i].eventType EQ "asynch">
+					<cfelseif allPlugins[i].eventType EQ "asynch" OR allPlugins[i].eventType EQ "async">
 						<cftry>
 							<cfset thisPlugin.handleEvent(arguments.event) />
 						<cfcatch type="any">

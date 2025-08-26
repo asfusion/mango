@@ -135,10 +135,11 @@ CREATE TABLE #prefix#blog (
 	skin varchar (100) NULL ,
 	url varchar (255) NULL ,
 	charset varchar (50) NULL ,
+    locale varchar (10) NULL ,
 	basePath varchar (255) NULL,
 	plugins nvarchar(max),
   	systemplugins nvarchar(max)
-) 
+)
 
 CREATE TABLE #prefix#author_blog (
 	author_id varchar (35) NOT NULL ,
@@ -150,11 +151,30 @@ CREATE TABLE #prefix#setting (
   path nvarchar(255) NOT NULL default '',
   name nvarchar(100) NOT NULL default '',
   [value] nvarchar(max),
-  blog_id varchar(50) default ''
+  blog_id varchar(50) default '',
+    [type] varchar( 10 ) default 'string'
 )
 
 CREATE  INDEX IX_#prefix#setting_path ON #prefix#setting(path)
 CREATE  INDEX IX_#prefix#setting_blog ON #prefix#setting(blog_id)
+
+
+CREATE TABLE #prefix#login_key (
+    id varchar(35) NOT NULL DEFAULT '',
+    user_id varchar(35) DEFAULT NULL,
+    user_type varchar(10) DEFAULT NULL,
+    last_visit_on datetime DEFAULT NULL,
+    PRIMARY KEY (id)
+    )
+
+
+CREATE TABLE #prefix#login_password_reset (
+    id varchar(40) NOT NULL DEFAULT '',
+    user_id varchar(40) DEFAULT NULL,
+    valid tinyint DEFAULT NULL,
+    created_on datetime DEFAULT NULL,
+    PRIMARY KEY (id)
+
 
 CREATE TABLE #prefix#category (
 	id varchar (35) NOT NULL ,
@@ -174,7 +194,6 @@ CREATE TABLE #prefix#entry (
 	excerpt nvarchar(max) NULL ,
 	author_id varchar (35) NULL ,
 	comments_allowed bit NULL ,
-	trackbacks_allowed bit NULL ,
 	status varchar (50) NULL ,
 	last_modified smalldatetime NULL ,
 	blog_id varchar (50) NULL 
@@ -228,7 +247,7 @@ CREATE TABLE #prefix#media (
 	thumbnail varchar (255) NULL ,
 	media_group varchar (35) NULL ,
 	copyright varchar (50) NULL 
-) 
+);
 
 CREATE TABLE #prefix#page (
 	id varchar (35)  NOT NULL ,
@@ -236,29 +255,17 @@ CREATE TABLE #prefix#page (
 	parent_page_id varchar (35)  NULL ,
 	hierarchy  nvarchar(max)  NULL ,
 	sort_order int NULL 
-) 
-
+);
 
 CREATE TABLE #prefix#post (
 	id varchar (35)  NOT NULL ,
 	posted_on datetime NOT NULL 
-) 
-
-CREATE TABLE #prefix#trackback (
-	id varchar (35) NOT NULL ,
-	entry_id varchar (35) NULL ,
-	content nvarchar(max) NULL ,
-	title nvarchar (200) NULL ,
-	creator_url nvarchar (255) NULL ,
-  creator_url_title nvarchar (50) NULL ,
-	created_on smalldatetime NULL ,
-	approved bit NULL 
-) 
+);
 
 CREATE TABLE #prefix#post_category (
 	post_id varchar (35)  NOT NULL ,
 	category_id varchar (35) NOT NULL 
-) 
+);
 
 CREATE TABLE #prefix#entry_revision (
   id varchar(35) NOT NULL,
@@ -271,9 +278,9 @@ CREATE TABLE #prefix#entry_revision (
   last_modified smalldatetime default NULL,
   entry_type varchar(10) default NULL,
   CONSTRAINT PK_#prefix#entry_revision PRIMARY KEY(id)
-)
+);
 
-CREATE  INDEX IX_#prefix#entry_revision ON #prefix#entry_revision(entry_id)
+CREATE  INDEX IX_#prefix#entry_revision ON #prefix#entry_revision(entry_id);
 
 
 
@@ -561,12 +568,12 @@ UNION ALL	SELECT 'system/assets', 'path', 'assets/content/', NULL
 UNION ALL	SELECT 'system/mail', 'server','',NULL
 UNION ALL	SELECT 'system/mail', 'username','',NULL
 UNION ALL	SELECT 'system/mail', 'password','',NULL
-UNION ALL	SELECT 'system/urls', 'searchUrl','archives.cfm/search/',NULL
-UNION ALL	SELECT 'system/urls', 'postUrl','post.cfm/{postName}',NULL
+UNION ALL	SELECT 'system/urls', 'searchUrl','archives.cfm',NULL
+UNION ALL	SELECT 'system/urls', 'postUrl','post.cfm?entry={postName}',NULL
 UNION ALL	SELECT 'system/urls', 'authorUrl','author.cfm/{authorAlias}',NULL
 UNION ALL	SELECT 'system/urls', 'categoryUrl','archives.cfm/category/{categoryName}',NULL
 UNION ALL	SELECT 'system/urls', 'archivesUrl','archives.cfm/',NULL
-UNION ALL	SELECT 'system/urls', 'pageUrl','page.cfm/{pageHierarchyNames}{pageName}',NULL
+UNION ALL	SELECT 'system/urls', 'pageUrl','page.cfm?entry={pageHierarchyNames}{pageName}',NULL
 UNION ALL	SELECT 'system/urls', 'atomUrl','feeds/atom.cfm',NULL
 UNION ALL	SELECT 'system/urls', 'rssUrl','feeds/rss.cfm',NULL
 UNION ALL	SELECT 'system/urls', 'apiUrl','api',NULL
@@ -581,5 +588,9 @@ UNION ALL	SELECT 'system/plugins', 'directory','{componentsDirectory}plugins/',N
 UNION ALL	SELECT 'system/plugins', 'path','plugins.',NULL
 UNION ALL	SELECT 'system/skins', 'path','',NULL
 UNION ALL	SELECT 'system/skins', 'url','',NULL
-UNION ALL 	SELECT 'system/admin/htmleditor', 'editor','ckeditor',NULL
+UNION ALL 	SELECT 'system/admin/htmleditor', 'editor','tinymce','default'
+UNION ALL 	SELECT 'system/admin/pages/fields', 'customfields','0','default'
+UNION ALL 	SELECT 'system/admin/pages/fields', 'name','0','default'
+UNION ALL 	SELECT 'system/admin/posts/fields', 'customfields','0','default'
+UNION ALL 	SELECT 'system/admin/posts/fields', 'name','0','default'
 </cfquery>

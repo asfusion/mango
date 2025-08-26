@@ -1,5 +1,7 @@
 <cfcomponent>
 
+	<cfset variables.cache = {} />
+
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="init" access="public" output="false" returntype="any">
 		<cfargument name="mainApp" required="true" type="any">
@@ -16,8 +18,9 @@
 	<cffunction name="get" access="public" output="false" returntype="any" hint="Returns the value associated with the specified key in this preference node. Returns the specified default if there is no value associated with the key.">
 		<cfargument name="pathName" type="String" required="false" hint="Path to preference node" />
 		<cfargument name="key" type="String" required="true" hint="key whose associated value is to be returned" />
-		<cfargument name="default" type="String" required="false" default="" hint="the value to be returned in the event that this preference node has no value associated with key" />
+		<cfargument name="default" type="any" required="false" default="" hint="the value to be returned in the event that this preference node has no value associated with key" />
 		<cfargument name="blog" type="String" required="false" hint="Blog id" />
+		<cfargument name="cache" type="boolean" required="false" default="false" hint="Allow the value to be cached and use cached values" />
 		
 			<cfset var preference = arguments.default />
 			<cfset var blogId = variables.blogid />
@@ -26,13 +29,25 @@
 			<cfif structkeyexists(arguments, "blog")>
 				<cfset blogId = arguments.blog />
 			</cfif>
-			
-			<!--- get it from database if it exists --->
-			<cfset storedPreference = variables.accessObject.getById(arguments.pathName, arguments.key, blogId) />
+
+			<cfif arguments.cache AND structkeyexists( variables.cache, arguments.pathName & "/" & arguments.key )>
+				<cfset preference = variables.cache[ arguments.pathName & "/" & arguments.key ] />
+			<cfelse>
+	<!--- get it from database if it exists --->
+			<cfset storedPreference = variables.accessObject.getById( arguments.pathName, arguments.key, blogId ) />
 			<cfif storedPreference.recordcount>
-				<cfset preference = storedPreference.value />
+					<cfif storedPreference.type EQ "json" AND isJSON( storedPreference.value )>
+						<cfset storedPreference.value = deserializeJSON( storedPreference.value ) />
+					</cfif>
+					<cfset preference = storedPreference.value />
+
+					<cfif arguments.cache>
+	<!--- store in cache if allowed --->
+						<cfset variables.cache[ arguments.pathName & "/" & arguments.key ] = preference />
+					</cfif>
+				</cfif>
 			</cfif>
-			
+
 		<cfreturn preference />
 	</cffunction>
 
@@ -49,7 +64,8 @@
 		</cfif>
 			
 		<cfset variables.daoObject.delete(arguments.pathName, arguments.key, blogId) />
-					
+		<cfset structDelete( variables.cache, arguments.pathName & "/" & arguments.key ) />
+
 		<cfreturn />
 	</cffunction>
 
@@ -71,11 +87,12 @@
 
 	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
 	<cffunction name="put" access="public" output="false" returntype="void" hint="Associates the specified value with the specified key in the given preference node">
-		<cfargument name="pathName" type="String" required="false" hint="Path to preference node" />
-		<cfargument name="key" type="String" required="true" hint="Key with which the specified value is to be associated." />
-		<cfargument name="value" type="String" required="false" hint="Value to be associated with the specified key" />
-		<cfargument name="blog" type="String" required="false" hint="Blog id" />
-		
+		<cfargument name="pathName" type="string" required="false" hint="Path to preference node" />
+		<cfargument name="key" type="string" required="true" hint="Key with which the specified value is to be associated." />
+		<cfargument name="value" type="string" required="false" hint="Value to be associated with the specified key" />
+		<cfargument name="blog" type="string" required="false" hint="Blog id" />
+		<cfargument name="type" type="string" required="false" default="string" hint="other possible value is json, which will be deserialize on retrieval" />
+
 		<cfset var blogId = variables.blogid />
 		<cfset var exists = false />
 		
@@ -85,11 +102,12 @@
 		
 		<cfset exists = variables.accessObject.getById(arguments.pathName, arguments.key, blogId) />
 		<cfif NOT exists.recordcount>
-			<cfset variables.daoObject.create(arguments.pathName, arguments.key, arguments.value, blogId) />
+			<cfset variables.daoObject.create( arguments.pathName, arguments.key, arguments.value, blogId, type ) />
 		<cfelse>
-			<cfset variables.daoObject.update(arguments.pathName, arguments.key, arguments.value, blogId) />
+			<cfset variables.daoObject.update( arguments.pathName, arguments.key, arguments.value, blogId ) />
 		</cfif>
-			
+
+		<cfset structDelete( variables.cache, arguments.pathName & "/" & arguments.key ) />
 	</cffunction>
 
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->

@@ -615,14 +615,6 @@ author_email, author_url})
 					else
 						result["mt_allow_comments"] = "(int) 0";
 					
-					/* @TODO
-					trackbacks not yet implemented
-					if (page.trackbacks_allowed) {
-						result["mt_allow_pings"] = "(int) 1";
-					}
-					else {
-						result["mt_allow_pings"] = "(int) 0";
-					} */
 					result["mt_allow_pings"] = "(int) 0";
 					
 					result["categories"] = arraynew(1);

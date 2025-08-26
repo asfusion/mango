@@ -32,7 +32,9 @@
 		<cfset currentItemCount = 1 />
 		<cfset total = 1 />
 	</cfif>
-	
+
+	<cfset currentEntry = currentPost />
+
 	<cfif attributes.ifCurrentIsOdd AND NOT currentItemCount mod 2>
 			<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
 	</cfif>

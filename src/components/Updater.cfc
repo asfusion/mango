@@ -15,51 +15,23 @@
 	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="downloadSkin" access="public" output="false" returntype="struct">
 		<cfargument name="skin" type="String" required="true" />
-			<cfset var ftp = "" />
-			<cfset var connection = "" />
 			<cfset var skinInfo = "" />
-			<cfset var exists = "">
 			<cfset var skinsDir = variables.blogManager.getBlog().getSetting('skins').directory />
-			<cfset var result = structnew()/>
+			<cfset var result = {} />
 			
 			<cfset result.message = createObject("component","Message") />
-					
 			<cfset result.message.setstatus("success") />
 			<cfset result.message.setText("Skin downloaded and available to use") />
 			
 			<cftry>
+				<cfhttp url="https://services.mangoblog.org/skins/#arguments.skin#?engineVersion=#variables.blogManager.getVersion()#" method="get" result="serviceResult" charset="utf-8" />
+				<cfset content = serviceResult.filecontent>
+				<cfset data = deserializeJSON( content ) />
+				<cfset skinInfo = data.data />
+
 				<!--- check if this skin is compatible --->
-				<cfinvoke webservice="http://update.mangoblog.org/services/Update.cfc?wsdl" method="getSkinInfo" timeout="5" returnvariable="skinInfo"><cfinvokeargument name="skin" value="#arguments.skin#"></cfinvoke>
 				<cfif versionCompare(skinInfo.requiresVersion, variables.blogManager.getVersion()) LT 1>
-					<!--- try to get ftp data from web service --->
-					<cfinvoke webservice="http://update.mangoblog.org/services/Update.cfc?wsdl" method="getSkinFTP" timeout="5" returnvariable="ftp">
-					
-					<cftry>
-						<!--- try simple download->unzip route --->
-						<cfset httpDownload(skinInfo.downloadUrl, skinsDir & arguments.skin & "/")>
-					
-						<cfcatch type="any">
-							<cftry>
-								<!--- try ftp --->
-								<!--- open connection and check if it exists --->
-									<cfftp connection="connection" server="#ftp.server#"  username="#ftp.username#" 
-								password="#ftp.password#" stoponerror="Yes" action="open" passive="true">
-									<cfftp action="existsdir" directory="#ftp.directory##arguments.skin#" connection="connection" result="exists">
-									<cfif exists.returnValue>
-										<!--- download it and  save skin in skin directory --->
-										<cfset ftpcopy(ftp.server, ftp.username, ftp.password, "#ftp.directory##arguments.skin#", skinsDir) />
-									<cfelse>
-										<cfset result.message.setstatus("error") />
-										<cfset result.message.setText("Selected skin cannot be found.") />
-									</cfif>
-									
-								<cfcatch type="any"><!--- didn't work out either --->
-									<cfset result.message.setstatus("ftp_error") />
-									<cfset result.message.setText(skinInfo.downloadUrl) />
-								</cfcatch>
-							</cftry>
-						</cfcatch>
-					</cftry>
+						<cfset httpDownload( skinInfo.downloadUrl, skinsDir & arguments.skin & "/")>
 				<cfelse>
 					<cfset result.message.setstatus("error") />
 					<cfset result.message.setText("Selected skin requires a newer version of Mango Blog than the one it is installed.") />
@@ -99,11 +71,6 @@
 							<cfthrow type="plugin" message="Unable to create temp directory." />
 						</cfcatch>
 					</cftry>
-				</cfif>
-				
-				<!--- Hack to get past RIAForge's download redirecting --->
-				<cfif REFindNoCase("\.riaforge\.org/index\.cfm\?event=action\.download$",arguments.pluginUrl)>
-					<cfset arguments.pluginUrl = arguments.pluginUrl & "&doit=true" />
 				</cfif>
 				
 				<!--- Download the zip file --->
@@ -258,15 +225,10 @@
 		<cfset var message = "">
 		
 		<cftry>
-			<cfinvoke webservice="http://update.mangoblog.org/services/Update.cfc?wsdl" 
-						method="getCurrentVersionNumber" timeout="5" returnvariable="latestVersion">
-
-			<cfif versionCompare(latestVersion, variables.blogManager.getVersion()) EQ 1>
-				<cfinvoke webservice="http://update.mangoblog.org/services/Update.cfc?wsdl" method="getUpdateInstructions" timeout="10" returnvariable="message">
-					<cfinvokeargument name="version" value="#variables.blogManager.getVersion()#">
-				</cfinvoke>
-			</cfif>
-			
+			<cfhttp url="https://services.mangoblog.org/updates/check?engineVersion=#variables.blogManager.getVersion()#" method="get" result="result" charset="utf-8" />
+			<cfset var content = result.filecontent>
+			<cfset var data = deserializeJSON( content ) />
+			<cfset message = data.data />
 			<cfcatch type="any"></cfcatch>
 		</cftry>
 		
@@ -293,11 +255,11 @@
 			</cfif>
 			
 			<!--- call Mango services to get the upgrade plan --->
-			<cfinvoke webservice="http://update.mangoblog.org/services/Update.cfc?wsdl" method="getUpdatePlan" 
-						timeout="10" returnvariable="updatePlan">
-				<cfinvokeargument name="version" value="#variables.blogManager.getVersion()#">
-				<cfinvokeargument name="serverInfo" value="#serverVersion#">
-			</cfinvoke>
+			<cfhttp url="https://services.mangoblog.org/updates?engineVersion=#variables.blogManager.getVersion()#" method="get" result="result" charset="utf-8" />
+			<cfset var content = result.filecontent>
+			<cfset var data = deserializeJSON( content ) />
+			<cfset updatePlan = data.data />
+
 				
 			<cfloop from="1" to="#arraylen(updatePlan)#" index="i">
 			<p>	<strong>Updating to version #updatePlan[i].updatesToVersion#</strong><br /><br /></p>
@@ -344,7 +306,7 @@
 					
 		<cfset result.message.setstatus("success") />
 		<cfset result.message.setText('<br /><strong>Updated done!</strong><br />
-		You will now be logged out. <a href="index.cfm">Click here to continue</a>.') />
+		You will now be logged out. <a href="files.cfm">Click here to continue</a>.') />
 		
 		<cftry>
 			<p>Downloading files... 
@@ -410,38 +372,37 @@
 	</cffunction>
 
 	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
-	<cffunction name="httpDownload" access="private" output="false">
+	<cffunction name="httpDownload" access="private" output="true">
 		<cfargument name="zipAddress" required="true" type="any">
 		<cfargument name="localdir" required="true" type="string">
 		<cfargument name="isZip" required="false" type="boolean" default="true">
 		
-		<cfset var tempdir = GetDirectoryFromPath(GetCurrentTemplatePath()) & "temp/">
+		<cfset var tempdir = gettempdirectory()>
 		<cfset var zip = "" />
 		<cfset var filename = listlast(zipaddress,"/") />
+		<cfset var downloadresult = {} />
 		
-		<cfif NOT directoryexists(tempdir)>
-			<cfdirectory action="create" directory="#tempdir#">
+		<cfhttp url="#arguments.zipAddress#" method="get" path="#tempdir#" file="#filename#" result="downloadresult">
+		<cfif downloadresult.status_code EQ "200">
+			<cfif NOT directoryexists(localdir)>
+				<cfdirectory action="create" directory="#localdir#">
+			</cfif>
+
+			<cfif arguments.isZip>
+				<cfset unzipFile(tempdir & filename, localdir) />
+			<cfelse><!--- not a zip file, simply copy it to the destination directory --->
+				<cffile action="copy" source="#tempdir##filename#" destination="#localdir#">
+			</cfif>
+
+			<!--- delete the zip file --->
+			<cftry>
+				<!--- if we did everything but couldn't delete the zip, no big deal --->
+				<cffile action="delete" file="#tempdir##filename#" />
+				<cfcatch type="any"></cfcatch>
+			</cftry>
+		<cfelse>
+			<cfthrow type="skin" message="Unable to download skin." />
 		</cfif>
-		
-		<cfhttp url="#arguments.zipAddress#" method="get" path="#tempdir#" file="#filename#">
-		
-		<cfif NOT directoryexists(localdir)>
-			<cfdirectory action="create" directory="#localdir#">
-		</cfif>
-		
-		<cfif arguments.isZip>
-			<cfset unzipFile(tempdir & filename, localdir) />
-		<cfelse><!--- not a zip file, simply copy it to the destination directory --->
-			<cffile action="copy" source="#tempdir##filename#" destination="#localdir#">
-		</cfif>
-		
-		<!--- delete the zip file --->
-		<cftry>
-			<!--- if we did everything but couldn't delete the zip, no big deal --->
-			<cffile action="delete" file="#tempdir##filename#" />
-			<cfdirectory action="delete" directory="#tempdir#" recurse="true">
-			<cfcatch type="any"></cfcatch>
-		</cftry>
 		<cfreturn />
 	</cffunction>
 	

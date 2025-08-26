@@ -1,31 +1,22 @@
 <cfimport prefix="mangoAdmin" taglib="tags">
-<cfparam name="page" default="#request.message.getTitle()#">
-<cfif structkeyexists(request.externaldata,"owner")><cfset page = request.externaldata.owner />
+<cfparam name="page" default="">
+<cfparam name="title" default="#request.message.getTitle()#">
+<cfif structkeyexists(request.externaldata,"owner")>
+	<cfset page = request.externaldata.owner />
 </cfif>
-<cf_layout page="#page#" title="#page#">
-<div id="wrapper">
+<cfset breadcrumb = request.message.getHierarchy() />
+<cf_layout page="#page#" title="#title#" hierarchy="#breadcrumb#">
+	<mangoAdmin:SecondaryMenuEvent />
+	<!-- END INNER NAV IF NEEDED -->
+	<h4 class="h4"><mangoAdmin:Message title /></h4>
+	<cfoutput>
+		<mangoAdmin:Message ifMessageExists type="generic" status="success">
+			<div class="alert alert-success" role="alert"><mangoAdmin:Message text /></div>
+		</mangoAdmin:Message>
+		<mangoAdmin:Message ifMessageExists type="generic" status="error">
+			<div class="alert alert-danger" role="alert"><mangoAdmin:Message text /></div>
+		</mangoAdmin:Message>
 
-	<div id="submenucontainer">
-		<ul id="submenu">
-			<mangoAdmin:MenuEvent />
-		</ul>
-	</div>
-	
-	<div id="content">
-		<h2 class="pageTitle"><mangoAdmin:Message title /></h2>
-		
-		<div id="innercontent">
-		<cfoutput>
-			<mangoAdmin:Message ifMessageExists type="generic" status="error">
-				<p class="error"><mangoAdmin:Message text /></p>
-			</mangoAdmin:Message>
-			<mangoAdmin:Message ifMessageExists type="generic" status="success">
-				<p class="message"><mangoAdmin:Message text /></p>
-			</mangoAdmin:Message>
-
-			<mangoAdmin:Message data />
-		</cfoutput>
-		</div>
-	</div>
-</div>
+		<mangoAdmin:Message data />
+	</cfoutput>
 </cf_layout>

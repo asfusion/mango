@@ -40,59 +40,61 @@
 		<cfset ownerMainMenu = panel />
 	</cfif>
 </cfsilent>
-<cf_layout page="#ownerMainMenu#" title="#panelData.label#">	
-<div id="wrapper">
+<cf_layout page="#ownerMainMenu#" title="#panelData.label#">
 <cfif listfind(currentRole.permissions, "manage_all_pages") OR
 		listfind(currentRole.permissions, "manage_pages")>
-	<div id="submenucontainer">
-		<ul id="submenu">
-			<cfif panelData.showInMenu EQ "secondary">
-			<cfif NOT len(preferences) OR listfind(preferences,"pages_new")>
-			<li><a href="page.cfm">New Page</a></li>
-			</cfif>	
-			<li><a href="pages.cfm"<cfif panel EQ ""> class="current"</cfif>>Edit Page</a></li>
-			<mangoAdmin:MenuEvent name="pagesNav" />
-			<cfelse>
-			<cfoutput><li><a href="page.cfm?panel=#panel#&amp;owner=#ownerMainMenu#">New</a></li></cfoutput>
-			<li><a href="" class="current">Edit</a></li>
-			<mangoAdmin:MenuEvent name="customPagesNav" owner="#panel#Panel"/>
-			</cfif>
-		</ul>
-	</div>
-
-	<div id="content">
-		<h2 class="pageTitle"><cfoutput>#pageTitle#</cfoutput></h2>
-		
-		<div id="innercontent">
-		<cfif len(error)><p class="error"><cfoutput>#error#</cfoutput></p></cfif>
-		<cfif len(message)><p class="message"><cfoutput>#message#</cfoutput></p></cfif>
 		<cfoutput>
-		<p class="buttonBar"><a href="page.cfm?panel=#panel#&amp;owner=#panel#" class="editButton">Create New<cfif panel EQ ""> Page</cfif></a></p>
-		<table cellspacing="0">
-			<tr><th class="buttonColumn">Edit</th><th>Title</th><th>Status</th><th>Comments</th><th>Delete</th></tr>
+		<cfif len(message)><div class="alert alert-success" role="alert">#message#</div></cfif>
+		<cfif len(error)><div class="alert alert-danger" role="alert">#error#</div></cfif>
+
+		<div class="table-settings mb-4">
+			<div class="row align-items-center justify-content-between">
+				<div class="col-4 col-md-2 ">
+				<cfif NOT len(preferences) OR listfind(preferences,"categories_new")>
+					<a href="page.cfm?panel=#panel#&amp;owner=#panel#"><button class="btn btn-secondary" type="button">
+								<i class="bi bi-plus"></i>Create New<cfif panel EQ ""> Page</cfif></button></a>
+				</cfif>
+				</div>
+			</div>
+		</div>
+
+		<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
+		<div class="card card-body border-0 shadow table-wrapper table-responsive">
+		<table class="table table-hover">
+			<thead>
+			<tr>
+				<th class="border-gray-200">Title</th>
+				<th class="border-gray-200">Status</th>
+				<th class="border-gray-200">Comments</th>
+				<th class="border-gray-200">Actions</th>
+			</tr>
+			</thead>
+		<tbody>
+		<!-- Item -->
 			<cfloop from="1" to="#arraylen(posts)#" index="i">
-				<!--- since this is used by list of posts of a custom panel,
-				we need to check if the user has enough permissions --->
-				<cfif listfind(currentRole.permissions, "manage_all_pages") OR
-				posts[i].getauthorId() EQ currentAuthor.id>
-				<cfset currentTitle = xmlformat(posts[i].getTitle()) />
-				<tr>
-					<td <cfif NOT i mod 2>class="alternate"</cfif>><a href="page.cfm?id=#posts[i].getId()#&amp;owner=#panel#" class="editButton">Edit</a></td>
-					<td <cfif NOT i mod 2>class="alternate"</cfif>><cfif len(currentTitle)>#currentTitle#<cfelse>--Untitled--</cfif></td>
-					<td <cfif NOT i mod 2>class="alternate"</cfif>>#posts[i].getStatus()#</td>
-					<td <cfif NOT i mod 2>class="alternate"</cfif>><a href="comments.cfm?entry_id=#posts[i].getId()#">#posts[i].getCommentCount()#</a></td>
-					<td <cfif NOT i mod 2>class="alternate"</cfif>><a href="pages.cfm?action=delete&amp;id=#posts[i].getId()#&amp;panel=#panel#&amp;owner=#panel#"  class="deleteButton">Delete</a></td>
+<!--- since this is used by list of posts of a custom panel, we need to check if the user has enough permissions --->
+				<cfif listfind(currentRole.permissions, "manage_all_pages") OR posts[i].getauthorId() EQ currentAuthor.id>
+					<cfset currentTitle = xmlformat(posts[i].getTitle()) />
+					<cfset status = posts[i].getStatus() />
+					<tr>
+					<td><a href="page.cfm?id=#posts[i].getId()#&amp;owner=#panel#" class="fw-bold">#currentTitle#</a></td>
+				<td><span class="fw-normal <cfif status EQ "published">text-success<cfelse>text-warning</cfif>">#posts[i].getStatus()#</span></td>
+				<td><span class="fw-normal badge bg-info"><a href="comments.cfm?entry_id=#posts[i].getId()#">#posts[i].getCommentCount()#</a></span></td>
+				<td>
+						<a href="pages.cfm?action=delete&amp;id=#posts[i].getId()#&amp;panel=#panel#&amp;owner=#panel#"  class="deleteButton"><button class="btn btn-outline-danger btn-sm" type="button">Delete</button></a>
+				</td>
 				</tr>
 				</cfif>
 			</cfloop>
-		</table>
-		</cfoutput>		
-		</div>
-	</div>
-	<cfelse><!--- not authorized --->
-<div id="content"><div id="innercontent">
-<p class="infomessage">Your role does not allow you to edit pages</p>
-</div></div>
+
+			</tbody>
+			</table>
+
+			</div>
+			</div>
+		</cfoutput>
+
+<cfelse><!--- not authorized --->
+	<div class="alert alert-info" role="alert">Your role does not allow you to edit posts</div>
 </cfif>
-</div>
 </cf_layout>

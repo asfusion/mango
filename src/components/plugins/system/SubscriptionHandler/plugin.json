@@ -1,0 +1,16 @@
+{
+  "id": "org.mangoblog.plugins.SubscriptionHandler",
+  "name": "Subscription Handler",
+  "version": "1.3",
+  "provider": "AsFusion",
+  "class":"SubscriptionHandler.Handler",
+  "description": "Manages subscriptions to comments and posts",
+  "requires": [
+    {
+    "engine": {
+      "version": 1.8,
+      "match": "greaterOrEqual"
+     }
+  }
+  ]
+}

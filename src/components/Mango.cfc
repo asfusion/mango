@@ -1,7 +1,7 @@
 <cfcomponent name="Mango">
 
 	<cfset variables.blog = "" />
-	<cfset variables.version = "1.7" />
+	<cfset variables.version = "2.0" />
 	<cfset variables.pluginQueue = "" />
 	<cfset variables.config = "" />
 	<cfset variables.blogId = "default" />
@@ -12,7 +12,6 @@
 		<cfargument name="configFile" required="false" type="string" default="" hint="Path to config file"/>
 		<cfargument name="id" required="false" default="default" type="string" hint="Blog"/>
 		<cfargument name="baseDirectory" required="false" type="string" hint="Path to main blog directory" />			
-		
 			<cfset var settings = "" />
 			<cfset var blogSettings = structnew() />
 			<cfset var preferences = createObject("component", "utilities.PreferencesFile")/>
@@ -21,7 +20,6 @@
 			<cfset variables.blogId = arguments.id />
 			<cfset variables.settings["baseDirectory"] = arguments.baseDirectory />
 			
-
 			<!--- check for the config file --->
 			<cfif fileexists(variables.config)>
 				<cfset preferences.init(variables.config)/>
@@ -35,7 +33,6 @@
 			settings = preferences.exportSubtreeAsStruct("");
 			variables.settings["datasource"] = settings.generalSettings.dataSource;
 			variables.dataAccessFactory = createobject("component","model.dataaccess.DataAccessFactory").init(variables.settings["dataSource"]);		
-			
 			//get all other settings from database
 			settingsManager = createObject("component","SettingManager").init(this, variables.dataAccessFactory);
 			
@@ -104,12 +101,16 @@
 			}
 			catch (var e) {}
 			
-			variables.preferences["plugins"] = createObject("component","SettingManager").init(this, variables.dataAccessFactory);
+			variables.preferences["plugins"] = new SettingManager( this, variables.dataAccessFactory );
 			
+			//system strings
+			variables.internationalizer = new LocaleManager( variables.blog.getLocale(), getDirectoryFromPath(GetCurrentTemplatePath()) & "locale/");
+			//skin strings
+			variables.internationalizer.loadFromDir( blogSettings['skins'].directory & variables.blog.getSkin() & "/locale/");
+
 			loadPlugins(settings.plugins.directory,settings.plugins.path);
 		</cfscript>
-		
-		
+
 		<cfreturn this />
 	</cffunction>
 
@@ -158,25 +159,24 @@
 		<cfset var results = parseVariables(arguments.urlvars,arguments.formvars)>		
 		<cfset var temp = "" />
 
-			<!--- look for action key  --->
-			<cfif structkeyexists(results.externaldata,"action") AND results.externaldata.action EQ "addComment">
-					<cfset temp = variables.commentsManager.addCommentFromRawData(results.externaldata) />
-					<cfset structappend(results.externaldata,temp.data)/>
-					<cfset results.message = temp.message />
-					<cfset results.newcomment = temp.newcomment />
-			</cfif>	
+		<!--- look for action key  --->
+		<cfif structkeyexists(results.externaldata,"action") AND results.externaldata.action EQ "addComment">
+				<cfset temp = variables.commentsManager.addCommentFromRawData(results.externaldata) />
+				<cfset structappend(results.externaldata,temp.data)/>
+				<cfset results.message = temp.message />
+				<cfset results.newcomment = temp.newcomment />
+		</cfif>
 				
-			<cfif structkeyexists(results.externaldata,"event")>
-				<cfset temp = structnew() />
-				<!--- data sent to the plugin should be the external data --->
-				<cfset temp = duplicate(results.externaldata) />
-				<!--- add the external data structure in the case the plugin wants to change something --->
-				<cfset temp.externaldata = results.externaldata />
-				<!--- for backwards compatibility, leave the message --->
-				<cfset temp.message = results.message />
-				<cfset variables.pluginQueue.broadcastEvent(variables.pluginQueue.createEvent(results.externaldata.event,temp, "Request", results.message))/>
-			</cfif>
-
+		<cfif structkeyexists(results.externaldata,"event")>
+			<cfset temp = structnew() />
+			<!--- data sent to the plugin should be the external data --->
+			<cfset temp = duplicate(results.externaldata) />
+			<!--- add the external data structure in the case the plugin wants to change something --->
+			<cfset temp.externaldata = results.externaldata />
+			<!--- for backwards compatibility, leave the message --->
+			<cfset temp.message = results.message />
+			<cfset variables.pluginQueue.broadcastEvent(variables.pluginQueue.createEvent(results.externaldata.event,temp, "Request", results.message))/>
+		</cfif>
 		<cfreturn results />
 	</cffunction>
 
@@ -229,7 +229,7 @@
 		<cfreturn variables.searcher />
 	</cffunction>
 
-	<cffunction name="getDataAccessFactory" access="package" output="false" returntype="any">		
+	<cffunction name="getDataAccessFactory" access="public" output="false" returntype="any">
 		<cfreturn variables.dataAccessFactory />
 	</cffunction>
 
@@ -245,7 +245,10 @@
 
 	<cffunction name="getPluginQueue" access="public" output="false" returntype="any">
 		<cfreturn variables.pluginQueue />
-	
+	</cffunction>
+
+	<cffunction name="getInternationalizer" access="public" output="false" returntype="any">
+		<cfreturn variables.internationalizer />
 	</cffunction>
 	
 	<cffunction name="getAdministrator" access="public" output="false" returntype="any">
@@ -284,9 +287,9 @@
 				variables.config, variables.blogId, variables.settings["baseDirectory"]), variables.blogId) />
 		<!--- just so that current request also gets the new config, init this instance too --->
 		<cfset init(variables.config, variables.blogId, variables.settings["baseDirectory"]) />
+		<cfset structDelete( variables, 'adminUtil' )>
 	</cffunction>
 		
-
 	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="loadPlugins" access="private" output="false" returntype="void">
 		<cfargument name="pluginsDir" type="String" required="true" />
@@ -360,7 +363,7 @@
 		<cfset arguments.data = replacenocase(arguments.data,"{baseDirectory}",variables.settings["baseDirectory"]) />
 		<cfreturn replacenocase(arguments.data,"{componentsDirectory}",getDirectoryFromPath(GetCurrentTemplatePath())) />
 	</cffunction>
-	
+
 	<cfscript>
 /**
  * Blends all nested structs, arrays, and variables in a struct to another.

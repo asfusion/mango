@@ -1,95 +1,55 @@
 <!--- we need an entry and an array of custom form fields --->
+<cfimport prefix="partials" taglib="partials">
 <cfparam name="attributes.customFormFields" default="#arraynew(1)#">
 <cfparam name="attributes.entry">
 <cfparam name="attributes.startingIndex" default="2">
 <cfif thisTag.executionmode EQ "start">
-<cfoutput>
+	<cfif arraylen(attributes.customFormFields) GT 0>
+		<cfoutput>
+	<div class="card card-body border-0 shadow mb-4 mb-xl-0">
 	<cfset currentFieldNumber = attributes.startingIndex />
 <cfloop from="1" to="#arraylen(attributes.customFormFields)#" index="i">
-	<cfset className = "" />
+	<cfset required = false />
 	<cfset currentValue = "" />
 	<cfset maxLength = 0 />
-	
+	<cfset options = [] />
+
 	<cfif structkeyexists(attributes.customFormFields[i], 'value')>
 		<cfset currentValue = attributes.customFormFields[i].value />
 	</cfif>
-	
+
 	<cfif structkeyexists(attributes.customFormFields[i], 'required') AND attributes.customFormFields[i].required>
-		<cfset className = "required" />
+		<cfset required = true />
 	</cfif>
-	
+
+	<cfif structkeyexists( attributes.customFormFields[i], 'options')>
+		<cfset options = attributes.customFormFields[i].options />
+	</cfif>
+
 	<cfif structkeyexists(attributes.customFormFields[i], 'maxLength') AND attributes.customFormFields[i].maxLength GT 0>
 		<cfset maxLength = attributes.customFormFields[i].maxLength />
-		<cfset className = listappend(className, 'countable', ' ') />
+		<!---<cfset className = listappend(className, 'countable', ' ') />
+		<cfif maxLength GT 0>maxlength='#maxLength#'</cfif>
+		--->
 	</cfif>
-	
-	<input type="hidden" name="customFieldKey_#currentFieldNumber#" value="#htmleditformat(attributes.customFormFields[i].id)#" />
-	<input type="hidden" name="customFieldName_#currentFieldNumber#" value="#htmleditformat(attributes.customFormFields[i].name)#" />
-	<cfif attributes.customFormFields[i].inputType EQ "hidden">
-		<input type="hidden" name="customField_#currentFieldNumber#" value="#htmleditformat(currentValue)#" />
-	<cfelseif attributes.customFormFields[i].inputType EQ "textinput">
-	<p>
-		<label for="customField_#currentFieldNumber#">#attributes.customFormFields[i].name#</label>
-		<span class="field"><input type="text" name="customField_#currentFieldNumber#" id="customField_#currentFieldNumber#" value="#htmleditformat(currentValue)#" 
-				size="40" class="#className#" <cfif maxLength GT 0>maxlength='#maxLength#'</cfif> /></span>
-	</p>
-	<cfelseif attributes.customFormFields[i].inputType EQ "textarea">
-	<p>
-		<label for="customField_#currentFieldNumber#">#attributes.customFormFields[i].name#</label>
-		<span class="field"><textarea name="customField_#currentFieldNumber#" id="customField_#currentFieldNumber#" rows="10" cols="50" 
-					class="#className#" style="width:100%" <cfif maxLength GT 0>maxlength='#maxLength#'</cfif>>#htmleditformat(currentValue)#</textarea></span>
-	</p>
-	<cfelseif attributes.customFormFields[i].inputType EQ "htmlTextarea">
-	<p>
-		<label for="customField_#currentFieldNumber#">#attributes.customFormFields[i].name#</label>
-		<span class="field"><textarea name="customField_#currentFieldNumber#" id="customField_#currentFieldNumber#" 
-					class="htmlEditor #className#" rows="10" cols="50" style="width:100%" >#htmleditformat(currentValue)#</textarea></span>
-	</p>
-	<cfelseif attributes.customFormFields[i].inputType EQ "radioButton">
-	<p>
-		<label for="customField_#currentFieldNumber#">#attributes.customFormFields[i].name#</label>
-		<span class="field">
-			<cfloop from="1" to="#arraylen(attributes.customFormFields[i].options)#" index="j">
-			<label><input type="radio" value="#attributes.customFormFields[i].options[j].value#" name="customField_#currentFieldNumber#" <cfif attributes.customFormFields[i].options[j].value EQ currentValue>checked="checked"</cfif>/>
-				#attributes.customFormFields[i].options[j].label#</label>&nbsp;&nbsp;&nbsp;
-			</cfloop>
-		</span>
-	</p>
-	<cfelseif attributes.customFormFields[i].inputType EQ "dropdown">
-	<p>
-		<label for="customField_#currentFieldNumber#">#attributes.customFormFields[i].name#</label>
-		<span class="field">
-			<select name="customField_#currentFieldNumber#" class="#className#">		
-			<cfloop from="1" to="#arraylen(attributes.customFormFields[i].options)#" index="j">
-				<option value="#attributes.customFormFields[i].options[j].value#" <cfif attributes.customFormFields[i].options[j].value EQ currentValue>selected="selected"</cfif>>#attributes.customFormFields[i].options[j].label#</option>
-			</cfloop>
-			</select>
-		</span>
-	</p>
-	<cfelseif attributes.customFormFields[i].inputType EQ "checkbox">
-	<p>
-		<label>#attributes.customFormFields[i].name#</label>
-		<span class="field">
-			<cfloop from="1" to="#arraylen(attributes.customFormFields[i].options)#" index="j">
-				<label><input type="checkbox" value="#attributes.customFormFields[i].options[j].value#" name="customField_#currentFieldNumber#" <cfif listfind(currentValue,attributes.customFormFields[i].options[j].value)>checked="checked"</cfif> class="#className#"/>
-					#attributes.customFormFields[i].options[j].label#</label>&nbsp;&nbsp;&nbsp;
-			</cfloop>
-		</span>
-	</p>
-	<cfelseif attributes.customFormFields[i].inputType EQ "assetSelector">
-	<p>
-		<label for="customField_#currentFieldNumber#">#attributes.customFormFields[i].name#</label>
-		<span class="field"><input type="text" name="customField_#currentFieldNumber#" id="customField_#currentFieldNumber#" value="#htmleditformat(currentValue)#" size="40" class="assetSelector #className#" /></span>
-	</p>
-	<cfelseif attributes.customFormFields[i].inputType EQ "fileUpload">
-	<p>
-		<label for="customField_#currentFieldNumber#">#attributes.customFormFields[i].name#</label>
-		<span class="field">
-			<input type="file" name="customField_#currentFieldNumber#" id="customField_#currentFieldNumber#" size="40" class="#className#" /></span>
-		<cfif len(currentValue)>Current value: #htmlEditFormat(currentValue)#</cfif>
-	</p>
+
+	<cfset checkValue = ''/>
+	<cfif structKeyExists( attributes.customFormFields[i], 'checkValue' )>
+		<cfset checkValue = attributes.customFormFields[i].checkValue />
 	</cfif>
+	<cfset hint = ''/>
+	<cfif structKeyExists( attributes.customFormFields[i], 'hint' )>
+		<cfset hint = attributes.customFormFields[i].hint />
+	</cfif>
+	<partials:form_field id="customField_#currentFieldNumber#" type="#attributes.customFormFields[i].inputType#" options="#options#"
+		label="#attributes.customFormFields[i].name#" value="#currentValue#" required="#required#" checkValue="#checkValue#" hint="#hint#" />
+
+		<input type="hidden" name="customFieldKey_#currentFieldNumber#" value="#htmleditformat(attributes.customFormFields[i].id)#" />
+		<input type="hidden" name="customFieldName_#currentFieldNumber#" value="#htmleditformat(attributes.customFormFields[i].name)#" />
+
 	<cfset currentFieldNumber = currentFieldNumber + 1 />
 </cfloop>
+	</div>
 </cfoutput>
+</cfif>
 </cfif>

@@ -1,0 +1,16 @@
+{
+  "id": "org.mangoblog.plugins.PluginHelper",
+  "name": "Plugin Helper",
+  "version": "1.2",
+  "provider": "AsFusion",
+  "class":"PluginHelper.Handler",
+  "description": "Adds utilities for plugins",
+  "requires": [
+    {
+    "engine": {
+      "version": 1.8,
+      "match": "greaterOrEqual"
+     }
+  }
+  ]
+}

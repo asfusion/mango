@@ -17,7 +17,7 @@
 				
 				<cfloop from="1" to="#arraylen(allPlugins)#" index="i">
 					<cfset thisPlugin = allPlugins[i].plugin />
-					<cfif allPlugins[i].eventType EQ "synch">
+					<cfif allPlugins[i].eventType EQ "synch" OR allPlugins[i].eventType EQ "sync">
 						<cftry>
 							<cfset arguments.event = thisPlugin.processEvent(arguments.event) />
 							<cfcatch type="any">
@@ -31,7 +31,7 @@
 						<cfif NOT arguments.event.continueProcess>
 							<cfbreak>
 						</cfif>
-					<cfelseif allPlugins[i].eventType EQ "asynch">
+					<cfelseif allPlugins[i].eventType EQ "asynch" OR allPlugins[i].eventType EQ "async">
 						<cfset pluginId = thisPlugin.getId() />
 						
 						<cftry>

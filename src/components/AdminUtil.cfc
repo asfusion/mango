@@ -1,12 +1,35 @@
 <cfcomponent name="Aministrator">
 	
 	<cfset variables.panelIds = structnew() />
-	
+	<cfset variables.defaultTemplates = {} />
+
 	<cffunction name="init" access="public" output="false" returntype="any">
 		<cfargument name="applicationManager" required="true" type="any">
 
-			<cfset variables.blogManager = arguments.applicationManager>
+		<cfset variables.blogManager = arguments.applicationManager>
+		<cfset variables.preferences = variables.blogManager.getSettingsManager() />
+		<cfset variables.id =  variables.blogManager.getBlog().getId() />
+
+		<cfset setGlobalPreferences() />
+		<cfset loadCustomPanels() />
 		<cfreturn this />
+	</cffunction>
+
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+	<cffunction name="setGlobalPreferences" access="private" output="false" returntype="any">
+		<cfset variables.adminSettings = getAdminSettings() />
+		<cfset variables.panelBasePosts = {'name' = { "show" = 1 }, 'customFields' = { "show" = 1 }} />
+		<cfset variables.panelBasePages = {'name' = { "show" = 1 }, 'customFields' = { "show" = 1 }} />
+
+		<!--- apply custom panel settings --->
+		<cfset variables.panelBasePosts = {
+			'name' = { "show" = variables.adminSettings.posts.fields.name EQ 1 },
+			'customFields' = { "show" = variables.adminSettings.posts.fields.customfields EQ 1 }
+		} />
+		<cfset variables.panelBasePages = {
+			'name' = { "show" = variables.adminSettings.pages.fields.name EQ 1 },
+			'customFields' = { "show" = variables.adminSettings.pages.fields.customfields EQ 1 }
+		} />
 	</cffunction>
 
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
@@ -34,7 +57,7 @@
 		<cfargument name="count" required="false" default="0" type="numeric" hint=""/>
 		
 		<cfset var authorsManager = variables.blogManager.getauthorsManager() />
-		<cfset var authors =  authorsManager.getAuthorsByBlog(variables.blogManager.getBlog().getId(), 
+		<cfset var authors =  authorsManager.getAuthorsByBlog( variables.id,
 				arguments.from, arguments.count, true) />
 			
 		<cfreturn authors />
@@ -81,7 +104,6 @@
 		<cfreturn posts />
 	</cffunction>	
 
-	
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="getPost" access="public" output="false" returntype="any">
 		<cfargument name="postId" type="String" required="true" />
@@ -101,14 +123,13 @@
 	
 		<cfreturn page />
 	</cffunction>		
-	
-	
+
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
-	<cffunction name="newPost" access="public" output="false" returntype="struct">		
+	<cffunction name="newPost" access="public" output="false" returntype="struct">
 		<cfargument name="title" type="string" required="true" />
 		<cfargument name="content" type="string" required="true" />
 		<cfargument name="excerpt" type="string" required="false" default="" />
-		<cfargument name="publish" type="boolean" required="false" default="true" hint="If false, post will be saved as draft" />		
+		<cfargument name="publish" type="boolean" required="false" default="true" hint="If false, post will be saved as draft" />
 		<cfargument name="authorId" type="String" required="false" default="1" hint="" />
 		<cfargument name="allowComments" type="boolean" required="false" default="true" hint="" />
 		<cfargument name="postedOn" type="string" required="false" default="#now()#" hint="" />
@@ -117,7 +138,7 @@
 		<cfargument name="rawData" default="#structnew()#" required="false" type="any">
 		<cfargument name="name" type="string" required="false" />
 		<cfargument name="categories" type="array" required="false" default="#arraynew(1)#" />
-		
+
 		<cfset var postsManager = variables.blogManager.getPostsManager() />
 		<cfset var authors = variables.blogManager.getAuthorsManager() />
 		<cfset var post = variables.blogManager.getObjectFactory().createPost() />
@@ -134,7 +155,7 @@
 		<cfif structkeyexists(arguments,"name")>
 			<cfset post.setName(arguments.name) />
 		</cfif>
-		<cfset post.setBlogId(variables.blogManager.getBlog().getId()) />
+		<cfset post.setBlogId( variables.id ) />
 		<cfset post.setCommentsAllowed(arguments.allowComments) />
 		<cfset post.setPostedOn(arguments.postedOn) />
 		<cfset post.setExcerpt(arguments.excerpt) />
@@ -167,7 +188,7 @@
 			
 			<cfset post.setCategories(categoryItems) />
 		
-		<cfset result = postsManager.addPost(post, arguments.rawData) />
+		<cfset result = postsManager.addPost(post, arguments.rawData, arguments.user ) />
 			
 		<cfreturn result />
 	</cffunction>
@@ -291,6 +312,7 @@
 		<cfset var pagesManager = variables.blogManager.getPagesManager() />
 		<cfset var page = variables.blogManager.getObjectFactory().createPage() />
 		<cfset var result = "" />
+		<cfset var block = "" />
 
 		<!---make a new page --->
 		<cfset page.setAuthorId(arguments.authorId) />
@@ -303,7 +325,7 @@
 		<cfset page.setParentPageId(arguments.parentPage) />
 		<cfset page.setSortOrder(arguments.sortOrder) />
 		<cfset page.setCommentsAllowed(arguments.allowComments) />
-		<cfset page.setBlogId(variables.blogManager.getBlog().getId()) />
+		<cfset page.setBlogId( variables.id ) />
 		<cfset page.setExcerpt(arguments.excerpt) />
 				
 		<cfif arguments.publish>
@@ -315,12 +337,26 @@
 		<cfif structkeyexists(arguments,"customFields")>
 			<cfset page.customFields = arguments.customFields />
 		</cfif>
-				
-		<cfset result = pagesManager.addPage(page, arguments.rawData,getAuthor(arguments.authorId)) />
+
+		<!--- check to see if this template has any default blocks we should set --->
+		<cfset var skinInfoForPage = getPageSkinInfo( page ) />
+		<cfif skinInfoForPage.hasBlocks>
+			<cfset var blocks = [] />
+			<cfloop array="#skinInfoForPage.definition#" item="block">
+				<cfif block.active>
+					<cfset arrayAppend( blocks, { 'id' = block.id, "values" = {}, "active" = true } ) />
+				</cfif>
+			</cfloop>
+			<cfif arraylen( blocks )>
+				<cfset page.customFields[ 'blocks' ] = { 'key' = 'blocks',
+					name = 'Blocks', value = serializeJSON( blocks )  }>
+			</cfif>
+		</cfif>
+
+		<cfset result = pagesManager.addPage( page, arguments.rawData,getAuthor(arguments.authorId) ) />
 		
 		<cfreturn result />
 	</cffunction>	
-	
 	
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="editPage" access="public" output="false" returntype="any">		
@@ -411,7 +447,7 @@
 			<cfset var blogsArray = arraynew(1) />
 			<cfset var roleManager = variables.blogManager.getRolesManager() />
 			
-			<cfset blog.id = variables.blogManager.getBlog().getId() />
+			<cfset blog.id = variables.id />
 			<cfset blog.role = roleManager.getRoleById(arguments.role) />
 
 			<cfset blogsArray = arraynew(1) />
@@ -431,11 +467,9 @@
 		<cfreturn result />
 	</cffunction>
 	
-	
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="editAuthor" access="public" output="false" returntype="struct">		
 		<cfargument name="id" type="string" required="true" />
-		<cfargument name="username" type="string" required="true" />
 		<cfargument name="password" type="string" required="true" />
 		<cfargument name="name" type="string" required="true"  />
 		<cfargument name="email" type="string" required="true" />
@@ -450,12 +484,11 @@
 			<cfset var author = getAuthor(arguments.id) />
 			<cfset var result = "" />
 			<cfset var i = 0 />
-			<cfset var blogid = variables.blogManager.getBlog().getId() />
-			
+
 			<cfif len(arguments.role)>
 				<!--- set the role for the current blog, if not empty --->
 				<cfloop index="i" from="1" to="#arraylen(author.blogs)#">
-					<cfif author.blogs[i].id EQ blogid>
+					<cfif author.blogs[i].id EQ variables.id>
 						<cfset author.blogs[i].role.id = arguments.role />
 					</cfif>
 				</cfloop>
@@ -473,7 +506,6 @@
 		<cfreturn result />
 	</cffunction>		
 		
-
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="editBlog" access="public" output="false" returntype="any">		
 		<cfargument name="title" type="string" required="true" />
@@ -524,6 +556,10 @@
 			<cfset blog.setSkin(arguments.skin) />
 			<cfset result =  variables.blogManager.getBlogsManager().editBlog(blog,structnew(),structnew(),arguments.user) />
 			<cfset variables.blogManager.reloadConfig() />
+
+			<cfif result.message.getStatus() EQ "success">
+				<cfset result.message.setText( 'Theme updated! <a href="#blog.getUrl()#" target="_blank"><button class="btn btn-outline-primary ms-4">Look at the change</button></a>' )>
+			</cfif>
 		<cfelseif action EQ "delete">
 			<!--- delete directory --->
 			<cfset result = structnew()/>
@@ -539,8 +575,6 @@
 					<cfset result.message.setText(cfcatch.Message) />
 				</cfcatch>
 			</cftry>
-			
-			
 		</cfif>
 				
 		<cfreturn result />
@@ -565,21 +599,20 @@
 		<cfreturn result />
 	</cffunction>
 
-
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="newCategory" access="public" output="false" returntype="any">
 		<cfargument name="title" type="string" required="true" />
 		<cfargument name="description" type="string" required="false" default="" />
-		<cfargument name="user" required="false" type="any">
+		<cfargument name="user" required="false" type="any" default="{}}">
 
 			<cfset var category = variables.blogManager.getObjectFactory().createCategory() />
 			<cfset var result = "" />
 				
 				<cfset category.setTitle(arguments.title) />
 				<cfset category.setdescription(arguments.description) />
-				<cfset category.setBlogId(variables.blogManager.getBlog().getId()) />
+				<cfset category.setBlogId( variables.id ) />
 
-				<cfset result =  variables.blogManager.getCategoriesManager().addCategory(category,structnew()) />
+				<cfset result =  variables.blogManager.getCategoriesManager().addCategory(category,structnew(), arguments.user ) />
 		
 		<cfreturn result />
 	</cffunction>
@@ -607,7 +640,6 @@
 		<cfreturn result />
 	</cffunction>	
 
-
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 <!---	<cffunction name="getUserInfo" access="remote" output="false" returntype="any">
 		<cfargument name="username" type="String" required="true" />
@@ -630,7 +662,6 @@
 		<cfreturn categories />
 	</cffunction>		
 
-	
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="getCategories" access="public" output="false" returntype="any">
 		<cfargument name="blogid" type="String" required="false" default="default" hint="Ignored" />
@@ -703,7 +734,6 @@
 		<cfreturn comments />
 	</cffunction>
 
-	
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="getComment" access="public" output="false" returntype="any">
 		<cfargument name="commentId" type="String" required="true" />
@@ -750,7 +780,6 @@
 		
 		<cfreturn result />
 	</cffunction>	
-	
 	
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="editComment" access="public" output="false" returntype="any">		
@@ -802,7 +831,6 @@
 		
 		<cfreturn result />
 	</cffunction>	
-
 
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="newRole" access="public" output="false" returntype="struct">
@@ -866,28 +894,9 @@
 		<cfdirectory name="dirs" directory="#dir#" action="list">
 		
 		<cfoutput query="dirs">
-			<cfset skinxmlfile = directory & "/" & name & "/skin.xml"/>
-			<cfif fileexists(skinxmlfile)>
-				<cffile action="read" file="#skinxmlfile#" variable="skindata">
-				<cfset skindata = xmlparse(skindata).skin />
-				<cfset skin = structnew() />
-				<cfset skin.name = skindata.xmlAttributes.name />
-				<cfset skin.id = skindata.xmlAttributes.id />
-				<cfset skin.lastModified = skindata.xmlAttributes.lastModified />
-				<cfset skin.version = skindata.xmlAttributes.version />
-				<cfset skin.description = skindata.description.xmltext />
-				<cfset skin.thumbnail = skindata.thumbnail.xmltext />
-				<cfset skin.author = skindata.author.xmltext />
-				<cfset skin.authorUrl = skindata.authorUrl.xmltext />
-				<cfset skin.designAuthor = skindata.designAuthor.xmltext />
-				<cfset skin.designAuthorUrl = skindata.designAuthorUrl.xmltext />
-				<cfif structkeyexists(skindata,"requiresVersion")>
-					<cfset skin.requiresVersion = skindata.requiresVersion.xmltext />
-				<cfelse><cfset skin.requiresVersion = ""></cfif>
-				<cfif structkeyexists(skindata,"license")>
-					<cfset skin.license = skindata.license.xmltext />
-				<cfelse><cfset skin.license = ""></cfif>
-				<cfset arrayappend(skins,skin) />
+			<cfset var newSkin = getSkin( name ) />
+			<cfif isStruct( newSkin )>
+				<cfset arrayappend(skins, newSkin ) />
 			</cfif>
 		</cfoutput>
 		<cfreturn skins />
@@ -914,76 +923,49 @@
 	
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="getSkin" access="public" output="false" returntype="any">
-		<cfargument name="id" type="String" required="true" />
-			<cfset var skin = "" />
-			<cfset var skindata = "" />
-			<cfset var skinxmlfile = "" />
-			<cfset var dir = getSkinDirectory() />
-			<cfset var i = 0 />
-			<cfset var j = 0 />
-			<cfset var pagetemplate = "" />
-			<cfset var podLocation = "" />
-			<cfset var pods = "" />
-			<cfset var pod = "" />
-			
-			<cfset skinxmlfile = dir & "/" & arguments.id & "/skin.xml"/>
-				<cffile action="read" file="#skinxmlfile#" variable="skindata">
-				<cfset skindata = xmlparse(skindata).skin />
-				<cfset skin = structnew() />
-				<cfset skin.name = skindata.xmlAttributes.name />
-				<cfset skin.id = skindata.xmlAttributes.id />
-				<cfset skin.lastModified = skindata.xmlAttributes.lastModified />
-				<cfset skin.version = skindata.xmlAttributes.version />
-				<cfset skin.description = skindata.description.xmltext />
-				<cfset skin.thumbnail = skindata.thumbnail.xmltext />
-				<cfset skin.adminEditorCss = skindata.adminEditorCss.xmltext />
-				<cfset skin.license = skindata.license.xmltext />
-				<cfset skin.pageTemplates = arraynew(1) />
-				
-				<cfloop from="1" to="#arraylen(skindata.pageTemplates.xmlchildren)#" index="i">
-					<cfset pagetemplate = structnew() />
-					<cfset pagetemplate.file = skindata.pageTemplates.xmlchildren[i].xmlattributes.file />
-					<cfset pagetemplate.name = skindata.pageTemplates.xmlchildren[i].xmlattributes.name />
-					<cfif fileexists("#dir#/#arguments.id#/#pagetemplate.file#")>
-						<cfset skin.pageTemplates[i] = pagetemplate />
-					</cfif>
-				</cfloop>
-				
-				<cfset skin.adminPageTemplates = structnew() />
-				
-				<cfif structkeyexists(skindata,"adminPageTemplates")>
-					<cfloop from="1" to="#arraylen(skindata.adminPageTemplates.xmlchildren)#" index="i">
-						<cfset pagetemplate = structnew() />
-						<cfset pagetemplate.file = skindata.adminPageTemplates.xmlchildren[i].xmlattributes.file />
-						<cfset pagetemplate.id = skindata.adminPageTemplates.xmlchildren[i].xmlattributes.id />
-						<cfif fileexists("#dir#/#arguments.id#/#pagetemplate.file#")>
-							<cfset skin.adminPageTemplates[pagetemplate.id] = pagetemplate />
-						</cfif>
-					</cfloop>
-				</cfif>
-				
-				<cfset skin.podLocations = arraynew(1) />
-				
-				<cfif structkeyexists(skindata,"podLocations")>
-					<cfloop from="1" to="#arraylen(skindata.podLocations.xmlchildren)#" index="i">
-						<cfset podLocation = structnew() />
-						<cfset podLocation.id = skindata.podLocations.xmlchildren[i].xmlattributes.id />
-						<cfset podLocation.name = skindata.podLocations.xmlchildren[i].xmlattributes.name />
-						<cfset pods = arraynew(1) />
-						
-						<cfloop from="1" to="#arraylen(skindata.podLocations.xmlchildren[i].xmlchildren)#" index="j">
-							<cfset pod = structnew() />
-							<cfset pod.id = skindata.podLocations.xmlchildren[i].xmlchildren[j].xmlattributes.id />
-							<cfset pod.title = skindata.podLocations.xmlchildren[i].xmlchildren[j].xmltext />
-							<cfset arrayappend(pods,pod) />
-						</cfloop>
+		<cfargument name="id" type="string" required="false" default="" />
+		<cfargument name="withSettings" type="boolean" required="false" default="false" />
 
-						<cfset podLocation.pods = pods />
-						<cfset skin.podLocations[i] = podLocation />
+			<cfset var skindata = "" />
+			<cfset var dir = getSkinDirectory() />
+			<cfif NOT len( arguments.id )>
+				<cfset arguments.id = getBlog().getSkin() />
+			</cfif>
+			<!--- try json modern version first --->
+			<cfset var file = dir & "/" & arguments.id & "/skin.json" />
+
+			<cfif fileExists( file )>
+				<cffile action="read" file="#file#" variable="skindata">
+				<cfset skindata = deserializeJSON( skindata ) />
+				<!--- populate common blocks --->
+				<cfset setupSkinData( skindata )/>
+				<cfif arguments.withSettings>
+					<cfset var paths = {} />
+					<!--- populate skin setting values --->
+					<cfset var setting = "" />
+
+					<cfloop array="#skindata.settings#" item="setting">
+						<cfset var defaults = {"name" = "", "default" = "", "type" = "text", "options" = [], "size" = "", "hint" = "", "value" = "" } />
+						<cfset structAppend( setting, defaults , false )/>
+						<cfif NOT structKeyExists( paths, setting.path )>
+							<cfset paths[ setting.path ] = variables.preferences.exportSubtreeAsStruct( setting.path )/>
+						</cfif>
+						<cfif structKeyExists( paths[ setting.path ], setting.key )>
+							<cfset setting.value = paths[ setting.path ][ setting.key ] />
+						<cfelseif len( setting.default )>
+							<cfset setting.value = setting.default />
+						</cfif>
+
 					</cfloop>
 				</cfif>
-				
-		<cfreturn skin />
+			<cfelse>
+				<cfset file = dir & "/" & arguments.id & "/skin.xml"/>
+				<cfif fileExists( file )>
+					<cfset skindata = parseXmlSkin( file )>
+				</cfif>
+			</cfif>
+
+		<cfreturn skindata />
 	</cffunction>
 
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
@@ -999,7 +981,7 @@
 		<cfargument name="plugin" type="string" required="true" />
 		<cfargument name="pluginId" type="string" required="true" />
 		<cfargument name="type" type="String" required="false" default="user" />
-		
+
 			<cfset var blog = variables.blogManager.getBlog()/>
 			<cfset var pluginPath = blog.getSetting("pluginsDir") & "#arguments.type#/" & arguments.plugin />
 			<cfset var pluginName = ""/>
@@ -1011,16 +993,21 @@
 			<cfset var i = ""/>
 			<cfset var assetType = ""/>
 			<cfset var result = structnew()/>
-			<cfset var id = blog.getId()/>
+			<cfset var id = variables.id />
 			<cfset var local = StructNew() />
+			<cfset var isJsonConfig = true >
 			
 			<cftry>
-				<cffile action="read" file="#pluginPath#/plugin.xml" variable="xml" />
-				<cfset pluginData = xmlparse(xml).plugin />
-				
+				<cfif fileExists( "#blog.getSetting("pluginsDir")#user/#arguments.plugin#/plugin.json" )>
+					<cfset pluginData = new PluginLoader().getPluginInfo( "#pluginPath#/plugin.json" )/>
+				<cfelse>
+					<cfset pluginData = new PluginLoader().getPluginInfo( "#pluginPath#/plugin.xml" )/>
+						<cfset isJsonConfig = false>
+				</cfif>
+
 				<!--- Get the name of the installation directory from the plugin class --->
-				<cfset pluginName = ListFirst(pluginData.xmlattributes["class"],".") />
-				
+				<cfset pluginName = ListFirst(pluginData["class"],".") />
+
 				<cfloop list="assets,assetsAdmin" index="assetType">
 					<cfif assetType is "assets">
 						<cfset assetBaseDir = expandPath("#blog.getBasePath()#/assets/plugins/#pluginName#") />
@@ -1028,32 +1015,54 @@
 						<cfset assetBaseDir = expandPath("#blog.getBasePath()#/admin/assets/plugins/#pluginName#") />
 					</cfif>
 					
-					<cfif structkeyexists(pluginData,assetType) and arraylen(pluginData[assetType].xmlChildren)>
+					<cfif structkeyexists(pluginData,assetType) and arraylen(pluginData[assetType])>
 						<!--- Create assets directory --->
 						<cfif not directoryExists(assetBaseDir)>
 							<cfdirectory action="create" directory="#assetBaseDir#" />
 						</cfif>
 						<!--- Loop over assets and copy them --->
-						<cfloop index="i" from="1" to="#arraylen(pluginData[assetType].xmlChildren)#">
-							<!--- Is the file destination specified? --->
-							<cfif structkeyexists(pluginData[assetType].xmlChildren[i].xmlattributes,"dest")>
-								<cfset assetDir = assetBaseDir & "/" & pluginData[assetType].xmlChildren[i].xmlattributes["dest"] />
-								<cfif not directoryExists(assetDir)>
-									<cfdirectory action="create" directory="#assetDir#" />
+						<cfloop index="i" from="1" to="#arraylen(pluginData[assetType])#">
+							<cfif isJsonConfig>
+
+								<cfif structkeyexists(pluginData[assetType][i],"dest")>
+									<cfset assetDir = assetBaseDir & "/" & pluginData[assetType][i].dest />
+									<cfif not directoryExists(assetDir)>
+										<cfdirectory action="create" directory="#assetDir#" />
+									</cfif>
+								<cfelse>
+									<cfset assetDir = assetBaseDir />
+								</cfif>
+
+								<cfif structkeyexists(pluginData[assetType][i],"file")>
+									<cfset source = pluginData[assetType][i]["file"] />
+									<cffile action="copy" source="#pluginPath#/#source#" destination="#assetDir#/#ListLast(source,"\/")#" />
+<!--- ...or copy directory --->
+									<cfelseif StructKeyExists(pluginData[assetType][i],"dir")>
+									<cfset source = pluginData[assetType][i]["dir"] />
+									<cfset copyDirectory(pluginPath & "/" & source,assetDir & "/" & ListLast(source,"\/")) />
 								</cfif>
 							<cfelse>
-								<cfset assetDir = assetBaseDir />
+<!--- Is the file destination specified? --->
+								<cfif structkeyexists(pluginData[assetType].xmlChildren[i].xmlattributes,"dest")>
+									<cfset assetDir = assetBaseDir & "/" & pluginData[assetType].xmlChildren[i].xmlattributes["dest"] />
+									<cfif not directoryExists(assetDir)>
+										<cfdirectory action="create" directory="#assetDir#" />
+									</cfif>
+								<cfelse>
+									<cfset assetDir = assetBaseDir />
+								</cfif>
+
+<!--- Copy file... --->
+								<cfif structkeyexists(pluginData[assetType].xmlChildren[i].xmlattributes,"file")>
+									<cfset source = pluginData[assetType].xmlChildren[i].xmlattributes["file"] />
+									<cffile action="copy" source="#pluginPath#/#source#" destination="#assetDir#/#ListLast(source,"\/")#" />
+<!--- ...or copy directory --->
+									<cfelseif StructKeyExists(pluginData[assetType].xmlChildren[i].xmlattributes,"dir")>
+									<cfset source = pluginData[assetType].xmlChildren[i].xmlattributes["dir"] />
+									<cfset copyDirectory(pluginPath & "/" & source,assetDir & "/" & ListLast(source,"\/")) />
+								</cfif>
 							</cfif>
-							
-							<!--- Copy file... --->
-							<cfif structkeyexists(pluginData[assetType].xmlChildren[i].xmlattributes,"file")>
-								<cfset source = pluginData[assetType].xmlChildren[i].xmlattributes["file"] />
-								<cffile action="copy" source="#pluginPath#/#source#" destination="#assetDir#/#ListLast(source,"\/")#" />
-							<!--- ...or copy directory --->
-							<cfelseif StructKeyExists(pluginData[assetType].xmlChildren[i].xmlattributes,"dir")>
-								<cfset source = pluginData[assetType].xmlChildren[i].xmlattributes["dir"] />
-								<cfset copyDirectory(pluginPath & "/" & source,assetDir & "/" & ListLast(source,"\/")) />
-							</cfif>
+
 						</cfloop>
 					</cfif>
 				</cfloop>
@@ -1094,26 +1103,29 @@
 		<cfargument name="plugin" type="string" required="true" />
 		<cfargument name="pluginId" type="string" required="true" />
 			<cfset var blog = variables.blogManager.getBlog()/>
-			<cfset var id = blog.getId()/>
+			<cfset var id = variables.id />
 			<cfset var xml = ""/>
 			<cfset var data = ""/>
 			<cfset var local = structnew() />
 
 			<cftry>
-				<cffile action="read" file="#blog.getSetting("pluginsDir")#user/#arguments.plugin#/plugin.xml" variable="xml" />
-				<cfset data = xmlparse(xml).plugin />
-				
+				<cfif fileExists( "#blog.getSetting("pluginsDir")#user/#arguments.plugin#/plugin.json" )>
+					<cfset data = new PluginLoader().getPluginInfo( "#blog.getSetting("pluginsDir")#user/#arguments.plugin#/plugin.json" )/>
+				<cfelse>
+					<cfset data = new PluginLoader().getPluginInfo( "#blog.getSetting("pluginsDir")#user/#arguments.plugin#/plugin.xml" )/>
+				</cfif>
+
 				<!--- Get the name of the installation directory from the plugin class --->
-				<cfset local.pluginDir = ListFirst(data.xmlattributes["class"],".") />
+				<cfset local.pluginDir = ListFirst( data["class"],"." ) />
 				
 				<!--- Delete the assets folders, only if defined in plugin.xml --->
-				<cfif structkeyexists(data,"assets") and arraylen(data.assets.xmlChildren)>
+				<cfif structkeyexists(data,"assets") and arraylen(data.assets)>
 					<cfif directoryExists(expandPath("#blog.getBasePath()#/assets/plugins/#local.pluginDir#"))>
 						<cfdirectory action="delete" recurse="true" directory="#expandPath("#blog.getBasePath()#/assets/plugins/#local.pluginDir#")#" />
 					</cfif>
 				</cfif>
 				
-				<cfif structkeyexists(data,"assetsAdmin") and arraylen(data.assetsAdmin.xmlChildren)>
+				<cfif structkeyexists(data,"assetsAdmin") and arraylen(data.assetsAdmin)>
 					<cfif directoryExists(expandPath("#blog.getBasePath()#/admin/assets/plugins/#local.pluginDir#"))>
 						<cfdirectory action="delete" recurse="true" directory="#expandPath("#blog.getBasePath()#/admin/assets/plugins/#local.pluginDir#")#" />
 					</cfif>
@@ -1139,17 +1151,16 @@
 			<cfset var result = structnew()/>
 			
 			<cfset result.message = createObject("component","Message") />
-			
+
 			<!--- try loading the plugin, if ok, then store it in db --->
 			<cfset local.pluginLoaded = variables.blogManager.loadPlugin(arguments.plugin, arguments.type) />
 			<cfif len(local.pluginLoaded)>
 				<cfset local.pluginQueue = variables.blogManager.getPluginQueue() />
 				<cfset local.pluginObj = local.pluginQueue.getPlugin(arguments.pluginId)/>
-			
+
 				<!--- setup ok, save --->
-				<cfset local.activateResult = variables.blogManager.getBlogsManager().activatePlugin(
-						variables.blogManager.getBlog().getId(), arguments.plugin, arguments.pluginId, arguments.type) />
-				
+				<cfset local.activateResult = variables.blogManager.getBlogsManager().activatePlugin( variables.id, arguments.plugin, arguments.pluginId, arguments.type) />
+
 				<cfif local.activateResult.status EQ "success">
 					<cftry>
 						<cfset local.pluginResult = local.pluginObj.setup()/>
@@ -1209,8 +1220,7 @@
 			<!--- Remove any plugin assets --->
 			<cfset deletePluginAssets(arguments.plugin,arguments.pluginId) />
 			
-			<cfset local.activateResult = variables.blogManager.getBlogsManager().deActivatePlugin(
-						variables.blogManager.getBlog().getId(), arguments.plugin, arguments.pluginId, arguments.type) />
+			<cfset local.activateResult = variables.blogManager.getBlogsManager().deActivatePlugin( variables.id, arguments.plugin, arguments.pluginId, arguments.type) />
 			
 			<cfif local.activateResult.status NEQ "success">
 				<cfset result.message.setstatus("error") />
@@ -1292,21 +1302,35 @@
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="getPageTemplates" access="public" output="false" returntype="array">
 
-			<cfset var templates = "" />
-			<cfset var id = variables.blogManager.getBlog().getSkin() />
-			<cfset templates = getSkin(id).pageTemplates />
-		
-			
+			<cfset var templates = [] />
+			<cfset var template = "" />
+			<cfset var templateInfo = getSkin( )/>
+		<!--- old skins --->
+		<cfif structKeyExists( templateInfo, "pageTemplates" )>
+			<cfset templates = templateInfo.pageTemplates />
+		</cfif>
+		<!--- new skins --->
+		<cfif structKeyExists( templateInfo, "templates" ) and structKeyExists( templateInfo.templates, 'page' )>
+			<cfset templates = templateInfo.templates.page />
+		</cfif>
+
+		<cfloop array="#templates#" item="template">
+			<cfset template.isDefault = template.file EQ "page.cfm" />
+			<cfset template.hasBlocks = structKeyExists( template, 'blocks' ) AND arraylen( template.blocks )>
+		</cfloop>
 		<cfreturn templates />
 	</cffunction>
 
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="getAdminPageTemplates" access="public" output="false" returntype="struct">
 
-			<cfset var templates = "" />
+			<cfset var templates = {} />
 			<cfset var id = variables.blogManager.getBlog().getSkin() />
-			<cfset templates = getSkin(id).adminPageTemplates />
-			
+			<cfset skin = getSkin( variables.blogManager.getBlog().getSkin() ) />
+			<cfif structKeyExists( skin, 'adminPageTemplates' )>
+				<cfset templates = getSkin(id).adminPageTemplates />
+			</cfif>
+
 		<cfreturn templates />
 	</cffunction>
 
@@ -1341,25 +1365,41 @@
 		<cfreturn dir />
 	</cffunction>	
 
-	
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="getCustomPanel" access="public" output="false" returntype="any">
-		<cfargument name="id" default="true" type="string" />
-		<cfargument name="entryType" default="post" type="string" />
-		
+		<cfargument name="id" default="" type="string" />
+		<cfargument name="type" default="post" type="string" />
+
+		<cfif NOT len( arguments.id )>
+			<cfset arguments.id = arguments.type />
+		</cfif>
 		<cfif structkeyexists(variables.panelIds,arguments.id)>
 			<cfreturn variables.panelIds[arguments.id].clone() />
+		<cfelseif structkeyexists( variables.panelIds,arguments.type )>
+			<cfreturn variables.panelIds[ arguments.type ].clone() />
 		<cfelse>
-			<cfreturn createobject("component","model.AdminCustomPanel").init(arguments.entryType) />	
+			<cfset var panel = createobject("component","model.AdminCustomPanel").init(arguments.type) />
+			<cfset var base = duplicate( panelBasePosts )/>
+			<cfif type EQ "page">
+				<cfset base = duplicate( panelBasePages ) />
+			</cfif>
+			<cfloop collection="#base#" item="local.key">
+				<cfset structAppend( panel.standardFields[ local.key ], base[ local.key ] ) />
+			</cfloop>
+			<cfreturn panel />
 		</cfif>
-		
+
 	</cffunction>
 	
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="addCustomPanel" access="public" output="false" returntype="void">
 		<cfargument name="customPanel" />
-
 		<cfset variables.panelIds[arguments.customPanel.id] = arguments.customPanel />
+	</cffunction>
+
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+	<cffunction name="getCustomPanels" access="public" output="false">
+		<cfreturn variables.panelIds />
 	</cffunction>
 
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
@@ -1397,9 +1437,437 @@
 		</cfoutput>
 		
 	</cffunction>
-	
+
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+	<cffunction name="parseXmlSkin" access="public" output="false" returntype="any">
+		<cfargument name="xmlFile" type="String" required="true" />
+		<cfset var skin = "" />
+		<cfset var skindata = "" />
+		<cfset var i = 0 />
+		<cfset var j = 0 />
+		<cfset var pagetemplate = "" />
+		<cfset var podLocation = "" />
+		<cfset var pods = "" />
+		<cfset var pod = "" />
+		<cfset var dir = getSkinDirectory() />
+
+		<cfset var defaults = { "requires" = [], "settings" = [], "templates" = [] }/>
+
+		<cffile action="read" file="#xmlFile#" variable="skindata">
+		<cfset skindata = xmlparse(skindata).skin />
+		<cfset skin = defaults />
+		<cfset skin.name = skindata.xmlAttributes.name />
+		<cfset skin.id = skindata.xmlAttributes.id />
+		<cfset skin.lastModified = skindata.xmlAttributes.lastModified />
+		<cfset skin.version = skindata.xmlAttributes.version />
+		<cfset skin.description = skindata.description.xmltext />
+		<cfset skin.thumbnail = skindata.thumbnail.xmltext />
+		<cfset skin.adminEditorCss = skindata.adminEditorCss.xmltext />
+		<cfset skin.license = skindata.license.xmltext />
+		<cfset skin.author = skindata.author.xmltext />
+		<cfset skin.authorUrl = skindata.authorUrl.xmltext />
+		<cfset skin.designAuthor = skindata.designAuthor.xmltext />
+		<cfset skin.designAuthorUrl = skindata.designAuthorUrl.xmltext />
+
+		<cfset skin.pageTemplates = arraynew(1) />
+
+		<cfloop from="1" to="#arraylen(skindata.pageTemplates.xmlchildren)#" index="i">
+			<cfset pagetemplate = structnew() />
+			<cfset pagetemplate.file = skindata.pageTemplates.xmlchildren[i].xmlattributes.file />
+			<cfset pagetemplate.name = skindata.pageTemplates.xmlchildren[i].xmlattributes.name />
+			<cfif fileexists("#dir#/#skin.id#/#pagetemplate.file#")>
+				<cfset skin.pageTemplates[i] = pagetemplate />
+			</cfif>
+		</cfloop>
+
+		<cfset skin.adminPageTemplates = structnew() />
+
+		<cfif structkeyexists(skindata,"adminPageTemplates")>
+			<cfloop from="1" to="#arraylen(skindata.adminPageTemplates.xmlchildren)#" index="i">
+				<cfset pagetemplate = structnew() />
+				<cfset pagetemplate.file = skindata.adminPageTemplates.xmlchildren[i].xmlattributes.file />
+				<cfset pagetemplate.id = skindata.adminPageTemplates.xmlchildren[i].xmlattributes.id />
+				<cfif fileexists("#dir#/#skin.id#/#pagetemplate.file#")>
+					<cfset skin.adminPageTemplates[pagetemplate.id] = pagetemplate />
+				</cfif>
+			</cfloop>
+		</cfif>
+
+		<cfset skin.podLocations = arraynew(1) />
+
+		<cfif structkeyexists(skindata,"podLocations")>
+			<cfloop from="1" to="#arraylen(skindata.podLocations.xmlchildren)#" index="i">
+				<cfset podLocation = structnew() />
+				<cfset podLocation.id = skindata.podLocations.xmlchildren[i].xmlattributes.id />
+				<cfset podLocation.name = skindata.podLocations.xmlchildren[i].xmlattributes.name />
+				<cfset pods = arraynew(1) />
+
+				<cfloop from="1" to="#arraylen(skindata.podLocations.xmlchildren[i].xmlchildren)#" index="j">
+					<cfset pod = structnew() />
+					<cfset pod.id = skindata.podLocations.xmlchildren[i].xmlchildren[j].xmlattributes.id />
+					<cfset pod.title = skindata.podLocations.xmlchildren[i].xmlchildren[j].xmltext />
+					<cfset arrayappend(pods,pod) />
+				</cfloop>
+
+				<cfset podLocation.pods = pods />
+				<cfset skin.podLocations[i] = podLocation />
+			</cfloop>
+		</cfif>
+
+		<cfreturn skin />
+	</cffunction>
 
 	<cfscript>
+	// ------------------------------------------
+	function setupSkinData( data ){
+		if ( structKeyExists( data, "blocks")){
+			if ( structKeyExists( data, "pageTemplates" ) ){
+			for ( var item in data.pageTemplates ){
+				if ( structKeyExists( item, 'blocks' )){
+					for ( var block in item.blocks ){
+						if ( NOT structKeyExists( block, 'title' ) AND structKeyExists( data.blocks, block.id )){
+							structAppend( block, data.blocks[ block.id ] );
+						}
+					}
+				}
+			}
+			}
+			if ( structKeyExists( data, "templates" ) ){
+				for ( var item in data.templates ){
+					for ( var template in data.templates[ item ]){
+						if ( structKeyExists( template, 'blocks' )){
+							for ( var block in template.blocks ){
+								if ( NOT structKeyExists( block, 'title' ) AND structKeyExists( data.blocks, block.id )){
+									structAppend( block, data.blocks[ block.id ] );
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		if ( NOT structKeyExists( data, "settings" )){
+			data.settings = [];
+		}
+		if ( NOT structKeyExists( data, "podLocations" )){
+			data.podLocations = [];
+		}
+		return data;
+	}
+
+	// ------------------------------------------
+	function getPageSkinInfo( pageObject ){
+		var pageTemplates = getPageTemplates();
+		var pageCurrent = pageObject.getTemplate();
+		var result = { 'template' = pageCurrent, 'hasBlocks' = false, 'availableTemplates' = [], 'definition' = {} };
+		for ( var info in pageTemplates ){
+			if ( NOT info.isDefault ){
+				arrayappend( result.availableTemplates, info );
+			}
+			if ( info.file EQ pageCurrent OR ( info.isDefault AND pageCurrent EQ "" )){
+				result.hasBlocks = info.hasblocks;
+				if ( info.hasblocks )
+					result.definition = info.blocks;
+				else
+					result.definition = [];
+			}
+		}
+		return result;
+	}
+
+	// ------------------------------------------
+	function saveSetting( path, key, value ){
+		var result = {};
+		result.message = createObject("component","Message");
+		variables.preferences.put( path, key, value, variables.id );
+
+		return result;
+	}
+
+// ------------------------------------------
+		function removeSetting( path, key ){
+			var result = {};
+			result.message = createObject("component","Message");
+			variables.preferences.remove( path, key, variables.id );
+
+			return result;
+		}
+
+// ------------------------------------------
+		function saveTemplateBlocks( templateId, blocks ){
+			var result = {};
+			result.message = createObject("component","Message");
+			variables.preferences.put( "blocks", templateId, serializeJSON( blocks ), variables.id, 'json' );
+
+			return result;
+		}
+
+	// ------------------------------------------
+	function getCurrentTemplates(){
+		var templates = [];
+		var data = getSkin();
+		var names = { "index" = "Home", "archives" = "Archives" };
+
+		if ( structKeyExists( data, "templates" ) ){
+			for ( var item in data.templates ){ //index, archives, etc
+				//only add allowed ones
+				if ( NOT structKeyExists( names, item )){
+					continue;
+				}
+				//current one
+				var currentTemplate = variables.preferences.get( "system/skins/templates", item, "", variables.id, false );
+				if ( NOT len( currentTemplate )){
+					currentTemplate = item & ".cfm";
+				}
+				for ( var template in data.templates[ item ] ) {
+					if ( currentTemplate EQ template.file ){
+						template.label = names[ item ];
+						template.template = item;
+						arrayAppend( templates, template );
+					}
+				}
+			}
+		}
+		return templates;
+	}
+
+	// ------------------------------------------
+	function getAdminSettings(){
+		var currentAdmin = variables.preferences.exportSubtreeAsStruct( "system/admin/", variables.id );
+		//set defaults just in case they aren't in the db
+		if ( NOT structKeyExists( currentAdmin ,'posts' )){
+			currentAdmin.posts.fields.customfields = 1;
+			currentAdmin.posts.fields.name = 1;
+		}
+		if ( NOT structKeyExists( currentAdmin, 'pages' )){
+			currentAdmin.pages.fields.customfields = 1;
+			currentAdmin.pages.fields.name = 1;
+		}
+
+		return currentAdmin;
+	}
+
+	// ------------------------------------------
+	function getCurrentTemplate( templateId ){
+		var templates = getCurrentTemplates();
+		for ( var item in templates ){
+			if ( item.template EQ templateId )
+				return item;
+		}
+		return {};
+	}
+
+	// ------------------------------------------
+	function getBlockValues( templateId ) {
+		return variables.preferences.get( "blocks", templateId, {}, variables.id, false );
+	}
+
+	// ------------------------------------------
+	function prepareBlocksForEdit( definition, values ) {
+		var blocks = [];
+		var blockDictionary = {};
+
+		for ( var def in definition ){
+			blockDictionary[ def.id ] = def;
+			def.used = 0;
+			def.canDelete = false;
+		}
+
+		//merge with definition
+		for ( var item in values ){
+			//find corresponding definition
+			if ( structKeyExists( blockDictionary, item.id )){
+				var baseDef = blockDictionary[ item.id ];
+				var newDef = duplicate( baseDef );
+				newDef.isEmpty = NOT blockHasValues( item.values );
+				newDef.active = structKeyExists( item, 'active' ) ? item.active : true;
+				for ( var field in newDef.fields ) {
+					populateBlockDefinition( field, item.values );
+				}
+				arrayAppend( blocks, newDef );
+				baseDef.used = baseDef.used + 1;
+			}
+		}
+
+		for ( var block in blocks ){
+			if ( blockDictionary[ block.id ].used GT 1 AND NOT block.active ){
+				block.canDelete = true;
+			}
+		}
+
+		for ( var def in definition ){
+			if ( def.used EQ 0 ){
+				def.active = false;
+				arrayAppend( blocks, def );
+			}
+		}
+
+		addFormIds( blocks );
+		return blocks;
+	}
+
+		function populateBlockDefinition( definition, values ){
+			if ( definition.type NEQ 'array' ) {
+				definition.value = structKeyExists(values, definition.id) ? values[ definition.id ] : ( structKeyExists(definition, 'default') ? definition.default : '' );
+
+			}
+			else {
+				if ( structKeyExists( values, definition.id )) {
+					var fieldSetArray = [];
+					var originalFieldSetDef = definition.fields[ 1 ];//definition will just have 1 item with the set of fields
+					for ( var item in values[ definition.id ] ){  //iterate over number of current fieldsets
+						var newFieldSet = duplicate( originalFieldSetDef );
+
+						arrayAppend( fieldSetArray, newFieldSet );
+						for ( var field in newFieldSet ){
+							populateBlockDefinition( field, item );
+						}
+//@todo check there is no max-items
+// if ( not structKeyExists( ) ){
+
+//}
+					}
+					arrayAppend( fieldSetArray, duplicate( originalFieldSetDef ));
+					definition.fields = fieldSetArray;
+				}
+			}
+			return definition;
+		}
+
+		// ------------------------------------------------------------
+		function addEmptyBlock( blocks, definition, type, position ){
+			var selection = {};
+			var found = false;
+			for ( var def in definition ){
+				if (  def.id EQ type ){
+					selection = def;
+					found = true;
+				}
+			}
+			if ( found ) {
+				arrayinsertat( blocks, position + 1, {'id' = type, 'active' = false, 'values' = {}} );
+			}
+			return blocks;
+		}
+
+		// ------------------------------------------------------------
+		function loadCustomPanels(){
+			var skin = getSkin( );
+			var base = duplicate( panelBasePosts );
+			var i18n = variables.blogManager.getInternationalizer();
+			var i = 0;
+			if ( structKeyExists( skin, "entryTypes" ) AND isArray( skin.entryTypes )){
+				for ( var panel in skin.entryTypes ){
+					i++;
+					var customPanelObj = variables.blogManager.getObjectFactory().createAdminCustomPanel().init( panel.type );
+					customPanelObj.order = i;
+
+					//first init with global settings, then apply skin's
+					if ( panel.type EQ "page" ){
+						base = duplicate( panelBasePages );
+					}
+					for ( var key in base ){
+						structAppend( customPanelObj.standardFields[ local.key ], base[ local.key ] );
+					}
+
+					customPanelObj.initFromJson( panel );
+					//check for built-in types
+					if ( customPanelObj.id EQ "post"){
+						customPanelObj.address = 'posts.cfm?owner=post';
+						customPanelObj.owner = 'post';
+						if ( NOT structKeyExists( panel, "icon" ))
+							customPanelObj.icon = 'bi-file-earmark-fill';
+					}
+					else if ( customPanelObj.id EQ "page"){
+						customPanelObj.address = 'pages.cfm?owner=page';
+						customPanelObj.owner = 'page';
+
+						if ( NOT structKeyExists( panel, "icon" ))
+							customPanelObj.icon = 'bi-file-earmark-text-fill';
+					}
+					customPanelObj.label = i18n.getValue(customPanelObj.label);
+					addCustomPanel( customPanelObj );
+				}
+			}
+			//if not found, set up defaults
+			else {
+				var customPanelObj = variables.blogManager.getObjectFactory().createAdminCustomPanel().init( 'post' );
+				for ( var key in base ){
+					structAppend( customPanelObj.standardFields[ local.key ], base[ local.key ] );
+				}
+				customPanelObj.address = 'posts.cfm?owner=post';
+				customPanelObj.requiresPermission = 'manage_posts';
+				customPanelObj.icon = 'bi-file-earmark-fill';
+				customPanelObj.label = i18n.getValue(customPanelObj.label);
+				addCustomPanel( customPanelObj );
+				base = duplicate( panelBasePages );
+				customPanelObj = variables.blogManager.getObjectFactory().createAdminCustomPanel().init( 'page' );
+				for ( var key in base ){
+					structAppend( customPanelObj.standardFields[ local.key ], base[ local.key ] );
+				}
+				customPanelObj.address = 'pages.cfm?owner=page';
+				customPanelObj.icon = 'bi-file-earmark-text-fill';
+				customPanelObj.requiresPermission = 'manage_pages';
+				customPanelObj.label = i18n.getValue(customPanelObj.label);
+				addCustomPanel( customPanelObj );
+			}
+		}
+
+		// ------------------------------------------------------------
+		function addFormIds( blocks ){
+			var prefix = "block_";
+			var i = 1;
+			for ( var block in blocks ){
+				addFieldFormIds( block.fields, prefix & i, '"#i#"."' & block.id & '"' );
+				i++;
+			}
+		}
+		function addFieldFormIds( definition, prefix, path ){
+			var i = 1;
+			for ( var field in definition ){
+				var fieldprefix = prefix & "_" & i;
+				if ( field.type NEQ "array" ){
+					field.form_id = fieldprefix;
+					field.path = path & '."' & field.id & '"';
+					field.basepath = path;
+				}
+				else {
+					var j = 1;
+					for ( var fieldSet in field.fields ) {
+						var newpath = path & '."' & field.id & '"' & '."' & j & '"';
+						var fieldprefixinner = fieldprefix & "_" & j;
+						addFieldFormIds( fieldSet, fieldprefixinner, newpath );
+						j++;
+					}
+				}
+				i++;
+			}
+		}
+
+
+// ------------------------------------------------------------
+		function blockHasValues( fields ){
+			var hasValues = false;
+			for ( var key in fields ) {
+				if ( NOT isArray( fields[ key ] ) ){
+					if ( len( fields[ key ] )){
+						return true;
+					}
+				}
+				else {
+					if ( arraylen( fields[ key ] ) GT 0 ){
+						for ( var i = arraylen( fields[ key ] ); i GT 0; i--) {
+							hasValues = blockHasValues( fields[ key ][ i ] );
+							if ( hasValues )
+								return true;
+						}
+					}
+				}
+			}
+
+			return hasValues;
+		}
+
 /**
  * Returns the path from a specified URL.
  * 
@@ -1566,5 +2034,6 @@ function unzipFile(zipFilePath, outputPath) {
 	zipFile.close();
 }
 </cfscript>
+
 
 </cfcomponent>

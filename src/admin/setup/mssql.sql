@@ -148,12 +148,32 @@ CREATE TABLE #prefix#setting (
   path nvarchar(255) NOT NULL default '',
   name nvarchar(100) NOT NULL default '',
   [value] ntext,
-  blog_id varchar(50) default ''
+  blog_id varchar(50) default '',
+  [type] varchar( 10 ) default 'string'
 )
 
 CREATE  INDEX IX_#prefix#setting_path ON #prefix#setting(path)
 CREATE  INDEX IX_#prefix#setting_blog ON #prefix#setting(blog_id)
- 
+
+
+
+CREATE TABLE #prefix#login_key (
+                                     id varchar(35) NOT NULL DEFAULT '',
+                                     user_id varchar(35) DEFAULT NULL,
+                                    user_type varchar(10) DEFAULT NULL,
+                                     last_visit_on datetime DEFAULT NULL,
+                                     PRIMARY KEY (id)
+)
+
+
+CREATE TABLE #prefix#login_password_reset (
+                                                id varchar(40) NOT NULL DEFAULT '',
+                                                user_id varchar(40) DEFAULT NULL,
+                                                valid tinyint DEFAULT NULL,
+                                                created_on datetime DEFAULT NULL,
+                                                PRIMARY KEY (id)
+)
+
 
 CREATE TABLE #prefix#category (
 	id varchar (35) NOT NULL ,

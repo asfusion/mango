@@ -3,15 +3,16 @@
 	<cfset variables.defaults = structnew() />
 	<cfset variables.defaults["id"] = "default"/>
 	<cfset variables.defaults["charset"] = "utf-8"/>
-	<cfset variables.defaults["tagline"] = "A Mango for you"/>
+	<cfset variables.defaults["tagline"] = "My brand new website"/>
 	<cfset variables.defaults["description"] = "A mango blog (edit your blog description in the administration)"/>
-	<cfset variables.defaults["skin"] = "cutline"/>
-	<cfset variables.defaults["categoryName"] = "default"/>
-	<cfset variables.defaults["categoryTitle"] = "Default"/>
-	<cfset variables.defaults["systemPlugins"] = "SubscriptionHandler,Links,Statistics,PodManager,RevisionManager,AssetManager,PluginHelper,htmlEditor"/>
-	<cfset variables.defaults["userPlugins"] = "cfformprotect,formRememberer,colorcoding,linkify,paragraphFormatter"/>
+	<cfset variables.defaults["skin"] = "massively"/>
+	<cfset variables.defaults["categoryName"] = "news"/>
+	<cfset variables.defaults["categoryTitle"] = "News"/>
+	<cfset variables.defaults["locale"] = "en"/>
+	<cfset variables.defaults["systemPlugins"] = "SubscriptionHandler,Statistics,PodManager,RevisionManager,AssetManager,PluginHelper,htmlEditor"/>
+	<cfset variables.defaults["userPlugins"] = "contact,sampledash"/>
 			
-<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->
 	<cffunction name="init" access="public" output="false" returntype="Setup">
 		<cfargument name="address" type="String" required="true" />
 		<cfargument name="datasourcename" type="String" required="true" />
@@ -43,8 +44,18 @@
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->
 	<cffunction name="checkSystem" access="public" output="false" returntype="any">
 		<!--- check cffile --->
+		<cftry>
+			<cfset var path = expandPath("../../") />
+			<!--- try writing a file, we need this to save config.cfm --->
+			<cffile action="write" file="#path#test.txt" output="hello" >
+			<cffile action="delete" file="#path#test.txt">
+			<cfcatch>
+				<cfreturn "Your install must have cffile permissions as well as file writing permissions in the install directory" />
+			</cfcatch>
+		</cftry>
+
 		<!--- check directory permissions --->
-		<!--- check Verity availability --->
+		<cfreturn "" />
 	
 	</cffunction>
 
@@ -61,7 +72,6 @@
 			<cfset result.message =  "" />
 			
 			<cftry>
-
 				<cfinclude template="#dbType#.sql">
 			
 			<cfcatch type="any">
@@ -73,7 +83,7 @@
 		<cfreturn result/>
 	</cffunction>
 
-<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->
 	<cffunction name="addCFDatasource" access="public" output="false" returntype="struct">
 		<cfargument name="cfadminpassword" type="String" required="true" />
 		<cfargument name="datasourcename" type="String" required="true" />
@@ -82,6 +92,7 @@
 		<cfargument name="dbType" type="String" required="true" />
 		<cfargument name="username" type="String" required="false" />
 		<cfargument name="password" type="String" required="false" />
+		<cfargument name="port" type="String" required="false" default="3306" />
 		
 			<cfset var ds = "" />
 			<cfset var result = structnew() />
@@ -98,10 +109,9 @@
 		<cfreturn result/>
 	</cffunction>
 
-<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->
 	<cffunction name="addAuthor" access="public" output="false" returntype="struct">
 		<cfargument name="name" type="String" required="false" />
-		<cfargument name="username" type="String" required="false" />
 		<cfargument name="password" type="String" required="false" />
 		<cfargument name="email" type="String" required="false" />
 
@@ -113,7 +123,7 @@
 			<cfset result.message =  "" />
 		<cftry>
 			<cfset admin = variables.blog.getAdministrator()>
-			<cfset result = admin.newAuthor(arguments.username,arguments.password,arguments.name,arguments.email,'','','','administrator') />
+			<cfset result = admin.newAuthor(arguments.email,arguments.password,arguments.name,arguments.email,'','','','administrator') />
 
 			<cfset result.status = result.message.getstatus() EQ "success">
 			<cfset result.message = result.message.getText() />
@@ -126,7 +136,7 @@
 		<cfreturn result/>
 	</cffunction>
 	
-<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->
+<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->
 	<cffunction name="addBlog" access="public" output="false" returntype="struct">
 		<cfargument name="title" type="String" required="false" />
 		<cfargument name="address" type="String" required="false" />
@@ -144,7 +154,7 @@
 	
 			<cfquery name="qinsertblog" datasource="#variables.dsn#" username="#variables.dsnUsername#" password="#variables.dsnPassword#">
 				INSERT INTO #variables.prefix#blog
-				(id, title,tagline,skin,url,charset,basePath, description,plugins,systemplugins)
+				(id, title,tagline,skin,url,charset,basePath, description,plugins,systemplugins, locale )
 				VALUES (
 				'#variables.defaults["id"]#',
 				<cfqueryparam value="#arguments.title#" cfsqltype="CF_SQL_VARCHAR" maxlength="150"/>,
@@ -155,7 +165,9 @@
 				<cfqueryparam value="#GetPathFromURL(arguments.address)#" cfsqltype="CF_SQL_VARCHAR" maxlength="255"/>,
 				'#variables.defaults["description"]#',
 				'#variables.defaults["userPlugins"]#',
-				'#variables.defaults["systemPlugins"]#')
+				'#variables.defaults["systemPlugins"]#',
+				'#variables.defaults["locale"]#'
+			)
 		  </cfquery>
 
 		<cfset variables.blog = createobject("component",variables.componentPath & "Mango").init(variables.config,
@@ -170,17 +182,16 @@
 		<cfreturn result/>
 	</cffunction>
 	
-<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->
 	<cffunction name="addData" access="public" output="false" returntype="struct">
-		
-			<cfset var addDataQuery = "" />
-			<cfset var result = structnew() />
-			<cfset var admin = ""/>
-			<cfset var categoryId = createUUID() />
-			<cfset var local = structnew() />
+		<cfset var addDataQuery = "" />
+		<cfset var result = structnew() />
+		<cfset var admin = ""/>
+		<cfset var categoryId = createUUID() />
+		<cfset var local = structnew() />
 			
-			<cfset result.status = true />
-			<cfset result.message =  "" />
+		<cfset result.status = true />
+		<cfset result.message =  "" />
 			
 			<cfif structkeyexists(variables,"blog")>
 				<cftry>
@@ -192,17 +203,10 @@
 					<!--- add a post --->
 					<cfset local.post = admin.newPost("Hello World!", 
 						"<p>Hello! and welcome to my blog. This is my first post just to see how things are working</p>",'',true,local.authors[1].getId()) />
-					<!--- add a comment to that post. I am using the db direclty to avoid getting caught by plugins trying to check for spam --->
-						<cfquery name="addDataQuery"  datasource="#variables.dsn#" username="#variables.dsnUsername#" password="#variables.dsnPassword#">
-								INSERT INTO #variables.prefix#comment ( id, entry_id, content, creator_name, creator_email, creator_url, created_on, approved, rating)
-								VALUES ('#createUUID()#', '#local.post.newPost.getId()#', 'Looking forward to your blog :)
-								(This is a test comment)', 'Mango Blog', 'info@mangoblog.org', 'http://www.mangoblog.org', <cfqueryparam value="#now()#" cfsqltype="CF_SQL_TIMESTAMP"/>, 1, 0)
-						</cfquery>
-
 					<!--- add an archives page --->
-					<cfset local.post = admin.newPage("Archives", 
-						"<p>This is a sample page, which you can edit/delete from your administration.</p><p>If your theme has the custom template for archives, you will see a list of your post archives below.</p>",
-						'',true, '', 'archives_index.cfm', 1, local.authors[1].getId(),false) />
+					<cfset local.post = admin.newPage("About",
+						"<p>This is a sample page, which you can edit/delete from your administration.</p>",
+						'',true, '', '', 1, local.authors[1].getId(),false) />
 				</cfif>
 				<cfcatch type="any"><!--- it is not super important that we add this data ---></cfcatch>
 				</cftry>
@@ -228,7 +232,7 @@
 		<cfreturn result/>
 	</cffunction>	
 	
-<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->
 	<cffunction name="setupPlugins" access="public" output="false" returntype="any">
 		<cfset var queue = ""/>
 		<cfset var plugin = "" />
@@ -236,10 +240,10 @@
 		<cfset var list = "">
 		
 		<cfif structkeyexists(variables,"blog")>
-			
+
 			<cfset queue = variables.blog.getPluginQueue() />
 			<cfset list = queue.getPluginNames() />
-				
+
 			<cfloop from="1" to="#arraylen(list)#" index="i">
 				<cfset plugin = queue.getPlugin(list[i])>
 				<cfset plugin.setup() />
@@ -273,14 +277,6 @@
 			<cfset config.put("generalSettings/dataSource", "password",  variables.dsnPassword)/>
 			<cfset config.put("generalSettings/dataSource", "tablePrefix", variables.prefix )/>
 			
-
-			<cfset local.isCF8 = listFirst(server.coldfusion.productversion) gte 8 />
-			<cfif local.isCF8>
-				<cfset local.threaded = '1' />
-			<cfelse>
-				<cfset local.threaded = '0' />
-			</cfif>
-			
 			<cfquery name="local.prefQuery"  datasource="#variables.dsn#" username="#variables.dsnUsername#" password="#variables.dsnPassword#">
 				SELECT name
 				FROM #variables.prefix#setting 
@@ -291,12 +287,12 @@
 			<cfif local.prefQuery.recordcount EQ 0>
 				<cfquery name="local.prefQuery"  datasource="#variables.dsn#" username="#variables.dsnUsername#" password="#variables.dsnPassword#">
 					INSERT INTO #variables.prefix#setting (path, name, value, blog_id)
-					VALUES ('system/engine', 'enableThreads', '#local.threaded#', NULL)
+					VALUES ('system/engine', 'enableThreads', 1, NULL)
 				</cfquery>
 			<cfelse>
 				<cfquery name="local.prefQuery"  datasource="#variables.dsn#" username="#variables.dsnUsername#" password="#variables.dsnPassword#">
 					UPDATE #variables.prefix#setting 
-					SET value = '#local.threaded#'
+					SET value = '1'
 					WHERE path = 'system/engine'
 					AND name = 'enableThreads'
 				</cfquery>
@@ -385,16 +381,78 @@
 				</cfquery>
 			</cfif>
 			
-			<cfif NOT listfindnocase(variables.defaults["userPlugins"],"blogcfcRedirecter")>
-				<cftry>
-					<cfdirectory directory="#arguments.path#components/plugins/user/blogcfcRedirecter" action="delete" recurse="true" />
-					<cfcatch type="any" />
-				</cftry>
-			</cfif>
 		<cfreturn result/>
 	</cffunction>
-	
-<cfinclude template="lib.cfm">
 
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->
+	<cffunction name="addSampleData" access="public" output="true" returntype="any">
+		<cfargument name="skin" type="String" required="true" />
+		<cfargument name="path" type="String" required="true" />
 
+		<cfset var config = "#path#config.cfm" />
+
+			<cfset facade = createobject("component", variables.componentPath & "MangoFacade") />
+		<cfset blogFacade = facade.init( config, path )>
+		<cfset blog = blogFacade.getMango()>
+		<cfset var assetsPath = blog.getBlog().getBasePath() & blog.getBlog().getSetting('assets').path />
+		<cfset var admin = blog.getAdministrator()>
+		<cfset var data = {}>
+		<cfset var authors = admin.getAuthors() />
+		<cfset var authorId = '' />
+		<cfset var category = admin.getCategories()[1]>
+		<cfif arraylen( authors )>
+			<cfset authorId = authors[ 1 ].getId() />
+		</cfif>
+
+		<cfquery name="local.prefQuery"  datasource="#variables.dsn#" username="#variables.dsnUsername#" password="#variables.dsnPassword#">
+			DELETE FROM #variables.prefix#post_category
+		</cfquery>
+		<cfquery name="local.prefQuery"  datasource="#variables.dsn#" username="#variables.dsnUsername#" password="#variables.dsnPassword#">
+			DELETE FROM #variables.prefix#post
+		</cfquery>
+		<cfquery name="local.prefQuery"  datasource="#variables.dsn#" username="#variables.dsnUsername#" password="#variables.dsnPassword#">
+			DELETE FROM #variables.prefix#entry_custom_field
+		</cfquery>
+		<cfquery name="local.prefQuery"  datasource="#variables.dsn#" username="#variables.dsnUsername#" password="#variables.dsnPassword#">
+			DELETE FROM #variables.prefix#entry
+		</cfquery>
+		<cfquery name="local.prefQuery"  datasource="#variables.dsn#" username="#variables.dsnUsername#" password="#variables.dsnPassword#">
+			UPDATE #variables.prefix#blog set skin = '#skin#'
+		</cfquery>
+
+	<cfset admin.saveSetting( 'site/info', 'youtube', 'https://www.youtube.com/@asfusion' ) />
+	<cfset admin.saveSetting( 'site/info', 'facebook', 'https://www.facebook.com/' ) />
+	<cfset admin.saveSetting( 'site/info', 'instagram', 'https://www.instagram.com/' ) />
+	<cfset admin.saveSetting( 'site/info', 'address', '123 Piquillin Road
+	Los Angeles, CA 90045' ) />
+	<cfset admin.saveSetting( 'site/info', 'phone', '123-233-2345' ) />
+	<cfset admin.saveSetting( 'site/info', 'github', 'https://github.com/asfusion/mango' ) />
+	<cfset admin.saveSetting( 'site/info', 'dribbble', 'https://github.com/asfusion/mango' ) />
+		<cfset admin.saveSetting( 'site/info', 'twitter', 'https://x.com' ) />
+	<cfset admin.saveSetting( 'site/info', 'email', authors[ 1 ].getEmail() ) />
+
+	<cfif skin EQ "massively">
+		<cfset data = new data.massively()>
+	<cfelseif skin EQ "ecohosting">
+		<cfset data = new data.ecohosting()>
+	<cfelseif skin EQ "monica">
+		<cfset data = new data.monica()>
+		<cfelseif skin EQ "augustine">
+		<cfset data = new data.augustine()>
+	</cfif>
+		<cfset var result = data.create( admin, authorId, assetsPath, authors[ 1 ].getEmail(), category, authors[ 1 ].getname() )/>
+		<cfset result.status = true />
+
+		<!---<cfdirectory action="delete" directory="#path#/assets/content/images" recurse="true" />--->
+		<cfdirectory action="copy" directory="#expandPath(".")#/data/#skin#/" destination="#path#/assets/content/images" recurse="true" />
+
+		<!---- we'll need to change the app name so that it reloads --->
+		<cfset templateContent = fileread( "#expandPath(".")#/data/Application.txt" ) />
+		<cfset templateContent = replacenocase( templateContent,"{appName}", createUUID(), "all" ) />
+
+		<cffile action="write" file="#path#/Application.cfc" output="#templateContent#" />
+		<cfset var result.status = true />
+		<cfreturn result />
+	</cffunction>
+	<cfinclude template="lib.cfm">
 </cfcomponent>

@@ -16,18 +16,14 @@
 	<br />Also, don''t forget to edit your blog''s <a href="settings.cfm">settings</a>.</p>'/>
 </cfif>
 
-<cfif len(message)>
-	<cfset message = '<p class="infomessage">#message#</p>' />
-<cfelseif len(error)>
-	<cfset message = '<p class="error">#error#</p>' />
-</cfif>
+<cf_layout page="index" title="Dashboard"><cfoutput>
+	<cfif len(message)>
+	<div class="alert alert-info" role="alert">#message#</div>
+	<cfelseif len(error)>
+		<div class="alert alert-danger" role="alert">#error#</div>
+	</cfif>
 
-<cf_layout page="Overview" title="Overview">
-	<div id="wrapper">
-		<div id="content">
-		<h2 class="pageTitle">Overview</h2>
 			<div id="innercontent">
-			<cfoutput>#message#</cfoutput>
 			<cfif structkeyexists(url, "update") AND listfind(currentRole.permissions, "manage_system")>
 				<cfflush interval="5">
 				<cfoutput>
@@ -46,4 +42,5 @@
 			</div>
 		</div>
 	</div>
+</cfoutput>
 </cf_layout>

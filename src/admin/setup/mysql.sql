@@ -145,6 +145,7 @@ CREATE TABLE `#prefix#blog` (
   `basepath` varchar(255) default NULL,
   `plugins` text,
   `systemplugins` text,
+    `locale` varchar (10) NULL ,
   PRIMARY KEY  (`id`)
 ) CHARACTER SET utf8 COLLATE utf8_general_ci;
 </cfquery>
@@ -159,11 +160,34 @@ CREATE TABLE  `#prefix#author_blog` (
 </cfquery>
 
 <cfquery name="setup" datasource="#dsn#" username="#username#" password="#password#">
+CREATE TABLE `#prefix#login_key` (
+                             `id` varchar(35) NOT NULL DEFAULT '',
+                             `user_id` varchar(35) DEFAULT NULL,
+                             `user_type` varchar(10) DEFAULT NULL,
+                             `last_visit_on` datetime DEFAULT NULL,
+                             PRIMARY KEY (`id`)
+)
+</cfquery>
+
+<cfquery name="setup" datasource="#dsn#" username="#username#" password="#password#">
+CREATE TABLE `#prefix#login_password_reset` (
+                                        `id` varchar(40) NOT NULL DEFAULT '',
+                                        `user_id` varchar(40) DEFAULT NULL,
+                                        `valid` tinyint DEFAULT NULL,
+                                        `created_on` datetime DEFAULT NULL,
+                                        PRIMARY KEY (`id`)
+)
+    </cfquery>
+
+
+
+<cfquery name="setup" datasource="#dsn#" username="#username#" password="#password#">
 CREATE TABLE `#prefix#setting` (
   `path` varchar(255) NOT NULL default '',
   `name` varchar(100) NOT NULL default '',
   `value` longtext,
   `blog_id` varchar(50) default '',
+    `type` varchar( 10 ) default 'string',
   KEY `IX_#prefix#setting_path` (`path`),
   KEY `IX_#prefix#setting_blog` (`blog_id`)
 ) CHARACTER SET utf8 COLLATE utf8_general_ci;
@@ -193,7 +217,6 @@ CREATE TABLE `#prefix#entry` (
   `excerpt` text default NULL,
   `author_id` varchar(35) default NULL,
   `comments_allowed` tinyint(1) NOT NULL default '1',
-  `trackbacks_allowed` tinyint(1) default NULL,
   `status` varchar(50) default NULL,
   `last_modified` datetime default NULL,
   `blog_id` varchar(50) default NULL,
@@ -325,22 +348,6 @@ CREATE TABLE `#prefix#post_category` (
 </cfquery>
 
 <cfquery name="setup" datasource="#dsn#" username="#username#" password="#password#">
-CREATE TABLE  `#prefix#trackback` (
-  `id` varchar(35) NOT NULL default '',
-  `entry_id` varchar(35) default NULL,
-  `content` text default NULL,
-  `title` varchar(200) default NULL,
-  `creator_url` varchar(255) default NULL,
-  `creator_url_title` varchar(50) default NULL,
-  `created_on` datetime default NULL,
-  `approved` tinyint(1) default NULL,
-  PRIMARY KEY  (`id`),
-  KEY `FK_#prefix#trackback_entry` (`entry_id`),
-  CONSTRAINT `FK_#prefix#trackback_entry` FOREIGN KEY (`entry_id`) REFERENCES `#prefix#entry` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) CHARACTER SET utf8 COLLATE utf8_general_ci;
-</cfquery>
-
-<cfquery name="setup" datasource="#dsn#" username="#username#" password="#password#">
 CREATE TABLE  `#prefix#link` (
   `id` varchar(35) NOT NULL,
   `title` varchar(100) default NULL,
@@ -382,12 +389,12 @@ INSERT INTO #prefix#setting(path, name, value, blog_id)
 		('system/mail', 'server','',NULL),
 		('system/mail', 'username','',NULL),
 		('system/mail', 'password','',NULL),
-		('system/urls', 'searchUrl','archives.cfm/search/',NULL),
-		('system/urls', 'postUrl','post.cfm/{postName}',NULL),
+		('system/urls', 'searchUrl','archives.cfm',NULL),
+		('system/urls', 'postUrl','post.cfm?entry={postName}',NULL),
 		('system/urls', 'authorUrl','author.cfm/{authorAlias}',NULL),
 		('system/urls', 'archivesUrl','archives.cfm/',NULL),
 		('system/urls', 'categoryUrl','archives.cfm/category/{categoryName}',NULL),
-		('system/urls', 'pageUrl','page.cfm/{pageHierarchyNames}{pageName}',NULL),
+		('system/urls', 'pageUrl','page.cfm?entry={pageHierarchyNames}{pageName}',NULL),
 		('system/urls', 'rssUrl','feeds/rss.cfm',NULL),
 		('system/urls', 'atomUrl','feeds/atom.cfm',NULL),
 		('system/urls', 'apiUrl','api',NULL),
@@ -395,12 +402,16 @@ INSERT INTO #prefix#setting(path, name, value, blog_id)
 		('system/urls', 'admin','',NULL),
 		('system/engine/logging', 'level','warning',NULL),
 		('system/engine', 'enableThreads','0',NULL),
-		('system/admin/htmleditor', 'editor','ckeditor',NULL),
 		('system/skins', 'directory','{baseDirectory}skins/',NULL),
 		('system/skins', 'path','',NULL),
 		('system/skins', 'url','',NULL),
-		('system/authorization', 'methods','native',NULL),
-		('system/search', 'component','search.DatabaseSimple',NULL),
-		('system/plugins', 'directory','{componentsDirectory}plugins/',NULL),
-		('system/plugins', 'path','plugins.',NULL);
+		('system/authorization', 'methods','native','default'),
+		('system/search', 'component','search.DatabaseSimple','default'),
+		('system/plugins', 'directory','{componentsDirectory}plugins/','default'),
+		('system/plugins', 'path','plugins.',NULL),
+('system/admin/htmleditor', 'editor','tinymce','default'),
+		('system/admin/pages/fields', 'customfields','0','default'),
+('system/admin/pages/fields', 'name','0','default'),
+('system/admin/posts/fields', 'customfields','0','default'),
+('system/admin/posts/fields', 'name','0.','default')
 </cfquery>

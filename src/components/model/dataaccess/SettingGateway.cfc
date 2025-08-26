@@ -22,7 +22,7 @@
 	<cfset var q_getSettingById = "" />
 	
 	<cfquery name="q_getSettingById"  datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
-		SELECT path, name, value, blog_id
+		SELECT path, name, value, blog_id, type
 		FROM #variables.prefix#setting		
 		WHERE path = <cfqueryparam value="#arguments.path#" cfsqltype="CF_SQL_VARCHAR" /> AND
 			<cfif len(arguments.blog_id)>
@@ -52,7 +52,7 @@
 	</cfif>
 	
 	<cfquery name="q_getSettingByPath"  datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
-		SELECT path, name, value, blog_id
+		SELECT path, name, value, blog_id, type
 		FROM #variables.prefix#setting			
 		WHERE path #operator# <cfqueryparam value="#arguments.path#" cfsqltype="CF_SQL_VARCHAR" /> AND
 			<cfif len(arguments.blog_id)>

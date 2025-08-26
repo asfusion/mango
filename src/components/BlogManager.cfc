@@ -27,6 +27,7 @@
 				blog.setBasePath(basepath);
 				blog.setCharset(charset);
 				blog.setPlugins(plugins);
+				blog.setLocale(locale);
 				blog.setSystemPlugins(systemPlugins);
 				arrayappend(blogs,blog);
 			</cfscript>
@@ -55,6 +56,7 @@
 				blog.setBasePath(basepath);
 				blog.setCharset(charset);
 				blog.setPlugins(plugins);
+				blog.setLocale(locale);
 				blog.setSystemPlugins(systemPlugins);
 				arrayappend(blogs,blog);
 			</cfscript>
@@ -81,6 +83,7 @@
 				blog.setSkin(skin);
 				blog.setBasePath(basepath);
 				blog.setCharset(charset);
+				blog.setLocale(locale);
 				blog.setPlugins(plugins);
 				blog.setSystemPlugins(systemPlugins);
 				blog.setSettings(arguments.config);				

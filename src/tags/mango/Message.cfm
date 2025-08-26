@@ -1,5 +1,6 @@
 <cfsetting enablecfoutputonly="true">
 <cfparam name="attributes.ifMessageExists" default="false">
+<cfparam name="attributes.ifNotMessageExists" default="false">
 <cfparam name="attributes.type" default="">
 <cfparam name="attributes.status" default="">
 <cfparam name="attributes.text" default="false">
@@ -13,6 +14,12 @@
 		<cfif len(attributes.type) AND request.message.getType() EQ attributes.type
 				AND len(attributes.status) AND request.message.getStatus() EQ attributes.status>
 		<cfelse>
+			<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
+		</cfif>
+	</cfif>
+	<cfif attributes.ifNotMessageExists>
+		<cfif ( len(attributes.type) AND request.message.getType() EQ attributes.type )
+			AND ( NOT len(attributes.status) OR ( request.message.getStatus() EQ attributes.status ))>
 			<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
 		</cfif>
 	</cfif>

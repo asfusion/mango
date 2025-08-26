@@ -1,6 +1,7 @@
 <cfif NOT structkeyexists(request,"adminLoginTemplate")>
-	<cfset request.adminLoginTemplate = "loginContent.cfm" />
+	<cfset request.adminLoginTemplate = "templates/login.cfm" />
 </cfif>
+<cfset blog = request.blogManager.getBlog() />
 <!--- first check if this page has been defined in the current skin --->
 <cfset templates = request.administrator.getAdminPageTemplates()>
 <cfif structkeyexists(templates,"login")>

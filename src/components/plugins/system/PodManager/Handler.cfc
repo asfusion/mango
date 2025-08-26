@@ -1,6 +1,14 @@
-<cfcomponent>
+<cfcomponent extends="org.mangoblog.plugins.BasePlugin">
 
 	<cfset variables.package = "org/mangoblog/plugins/PodManager"/>
+
+	<cfset this.events =
+		[ { 'name' = 'getPods', 'type' = 'sync', 'priority' = '1' },
+	{ 'name' = 'initializePodGroup', 'type' = 'sync', 'priority' = '5' },
+	{ 'name' = 'registerPod', 'type' = 'async', 'priority' = '100' },
+	{ 'name' = 'podManager-showSettings', 'type' = 'sync', 'priority' = '5' },
+	{ 'name' = 'skinsNav', 'type' = 'sync', 'priority' = '5' }
+		] />
 
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
 	<cffunction name="init" access="public" output="false" returntype="any">
@@ -16,47 +24,7 @@
 		<cfreturn this/>
 	</cffunction>
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
-	<cffunction name="getName" access="public" output="false" returntype="string">
-		<cfreturn variables.name />
-	</cffunction>
-
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
-	<cffunction name="setName" access="public" output="false" returntype="void">
-		<cfargument name="name" type="string" required="true" />
-		<cfset variables.name = arguments.name />
-		<cfreturn />
-	</cffunction>
-
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
-	<cffunction name="getId" access="public" output="false" returntype="any">
-		<cfreturn variables.id />
-	</cffunction>
-	
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
-	<cffunction name="setId" access="public" output="false" returntype="void">
-		<cfargument name="id" type="any" required="true" />
-		<cfset variables.id = arguments.id />
-		<cfreturn />
-	</cffunction>
-
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
-	<cffunction name="setup" hint="This is run when a plugin is activated" access="public" output="false" returntype="any">
-		<cfreturn />
-	</cffunction>
-
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
-	<cffunction name="unsetup" hint="This is run when a plugin is de-activated" access="public" output="false" returntype="any">
-		<cfreturn />
-	</cffunction>
-
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
-	<cffunction name="handleEvent" hint="Asynchronous event handling" access="public" output="false" returntype="any">
-		<cfargument name="event" type="any" required="true" />		
-		<cfreturn />
-	</cffunction>
-
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
+<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="processEvent" hint="Synchronous event handling" access="public" output="false" returntype="any">
 		<cfargument name="event" type="any" required="true" />
 
@@ -108,17 +76,21 @@
 			
 			<!--- _____________________________________ --->
 			<!--- admin nav event --->
-			<cfelseif eventName EQ "mainNav" 
+			<cfelseif eventName EQ "skinsNav"
 						AND variables.manager.isCurrentUserLoggedIn() 
 						AND listfind(variables.manager.getCurrentUser().getCurrentRole(variables.manager.getBlog().getId()).permissions, "manage_pods")>
-					<cfset link = structnew() />
-					<cfset link.owner = "PodManager">
-					<cfset link.page = "generic" />
-					<cfset link.title = "Pod Manager" />
-					<cfset link.eventName = "podManager-showSettings" />
-					<cfset link.icon = "assets/images/icons/pod_manager.png" />
-					
+
+					<cfset skins = variables.manager.getAdministrator().getSkin( variables.manager.getBlog().getSkin() ) />
+					<cfif arraylen( skins.podLocations ) GT 0>
+						<cfset link = structnew() />
+						<cfset link.owner = "PodManager">
+						<cfset link.page = "generic_skin_settings" />
+						<cfset link.title = "Pods" />
+						<cfset link.eventName = "podManager-showSettings" />
+						<cfset link.icon = "bi-grid-1x2-fill" />
+
 					<cfset arguments.event.addLink(link)>
+					</cfif>
 
 			<!--- _____________________________________ --->
 			<!--- admin event --->
@@ -143,7 +115,7 @@
 						<cfset variables.locations[data.externaldata.locationId] = newList />
 											
 						<cfset data.message.setstatus("success") />
-						<cfset data.message.setType("settings") />
+						<cfset data.message.setType("generic") />
 						<cfset data.message.settext("Settings updated")/>
 					</cfif>
 					
@@ -190,7 +162,9 @@
 				</cfif>
 				
 				<!--- change message --->
-				<cfset data.message.setTitle("Pod Manager") />
+				<cfset data.message.setHierarchy( [{ 'link' = "skins.cfm", 'title' = 'Design' },
+					{ 'title' = 'Pods' }]) />
+				<cfset data.message.setTitle("") />
 				<cfset data.message.setData(page) />
 			</cfif>
 		

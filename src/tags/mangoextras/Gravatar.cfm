@@ -33,28 +33,28 @@
 		<cfset name = author.getName() />
 		<cfset email = author.getEmail() />
 	</cfif>
-	
+
 	<cfif len(email)>
-		<cfset gravatar_url = 
-			"http://www.gravatar.com/avatar.php?gravatar_id=#LCase(hash(LCase(email)))#&amp;rating=#attributes.rating#&amp;size=#attributes.size#"/>
-		
+		<cfset gravatar_url =
+			"https://www.gravatar.com/avatar.php?gravatar_id=#LCase(hash(LCase(email)))#&amp;rating=#attributes.rating#&amp;size=#attributes.size#"/>
+
 		<cfif len(attributes.defaultimg)>
-			<cfif not findnocase("http://",attributes.defaultimg)>
+			<cfif not findnocase("http",attributes.defaultimg)>
 				<cfset attributes.defaultimg = blog.getUrl() & "skins/#blog.getSkin()#/" & attributes.defaultimg />
 			</cfif>
 			<cfset gravatar_url = gravatar_url & "&amp;default=" & URLEncodedFormat(attributes.defaultimg) />
 		</cfif>
-		
+
 		<cfif len(attributes.border)>
 			<cfset gravatar_url = gravatar_url & "&amp;border=" & attributes.border />
 		</cfif>
-			
+
 		<cfif len(attributes.class)>
 			<cfset gravatar_class = 'class="#attributes.class#"'/>
 		</cfif>
-		
+
 		<cfif attributes.imgtag>
-			<cfoutput><img alt="#name#" src="#gravatar_url#" title="#name#" width="#attributes.size#"  height="#attributes.size#" #gravatar_class# /></cfoutput>		
+			<cfoutput><img alt="#name#" src="#gravatar_url#" title="#name#" width="#attributes.size#"  height="#attributes.size#" #gravatar_class# /></cfoutput>
 		<cfelse>
 			<cfoutput>#gravatar_url#</cfoutput>
 		</cfif>

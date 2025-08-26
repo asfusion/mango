@@ -197,7 +197,6 @@
 		</cfif>
 	</cffunction>	
 	
-
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::--->
 	<cffunction name="getPostById" access="public" output="false" returntype="any">
 		<cfargument name="id" required="true" type="string" hint="Id"/>

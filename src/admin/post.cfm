@@ -25,7 +25,8 @@
 	<cfset currentBlogId = request.blogManager.getBlog().getId() />
 	<cfset currentRole = currentAuthor.getCurrentRole(currentBlogId)/>
 	<cfset preferences = currentRole.preferences.get("admin","menuItems","") />
-	
+	<cfset postUrl = '' />
+
 	<cfif id NEQ "">
 		<cfset mode = "update" />
 	</cfif>
@@ -63,7 +64,7 @@
 					<cfset postUrl = postUrl & "&preview=1">
 				</cfif>
 			</cfif>
-			<cfset pagetitle = 'Editing "<a href="#postUrl#" target="_blank">#xmlformat(post.getTitle())#</a>"'>
+			<cfset pagetitle = 'Editing "#htmlEditFormat(post.getTitle())#"'>
 		<cfelse>
 			<cfset post = request.blogManager.getObjectFactory().createPost() />
 		</cfif>	
@@ -79,7 +80,19 @@
 	
 		<cfset panelData = request.administrator.getCustomPanel(panel,'post') />
 		<cfset request.panelData = panelData />
-		
+		<cfset request.displayData = panelData /><!--- new more generic name --->
+	<!--- send event to give opportunity to plugins to pre-populate a default page --->
+		<cfset args = structnew() />
+		<cfset args.item = post />
+		<cfset args.formName = "postForm" />
+		<cfset args.request = request />
+		<cfset args.formScope = form />
+		<cfset args.status = mode />
+		<cfset args.display = request.displayData />
+		<cfset event = pluginQueue.createEvent("beforeAdminPostFormDisplay",args,"AdminForm") />
+		<cfset event = pluginQueue.broadcastEvent(event) />
+		<cfset post = event.item />
+
 		<cfif mode EQ "new">
 			<!--- use default value from panel data --->
 			<cfset post.setTitle(panelData.standardFields['title'].value) />
@@ -108,18 +121,6 @@
 			</cfif>
 		</cfif>
 
-		<!--- send event to give opportunity to plugins to pre-populate the post --->
-		<cfset args = structnew() />
-		<cfset args.item = post />
-		<cfset args.formName = "postForm" />
-		<cfset args.request = request />
-		<cfset args.formScope = form />
-		<cfset args.status = mode />
-		<cfset event = pluginQueue.createEvent("beforeAdminPostFormDisplay",args,"AdminForm") />
-		<cfset event = pluginQueue.broadcastEvent(event) />
-		
-		<cfset post = event.item />
-		
 		<!--- also create the event that will be used to show extra data at the end of the form --->
 		<cfset event = pluginQueue.createEvent("beforeAdminPostFormEnd",args,"AdminForm") />
 		<cfset event = pluginQueue.broadcastEvent(event) />
@@ -133,7 +134,7 @@
 		<cfset hiddenPanelField["value"] = panel />
 		<cfset hiddenPanelField["name"] = "Entry Type"/>
 		<cfset hiddenPanelField["inputType"] = "hidden">
-		<cfset arrayappend(customFormFields,hiddenPanelField)>
+		<cfset arrayappend( customFormFields, hiddenPanelField )>
 		
 		<cfloop from="1" to="#arraylen(customFormFields)#" index="i">
 			<cfif post.customFieldExists(customFormFields[i].id)>
@@ -159,8 +160,8 @@
 		<cfset categories = post.getCategories() />
 		<cfset categoriesList = "" />
 				
-		<cfloop from="1" to="#arraylen(categories)#" index="i">
-			<cfset categoriesList = listappend(categoriesList,categories[i].id) />
+		<cfloop from="1" to="#arraylen(categories)#" index="categoryIndex">
+			<cfset categoriesList = listappend(categoriesList,categories[categoryIndex].id) />
 		</cfloop>
 	</cfif>
 	<!--- remove publish settings if user doesn't have permissions --->
@@ -175,52 +176,39 @@
 	<cfif panelData.showInMenu EQ "primary">
 		<cfset ownerMainMenu = panel />
 	</cfif>
+	<cfset breadcrumb = [ { 'link' = 'posts.cfm?panel=#panel#&amp;owner=#panel#', 'title' = panelData.label },
+	{ 'title' = ( mode EQ "update" ) ? 'Edit' : 'New' } ] />
 </cfsilent>
-<cf_layout page="#ownerMainMenu#" title="#panelData.label#">
+<cf_layout page="#ownerMainMenu#" title="#pagetitle#" hierarchy="#breadcrumb#">
 	<script type="text/javascript" src="assets/scripts/keep-alive.js" ></script>
-<div id="wrapper">
-<cfif listfind(currentRole.permissions, "manage_all_posts") OR
-		(listfind(currentRole.permissions, "manage_posts") AND 
-			(mode EQ "new" OR post.authorId EQ currentAuthor.id))>
-	<div id="submenucontainer">
-		<ul id="submenu">
-			<cfif panelData.showInMenu EQ "secondary">
-			<cfif NOT len(preferences) OR listfind(preferences,"posts_new")>
-			<li><a href="post.cfm"<cfif mode EQ "new" AND panel EQ ""> class="current"</cfif>>New Post</a></li>	
-			</cfif>			
-			<li><a href="posts.cfm"<cfif mode EQ "update" AND panel EQ ""> class="current"</cfif>>Edit Post</a></li>
-			<mangoAdmin:MenuEvent name="postsNav" />
-			<cfelse>
-			<cfoutput><li><a href="post.cfm?panel=#panel#&amp;owner=#ownerMainMenu#"<cfif mode EQ "new" AND panel NEQ ""> class="current"</cfif>>New</a></li>	
-			<li><a href="posts.cfm?panel=#panel#&amp;owner=#ownerMainMenu#"<cfif mode EQ "update" AND panel NEQ ""> class="current"</cfif>>Edit</a></li>
-			<mangoAdmin:MenuEvent name="customPostsNav" owner="#panel#Panel"/></cfoutput>
-			</cfif>
-		</ul>
-	</div>
-	
-	<div id="content">
-		<h2 class="pageTitle"><cfoutput>#pagetitle#</cfoutput></h2>
-		
-		<div id="innercontent">
-		<cfif len(error)>
-			<p class="error"><cfoutput>#error#</cfoutput></p>
-		</cfif>
-		<cfif len(message)>
-			<p class="message"><cfoutput>#message#</cfoutput></p>
-		</cfif>
-		
+
+	<cfif listfind(currentRole.permissions, "manage_all_posts") OR
+		(listfind(currentRole.permissions, "manage_posts") AND
+		(mode EQ "new" OR post.authorId EQ currentAuthor.id))>
+		<cfoutput>
+			<cfif len(message)><div class="alert alert-success" role="alert">#message#</div></cfif>
+			<cfif len(error)><div class="alert alert-danger" role="alert">#error#</div></cfif>
+
+			<form method="post" action="#cgi.SCRIPT_NAME#" name="postForm" id="postForm">
+				<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
+					<h4 class="h4">#pageTitle#</h4>
+					<div>
+						<input type="submit" class="btn btn-primary d-inline-flex align-items-center me-2 animate-up-2" name="submit" value="Save" />
+						<cfif len( postUrl )>
+							<a href="#postUrl#" target="_blank"><button type="button" class="btn btn-outline-info d-inline-flex align-items-center me-2">View</button></a>
+						</cfif>
+					</div>
+				</div>
+
 		<cfif len(panelData.template)>
 			<cfinclude template="#panelData.template#">
 		<cfelse>
 			<cfinclude template="postForm.cfm">
 		</cfif>
 		<mangoAdmin:Event name="beforeAdminPostContentEnd" item="#post#" />
-		</div>
-	</div>
-		<cfelse><!--- not authorized --->
-<div id="content"><div id="innercontent">
-<p class="infomessage">Your role does not allow <cfif mode EQ "new">adding new posts<cfelse>editing this post</cfif></p>
-</div></div>
-</cfif>
-</div>
+		</form>
+		</cfoutput>
+	<cfelse><!--- not authorized --->
+		<div class="alert alert-info" role="alert">Your role does not allow <cfif mode EQ "new">adding new posts<cfelse>editing this post</cfif></div>
+	</cfif>
 </cf_layout>

@@ -1,5 +1,7 @@
 <cfcomponent output="false">
 
+	<cfset this.events = [] />
+
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
 	<cffunction name="init" access="public" output="false" returntype="any">
 		<cfargument name="mainManager" type="any" required="true" />
@@ -7,7 +9,13 @@
 		
 			<cfset variables.mainManager = arguments.mainManager />
 			<cfset variables.preferencesManager = arguments.preferences />
-			
+
+			<!--- register locale automatically if found --->
+			<cfset var currentDir = getDirectoryFromPath( getCurrentTemplatePath() ) & "locale/" />
+			<cfif directoryExists( currentDir )>
+				<cfset variables.mainManager.getInternationalizer().loadFromDir( currentDir ) />
+			</cfif>
+
 		<cfreturn this/>
 	</cffunction>
 
@@ -137,7 +145,12 @@
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="getSetting" access="public" output="false" returntype="any">
 		<cfargument name="key" type="any" required="true" />
-		<cfreturn variables.settings[arguments.key] />
+		<cfargument name="default" type="any" required="false" />
+		<cfif structKeyExists( variables.settings, arguments.key )>
+			<cfreturn variables.settings[arguments.key] />
+		<cfelseif structKeyExists( arguments, 'default' )>
+			<cfreturn arguments.default />
+		</cfif>
 	</cffunction>
 
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->

@@ -26,6 +26,7 @@
 <cfparam name="attributes.ifCommentCountLT" type="string" default="">
 <cfparam name="attributes.ifHasCustomField" type="string" default="">
 <cfparam name="attributes.ifNotHasCustomField" type="string" default="">
+<cfparam name="attributes.ifCustomFieldEQ" type="string" default="">
 
 <cfif thisTag.executionmode is 'start'>
 <cfif attributes.format EQ "default">
@@ -147,14 +148,17 @@
 	<cfif len(attributes.ifCommentCountLT) AND currentPage.getCommentCount() GTE attributes.ifCommentCountLT>
 		<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
 	</cfif>
-	
-	<cfif len(attributes.ifHasCustomField)>
-		<cfif NOT currentPage.customFieldExists(attributes.ifHasCustomField)>
-			<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
-		</cfif>
+
+	<cfif len(attributes.ifHasCustomField) AND NOT currentPage.customFieldExists(attributes.ifHasCustomField)>
+		<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
 	</cfif>
-	
+
 	<cfif len(attributes.ifNotHasCustomField) AND currentPage.customFieldExists(attributes.ifNotHasCustomField)>
+		<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
+	</cfif>
+
+	<cfif len(attributes.ifCustomFieldEQ) AND (NOT currentPage.customFieldExists(attributes.ifHasCustomField)
+	OR currentPage.getCustomField(attributes.ifHasCustomField).value NEQ attributes.ifCustomFieldEQ)>
 		<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
 	</cfif>
 	
@@ -208,10 +212,10 @@
 		<cfset prop = currentPage.getCustomField(attributes.customfield).value />
 		</cfif>
 	</cfif>
-	<cfif attributes.format EQ "xml">
-		<cfset prop = xmlformat(prop) />
+	<cfif attributes.format EQ "paragraph">
+		<cfset prop = ParagraphFormat2( prop ) />
 	<cfelseif attributes.format EQ "escapedHtml">
-		<cfset prop = htmleditformat(prop)>
+		<cfset prop = htmleditformat( prop )>
 	</cfif>
 	<cfoutput>#prop#</cfoutput>
 </cfif>

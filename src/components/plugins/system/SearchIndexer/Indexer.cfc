@@ -1,5 +1,16 @@
-<cfcomponent>
-		
+<cfcomponent extends="org.mangoblog.plugins.BasePlugin">
+
+	<cfset this.events =
+		[ { 'name' = 'afterPostAdd', 'type' = 'async', 'priority' = '5' },
+	{ 'name' = 'afterPageAdd', 'type' = 'async', 'priority' = '5' },
+	{ 'name' = 'afterPostUpdate', 'type' = 'async', 'priority' = '5' },
+	{ 'name' = 'afterPageUpdate', 'type' = 'async', 'priority' = '5' },
+	{ 'name' = 'afterPostDelete', 'type' = 'async', 'priority' = '5' },
+	{ 'name' = 'afterPageDelete', 'type' = 'async', 'priority' = '5' },
+	{ 'name' = 'searchIndexer-reindex', 'type' = 'async', 'priority' = '5' },
+	{ 'name' = 'searchIndexer-optimize', 'type' = 'async', 'priority' = '5' }
+		] />
+
 	<cfset variables.id = "">
 	
 	<cffunction name="init" access="public" output="false" returntype="any">
@@ -8,38 +19,6 @@
 		<cfset variables.manager = arguments.mainManager />
 		<cfreturn this/>
 	</cffunction>
-
-	
-	<cffunction name="getName" access="public" output="false" returntype="string">
-		<cfreturn variables.name />
-	</cffunction>
-
-	<cffunction name="setName" access="public" output="false" returntype="void">
-		<cfargument name="name" type="string" required="true" />
-		<cfset variables.name = arguments.name />
-		<cfreturn />
-	</cffunction>
-
-	<cffunction name="getId" access="public" output="false" returntype="any">
-		<cfreturn variables.id />
-	</cffunction>
-
-	<cffunction name="setId" access="public" output="false" returntype="void">
-		<cfargument name="id" type="any" required="true" />
-		<cfset variables.id = arguments.id />
-		<cfreturn />
-	</cffunction>
-	
-	<cffunction name="setup" hint="This is run when a plugin is activated" access="public" output="false" returntype="any">
-		<!--- TODO: Implement Method: add scheduled task to reindex/optimize --->
-		<cfreturn />
-	</cffunction>
-
-	<cffunction name="unsetup" hint="This is run when a plugin is de-activated" access="public" output="false" returntype="any">
-		<!--- TODO: Implement Method: try to remove collections --->
-		<cfreturn />
-	</cffunction>
-
 	<cffunction name="handleEvent" hint="Asynchronous event handling" access="public" output="false" returntype="any">
 		<cfargument name="event" type="any" required="true" />
 

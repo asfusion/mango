@@ -67,127 +67,136 @@
 </cfsilent>
 <cf_layout page="Users" title="Roles">
 <cfif listfind(currentRole.permissions, "manage_users")>
-<div id="wrapper">
-	<div id="submenucontainer">
-		<ul id="submenu">
-			<li><a href="author.cfm?profile=1">My Profile</a></li>
-			<cfif NOT len(preferences) OR listfind(preferences,"users_new")>
-			<li><a href="author.cfm">New User</a></li>
-			</cfif>
+	<cfoutput>
+		<cfif len(message)><div class="alert alert-success" role="alert">#message#</div></cfif>
+		<cfif len(error)><div class="alert alert-danger" role="alert">#error#</div></cfif>
+
+		<nav class="nav navbar-dashboard navbar-dark flex-column flex-sm-row mb-4">
+				<a href="author.cfm?profile=1" class="nav-link<cfif mode EQ "profile"> active</cfif>">My Profile</a>
+		<cfif listfind(currentRole.permissions, "manage_users")>
 			<cfif NOT len(preferences) OR listfind(preferences,"users_edit")>
-			<li><a href="authors.cfm">Edit User</a></li>
+				<a class="nav-link" href="authors.cfm">Users</a>
 			</cfif>
 			<cfif NOT len(preferences) OR listfind(preferences,"roles")>
-			<li><a href="roles.cfm" class="current">Roles</a></li>
-			</cfif>			
-			<mangoAdmin:MenuEvent name="authorsNav" />
-		</ul>
-	</div>
-	
-	<div id="content">
-		<h2 class="pageTitle">Roles</h2>	
+				<a class="nav-link  active" href="roles.cfm">Roles</a>
+			</cfif>
+				<mangoAdmin:MenuEvent name="authorsNav" />
+		</cfif>
+	</nav>
 
-		<div id="innercontent">
-		<cfif len(error)>
-			<p class="error"><cfoutput>#error#</cfoutput></p>
-		</cfif>
-		<cfif len(message)>
-			<p class="message"><cfoutput>#message#</cfoutput></p>
-		</cfif>
-		
-		<cfoutput>
-			<div>
-		<cfif mode EQ "update"><p class="buttonBar"><a href="roles.cfm" class="editButton">Create New Role</a></p></cfif>
-		<table cellspacing="0">
-			<tr><th class="buttonColumn">Edit</th><th>Name</th><th>Description</th></tr>
-			<cfloop from="1" to="#arraylen(roles)#" index="i">
-				<tr>
-					<td <cfif NOT i mod 2>class="alternate"</cfif>><a href="roles.cfm?id=#roles[i].getId()#" class="editButton">Edit</a></td>
-					<td <cfif NOT i mod 2>class="alternate"</cfif>>#xmlformat(roles[i].getName())#</td>
-					<td <cfif NOT i mod 2>class="alternate"</cfif>>#xmlformat(roles[i].getDescription())#</td>
-				</tr>
-			</cfloop>
+	<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center">
+	<div class="card card-body border-0 shadow table-wrapper table-responsive">
+	<table class="table table-hover">
+		<thead>
+		<tr>
+			<th>Name</th>
+			<th>Description</th>
+			<th class="border-gray-200">Actions</th>
+		</tr>
+		</thead>
+	<tbody>
+	<!-- Item -->
+		<cfloop from="1" to="#arraylen(roles)#" index="i">
+			<tr>
+
+				<td <cfif NOT i mod 2>class="alternate"</cfif>>#xmlformat(roles[i].getName())#</td>
+				<td <cfif NOT i mod 2>class="alternate"</cfif>>#xmlformat(roles[i].getDescription())#</td>
+				<td <cfif NOT i mod 2>class="alternate"</cfif>><a href="roles.cfm?id=#roles[i].getId()#" class="editButton">Edit</a></td>
+		</tr>
+		</cfloop>
+
+		</tbody>
 		</table>
+
 		</div>
-		<div>
+		</div><!--- END TABLE --->
+
+
+
+		<cfif mode EQ "update"><p class="buttonBar"><a href="roles.cfm" class="editButton">Create New Role</a></p></cfif>
+
 			<form action="roles.cfm" method="POST">
 				<input type="hidden" name="id" value="#id#">
-				<fieldset id="roleFieldset">
-		      		<legend>#formtitle#</legend>
-					<p>
-						<label for="name">Name</label>
-						<span class="field"><input type="text" id="name" name="name" value="#htmleditformat(name)#" size="30" class="required"></span>
-					</p>
-					
-					<p>
-						<label for="description">Description</label>
-						<span class="field"><textarea id="description" name="description" rows="3" cols="60">#htmleditformat(description)#</textarea></span>
-					</p>
-				
-					<div class="column1">
-						<h3>Permissions</h3>
-						<h4>What can a user with this role do?</h4>
-						<ol>
-							<cfloop from="1" to="#arraylen(permissions)#" index="i">
-							<li>
-								<input type="checkbox" value="#permissions[i].id#" id="permissions_#permissions[i].id#" 
-									name="permissions" <cfif listfind(permissionsList,permissions[i].id)>checked="checked"</cfif>/>
-								<label for="permissions_#permissions[i].id#" id="permissions_#permissions[i].id#-L" class="postField">#xmlformat(permissions[i].name)#</label>
-								<span class="hint">#xmlformat(permissions[i].description)#</span>
-							</li>
-							</cfloop>
-						</ol>
-					</div><!--- /column1 --->
-					
-					<div class="column2">
-						<h3>Preferences</h3>
-						<h4>Menu items to show in admin:</h4>
-						<p class="hint">Removing a menu item only hides it from the menu but it does not revoke permissions</p>
+
+
+	<h2>#formtitle#</h2>
+	<div class="row">
+		<div class="col-6">
+
+		<div class="card card-body border-0 shadow mb-4">
+
+			<div class="mb-3">
+				<label for="name">Name</label>
+					<input type="text" id="name" name="name" value="#htmleditformat(name)#" size="30" class="form-control required"/>
+			</div>
+
+			<div class="mb-3">
+				<label for="description">Description</label>
+				<textarea id="description" name="description" rows="3" cols="60" class="form-control">#htmleditformat(description)#</textarea>
+			</div>
+		</div>
+		</div>
+	</div>
+	<div class="row">
+	<div class="col-6">
+	<div class="card card-body border-0 shadow mb-4">
+
+	<div class="mb-3">
+		<h2 class="h5 mb-4">Permissions</h2>
+		<p class="form-text">What can a user with this role do?</p>
+
+		<cfloop from="1" to="#arraylen(permissions)#" index="i">
+			<div class="form-check">
+
+			<input class="form-check-input" type="checkbox" value="#permissions[i].id#" id="permissions_#permissions[i].id#"
+							   name="permissions" <cfif listfind(permissionsList,permissions[i].id)>checked="checked"</cfif>/>
+			<label for="permissions_#permissions[i].id#" id="permissions_#permissions[i].id#-L" class="postField">#xmlformat(permissions[i].name)#</label>
+			<span class="hint">#xmlformat(permissions[i].description)#</span>
+			</div>
+		</cfloop>
+
+		</div>
+
+		</div>
+		</div>
+
+		<div class="col-6">
+		<div class="card card-body border-0 shadow mb-4">
+			<h2 class="h5 mb-4">Preferences</h2>
+			<p class="form-text">Menu items to show in admin:</p>
+			<p class="hint">Removing a menu item only hides it from the menu but it does not revoke permissions</p>
 						
-						<cfset options =
-								"posts,Posts," &
-								"posts_new,Posts Submenu: New Post," &
-								"pages,Pages," &
-								"pages_new,Pages Submenu: New Page," &
-								"links,Links," &
-								"categories,Categories," &
-								"categories_new,Categories Submenu: New Category," &
-								"files,Files," &
-								"themes,Themes," &
-								"plugins,Plugins," &
-								"users,Users/My Profile," &
-								"users_new,Users Submenu: New User," &
-								"users_edit,Users Submenu: Edit User," &
-								"roles,Users Submenu: Roles," &
-								"cache,Cache," &
-								"settings,Settings" />
-						<ol>
-							<cfloop from="1" to="#listlen(options)#" step="2" index="i">
-							<li>
-								<input type="checkbox" value="#ListGetAt(options,i)#" id="menuItems_#ListGetAt(options,i)#" 
-									name="menuItems" <cfif listfind(showMenuList,ListGetAt(options,i)) OR showMenuList EQ "all">checked="checked"</cfif>/>
-								<label for="menuItems_#ListGetAt(options,i)#">#ListGetAt(options,i+1)#</label>
-							</li>
-							</cfloop>
-						</ol>
-					</div><!--- /column2 --->
-					
-				</fieldset>
-				
-				<div class="actions">
-					<input type="submit" class="primaryAction" name="submit" id="submit" value="Submit">
+			<cfset options =
+					"posts,Posts," &
+					"posts_new,Posts Submenu: New Post," &
+					"pages,Pages," &
+					"pages_new,Pages Submenu: New Page," &
+					"links,Links," &
+					"categories,Categories," &
+					"categories_new,Categories Submenu: New Category," &
+					"files,Files," &
+					"themes,Themes," &
+					"plugins,Plugins," &
+					"users,Users/My Profile," &
+					"users_new,Users Submenu: New User," &
+					"users_edit,Users Submenu: Edit User," &
+					"roles,Users Submenu: Roles," &
+					"settings,Settings" />
+				<cfloop from="1" to="#listlen(options)#" step="2" index="i">
+					<div class="form-check">
+					<input class="form-check-input" type="checkbox" value="#ListGetAt(options,i)#" id="menuItems_#ListGetAt(options,i)#"
+						name="menuItems" <cfif listfind(showMenuList,ListGetAt(options,i)) OR showMenuList EQ "all">checked="checked"</cfif>/>
+					<label for="menuItems_#ListGetAt(options,i)#">#ListGetAt(options,i+1)#</label>
 				</div>
+				</cfloop>
 			</form>
 		</div>
+			<div class="mt-3 align-content-end"><button class="btn btn-gray-800 mt-2 animate-up-2" type="submit">Save</button></div>
+			<input type="hidden" name="submit" value="Submit">
 		</cfoutput>
 		</div>
 	</div>
-		<cfelse>
-		<div id="wrapper">
-		<!--- not authorized --->
-<div id="content"><div id="innercontent">
-<p class="infomessage">Your role does not allow you to manage user roles</p>
-</div></div></div>
+<cfelse><!--- not authorized --->
+	<div class="alert alert-info" role="alert">Your role does not allow editing themes</div>
 </cfif>
-</div>
 </cf_layout>

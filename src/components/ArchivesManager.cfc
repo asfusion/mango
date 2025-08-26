@@ -24,7 +24,17 @@
 		<cfset var archives = variables.accessObject.getPostsGateway().getActiveMonths(arguments.year,variables.blogid)  />		
 		<cfreturn packageObjects(archives,"date") />
 		
-	</cffunction>	
+	</cffunction>
+
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+	<cffunction name="getYearlyArchives" access="public" output="false" returntype="array">
+		<cfargument name="adminMode" required="false" default="false" type="boolean" hint="Whether to include drafts and future posts"/>
+		<cfargument name="useWrapper" required="false" type="boolean" hint="Whether to use the post wrapper"/>
+
+		<cfset var archives = variables.accessObject.getPostsGateway().getActiveYears(variables.blogid)  />
+		<cfreturn packageObjects(archives,"date") />
+
+	</cffunction>
 
 	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="getArchive" access="public" output="false" returntype="any">	

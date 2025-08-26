@@ -20,7 +20,7 @@
 	<cfset var q_blog = "" />
 	
 	<cfquery name="q_blog" datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
-		SELECT	id, title, description, tagline, skin, url, charset, basePath, plugins, systemplugins, url as urlString
+		SELECT	id, title, description, tagline, skin, url, charset, basePath, plugins, systemplugins, url as urlString, locale
 		FROM	#variables.prefix#blog as blog
 		WHERE id = <cfqueryparam value="#arguments.id#" cfsqltype="CF_SQL_VARCHAR"/>
 	</cfquery>
@@ -34,7 +34,7 @@
 	<cfset var q_blog = "" />
 	
 	<cfquery name="q_blog" datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
-		SELECT	id, title, description, tagline, skin, url, charset, basePath, plugins, systemplugins, url as urlString
+		SELECT	id, title, description, tagline, skin, url, charset, basePath, plugins, systemplugins, url as urlString, locale
 		FROM	#variables.prefix#blog		
 	</cfquery>
 
@@ -48,7 +48,7 @@
 	<cfset var q_blog = "" />
 	
 	<cfquery name="q_blog" datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
-		SELECT	id, title, description, tagline, skin, url, charset, basePath, plugins, systemplugins, url as urlString
+		SELECT	id, title, description, tagline, skin, url, charset, basePath, plugins, systemplugins, url as urlString, locale
 		FROM	#variables.prefix#author_blog as author_blog INNER JOIN
                      #variables.prefix#blog as blog ON author_blog.blog_id = blog.id
 		WHERE author_blog.author_id = <cfqueryparam value="#arguments.author_id#" cfsqltype="CF_SQL_VARCHAR"/>

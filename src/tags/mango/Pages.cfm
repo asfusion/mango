@@ -8,6 +8,7 @@
 <cfparam name="attributes.ifCountLT" type="string" default="">
 <cfparam name="attributes.recurse" type="boolean" default="true">
 <cfparam name="request.currentPageNumber" default="0">
+<cfparam name="attributes.loopAtLeastOnce" type="boolean" default="false">
 
 <!--- starting tag --->
 <cfif thisTag.executionMode EQ "start">
@@ -17,7 +18,6 @@
 	<cfelseif attributes.parentPage EQ "-1">
 		<!--- inside a page, just look for children --->
 		<cfif listfindnocase(ancestorlist,"cf_page")>
-						
 			<cfset data = GetBaseTagData("cf_page")/>
 			<cfset attributes.parentPage = data.currentPage.getId()  />
 		<cfelse>
@@ -61,6 +61,7 @@
 	<cfset counter = attributes.from />	
 	<cfif counter LTE to AND counter LTE arraylen(pages)>
 		<cfset currentPage = pages[counter]>
+	<cfelseif counter EQ 1 AND attributes.loopAtLeastOnce>
 	<cfelse>
 		<cfsetting enablecfoutputonly="false"><cfexit>
 	</cfif>

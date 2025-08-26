@@ -33,12 +33,19 @@
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
 	<cffunction name="setLinks" access="public" output="false" returntype="void">
 		<cfargument name="data" type="any" required="true" />
-		<cfset this.links = arguments.data />
+		<cfloop array="#arguments.data#" item="link">
+			<cfset addLink( link )/><!--- doing this to ensure all links have an id --->
+		</cfloop>
 	</cffunction>
 	
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
 	<cffunction name="addLink" access="public" output="false" returntype="void">
 		<cfargument name="data" type="any" required="true" />
+		<cfif NOT structKeyExists( arguments.data, 'id' ) AND structKeyExists( arguments.data, 'owner' )>
+			<cfset arguments.data.id = arguments.data.owner />
+		<cfelseif NOT structKeyExists( arguments.data, 'id' )>
+			<cfset arguments.data.id = '' />
+		</cfif>
 		<cfset arrayappend(this.links, arguments.data) />
 	</cffunction>
 </cfcomponent>

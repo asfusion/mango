@@ -1,49 +1,14 @@
-<cfcomponent>
+<cfcomponent extends="org.mangoblog.plugins.BasePlugin">
 
-	<cfset variables.name = "Statistics">
-	<cfset variables.id = "org.mangoblog.plugins.Statistics">
-	
+	<cfset this.events = [ { 'name' = 'dashboardPod', 'type' = 'sync', 'priority' = '1' }] />
+
+<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="init" access="public" output="false" returntype="any">
 		<cfargument name="mainManager" type="any" required="true" />
-
-			<cfset variables.manager = arguments.mainManager />
+		<cfargument name="preferences" type="any" required="true" />
+		<cfset super.init(arguments.mainManager, arguments.preferences) />
+		<cfset variables.i18n = variables.mainManager.getInternationalizer()/>
 		<cfreturn this/>
-	</cffunction>
-
-	<cffunction name="setup" hint="This is run when a plugin is activated" access="public" output="false" returntype="any">
-		<!--- TODO: Implement Method --->
-		<cfreturn />
-	</cffunction>
-
-	<cffunction name="unsetup" hint="This is run when a plugin is de-activated" access="public" output="false" returntype="any">
-		<!--- TODO: Implement Method --->
-		<cfreturn />
-	</cffunction>
-	
-	<cffunction name="getName" access="public" output="false" returntype="string">
-		<cfreturn variables.name />
-	</cffunction>
-
-	<cffunction name="setName" access="public" output="false" returntype="void">
-		<cfargument name="name" type="string" required="true" />
-		<cfset variables.name = arguments.name />
-		<cfreturn />
-	</cffunction>
-
-	<cffunction name="getId" access="public" output="false" returntype="any">
-		<cfreturn variables.id />
-	</cffunction>
-
-	<cffunction name="setId" access="public" output="false" returntype="void">
-		<cfargument name="id" type="any" required="true" />
-		<cfset variables.id = arguments.id />
-		<cfreturn />
-	</cffunction>
-
-	<cffunction name="handleEvent" hint="Asynchronous event handling" access="public" output="false" returntype="any">
-		<cfargument name="event" type="any" required="true" />
-		
-		<cfreturn />
 	</cffunction>
 
 	<cffunction name="processEvent" hint="Synchronous event handling" access="public" output="false" returntype="any">
@@ -59,32 +24,54 @@
 			<cfset var postCount = "" />
 			<cfset var draftCount = "" />
 			<cfset var podcontent = "" />
+			<cfset var manager = getManager() />
 			
 			<cfif eventName EQ "dashboardPod" AND manager.isCurrentUserLoggedIn()>
-				<cfset postManager = variables.manager.getPostsManager() />
-				<cfset pageManager = variables.manager.getPagesManager() />
-				<cfset commentManager = variables.manager.getCommentsManager() />
+				<cfset postManager = manager.getPostsManager() />
+				<cfset pageManager = manager.getPagesManager() />
+				<cfset commentManager = manager.getCommentsManager() />
 				<cfset postCount = postManager.getPostCount() />
 				<cfset firstPost = postManager.getPosts(postCount,1) />
-				<cfset draftCount = postManager.getPostCount(true)-postCount />				
+				<cfset draftCount = postManager.getPostCount(true)-postCount />
 				
-				<cfsavecontent variable="podcontent">
-				<cfoutput><p>This blog has: <ul><li>#postCount# published posts,</li>
-					<li>#pageManager.getPageCount()# published pages,</li>
-					<cfif draftCount GT 0><li>#draftCount# draft posts and</li></cfif>
-					<li>#commentManager.getCommentCount()# comments.</li></ul></p>					
+				<cfsavecontent variable="podcontent"><cfoutput>
+					<div class="d-block">
+						<div class="d-flex align-items-center me-5">
+							<div class="icon-shape icon-sm icon-shape-secondary rounded me-3">
+								<i class="bi bi-easel-fill fs-3"></i>
+							</div>
+							<div class="d-block">
+								<label class="mb-0">#variables.i18n.getValue( "Posts" )#</label>
+								<h4 class="mb-0">#postCount#</h4>
+							</div>
+						</div>
+						<div class="d-flex align-items-center pt-3">
+							<div class="icon-shape icon-sm icon-shape-danger rounded me-3">
+								<i class="bi bi-sticky-fill fs-3"></i>
+							</div>
+							<div class="d-block">
+								<label class="mb-0">#variables.i18n.getValue( "Pages" )#</label>
+								<h4 class="mb-0">#pageManager.getPageCount()#</h4>
+							</div>
+						</div>
+						<div class="d-flex align-items-center pt-3">
+							<div class="icon-shape icon-sm icon-shape-purple rounded me-3">
+								<i class="bi bi-chat-text-fill fs-3"></i>
+							</div>
+							<div class="d-block">
+								<label class="mb-0">#variables.i18n.getValue( "Comments" )#</label>
+								<h4 class="mb-0">#commentManager.getCommentCount()#</h4>
+							</div>
+						</div>
+					</div>
 					<cfif arraylen(firstPost)>
-						<p>The first post was created #formatAge(firstPost[1].getPostedOn())# ago.</p>
-					<cfelse>
-						<p><a href="post.cfm">Create a new post</a></p>
-					</cfif></cfoutput>
+						<div class="small d-flex mt-3"><div>#variables.i18n.getValue( "The first post was created" )# #formatAge(firstPost[1].getPostedOn())# ago</div></div>
+					</cfif>
+					<cfif listfind(variables.mainManager.getCurrentUser().getCurrentRole(variables.mainManager.getBlog().getId()).permissions, "manage_posts")><a href="post.cfm"><button class="btn btn-primary mt-4">Create a new post</button></a></cfif>
+				</cfoutput>
 				</cfsavecontent>			
 				
-				<cfset pod = structnew() />
-				<cfset pod.title = "Your Site Statistics" />
-				<cfset pod.content = podcontent />
-				<cfset arguments.event.addPod(pod)>
-				
+				<cfset arguments.event.addPod(  { title = #variables.i18n.getValue( "Your Site Statistics" )#,  content = podcontent, size = 'small' }  )>
 			</cfif>
 		
 		<cfreturn arguments.event />
@@ -115,17 +102,17 @@
   			if (ageYR EQ 1)
   				age = age & " 1 year ";
   			if (ageYR GT 1)
-  				age = age & ageYR & " years ";
+  				age = age & ageYR & " " & variables.i18n.getValue( "years" ) & " ";
   				
   			if (ageMO EQ 1)
   				age = age & "1 month ";
   			if (ageMO GT 1)
-  				age = age & ageMO & " months ";
+  				age = age & ageMO & " " & variables.i18n.getValue( "months" ) & " ";
   			
   			if (ageWK EQ 1)
   				age = age & "1 week";
   			if (ageWK GT 1)
-  				age = age & ageWK & " weeks";
+  				age = age & ageWK & " " & variables.i18n.getValue( "weeks" ) & " ";
   				
   			return age;
 		</cfscript>

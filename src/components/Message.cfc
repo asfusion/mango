@@ -5,7 +5,7 @@
 	<cfset this.type = "">
 	<cfset this.data = "">
 	<cfset this.title = "">
-	
+	<cfset this.hierarchy = []>
 	
 	<cffunction name="getText" access="public" output="false" returntype="string">
 		<cfreturn this.text />
@@ -44,8 +44,7 @@
 	<cffunction name="setTitle" access="public" output="false" returntype="void">
 		<cfargument name="title" type="string" required="true" />
 		<cfset this.title = arguments.title />
-		<cfreturn />
-	</cffunction>	
+	</cffunction>
 	
 	<cffunction name="getData" access="public" output="false" returntype="any">
 		<cfreturn this.data />
@@ -54,7 +53,15 @@
 	<cffunction name="setData" access="public" output="false" returntype="void">
 		<cfargument name="data" type="any" required="true" />
 		<cfset this.data = arguments.data />
-		<cfreturn />
-	</cffunction>		
+	</cffunction>
+
+	<cffunction name="getHierarchy" access="public" output="false" returntype="any">
+		<cfreturn this.hierarchy />
+	</cffunction>
+
+	<cffunction name="setHierarchy" access="public" output="false" returntype="void">
+		<cfargument name="hierarchy" type="any" required="true" />
+		<cfset this.hierarchy = arguments.hierarchy />
+	</cffunction>
 	
 </cfcomponent>

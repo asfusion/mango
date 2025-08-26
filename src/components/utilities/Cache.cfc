@@ -93,9 +93,8 @@
 	<cffunction name="checkAndRetrieve" access="public" output="false" returntype="struct">
 		<cfargument name="key" type="string" required="true" />
 		<cfset var result = structnew() />
-		<cfset cleanup() />
-		
-		<cfif structkeyexists(variables.items, arguments.key)>
+
+		<cfif contains( arguments.key )>
 			<cftry>
 				<cfset result.value = retrieve(arguments.key) />
 				<cfset result.contains = true />

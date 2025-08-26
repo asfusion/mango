@@ -1,6 +1,6 @@
 <cfcomponent name="PluginLoader">
 
-	<cffunction name="loadPlugins" access="package" output="false" returntype="Any">
+	<cffunction name="loadPlugins" access="public" output="false" returntype="Any">
 		<cfargument name="list" type="any" required="true" />	
 		<cfargument name="pluginQueue" type="PluginQueue" required="true" />
 		<cfargument name="path" type="string" required="false" default="#GetDirectoryFromPath(GetCurrentTemplatePath())#" />
@@ -10,7 +10,7 @@
 		<cfargument name="pluginType" type="string" required="false" default="user" />
 		
 			<cfset var i = 0 />
-			<cfset var xml = "">
+			<cfset var filecontents = "">
 			<cfset var logger = "" />
 			<cfset var successList = "" />
 			<cfset var pluginInfo = '' />
@@ -19,8 +19,11 @@
 			
 			<cfloop index="i" list="#arguments.list#">
 				<cftry>
-					<cffile action="read" file="#arguments.path##i#/plugin.xml" variable="xml">
-					<cfset pluginInfo = parseXml(xmlparse(xml)) />
+					<cfif fileExists( "#arguments.path##i#/plugin.json" )>
+						<cfset pluginInfo = getPluginInfo( "#arguments.path##i#/plugin.json" )/>
+					<cfelse>
+						<cfset pluginInfo = getPluginInfo( "#arguments.path##i#/plugin.xml" )/>
+					</cfif>
 					<cfset plugin = loadPlugin(pluginInfo,arguments.pluginQueue,arguments.componentBasePath,arguments.mainManager,arguments.preferences) />
 					<cfset successList = listappend(successList,i) />
 					
@@ -34,8 +37,8 @@
 					<!--- log the error --->
 					<cfset logger = arguments.mainManager.getLogger() />
 					<cfset logger.logObject("debug",cfcatch,"Error while instantiating plugin #i#",'plugin','PluginLoader')>
-					<cfset logger.logMessage("error", 
-												"Error while instantiating plugin #i#: #cfcatch.Detail#",'plugin','PluginLoader') />
+					<cfset logger.logMessage("error",
+												"Error while instantiating plugin #i#: #cfcatch.message#",'plugin','PluginLoader') />
 				</cfcatch>
 				</cftry>
 			</cfloop>
@@ -55,12 +58,21 @@
 				
 				<cfoutput query="list">
 					<cffile action="read" file="#directory#/plugin.xml" variable="xml">
-					
 					<cfset arrayappend(plugins,parseXml(xmlparse(xml))) />
 				</cfoutput>
 				
 				<cfcatch type="any"><!--- ignore error ---></cfcatch>
 			</cftry>
+		<cftry>
+			<cfdirectory name="list" directory="#arguments.path#" action="list" filter="plugin.json" recurse="true">
+
+			<cfoutput query="list">
+				<cffile action="read" file="#directory#/plugin.json" variable="xml">
+				<cfset arrayappend(plugins, deserializeJSON( xml )) />
+			</cfoutput>
+
+			<cfcatch type="any"><!--- ignore error ---></cfcatch>
+		</cftry>
 		<cfreturn plugins />
 	</cffunction>
 	
@@ -126,23 +138,44 @@
 		<cfargument name="componentBasePath" type="string" required="false" default="" />
 		<cfargument name="mainManager" type="any" required="true" />
 		<cfargument name="preferences" type="any" required="true" />		
-		
+
 			<cfset var i = 0 />
-			<cfset var plugin = createObject("component", 
+			<cfset var plugin = createObject("component",
 					arguments.componentBasePath & arguments.pluginData.class).init(arguments.mainManager,arguments.preferences) />
-			<cfset var event = "" />
-			<cfset var dump = "" />
-			
-			<cfset plugin.setId(arguments.pluginData.id) />
-			<cfset plugin.setName(arguments.pluginData.name) />
+			<cfset var events = [] />
+
+			<cfset plugin.setId( arguments.pluginData.id ) />
+			<cfset plugin.setName( arguments.pluginData.name ) />
 			
 			<!--- add events --->
-			<cfloop index="i" from="1" to="#arraylen(arguments.pluginData.events)#">
-				<cfset event = arguments.pluginData.events[i] />
-				<cfset arguments.pluginQueue.addListener(plugin,arguments.pluginData.events[i].name,arguments.pluginData.events[i].type,arguments.pluginData.events[i].priority)/>	
+			<cfif structKeyExists( arguments.pluginData, 'events' )>
+				<cfset events = arguments.pluginData.events />
+			</cfif>
+			<cfif structKeyExists( plugin, 'events' ) AND arraylen( plugin.events )>
+				<cfset arrayAppend( events, plugin.events, true )/>
+			</cfif>
+
+			<cfloop index="i" from="1" to="#arraylen( events )#">
+				<cfset arguments.pluginQueue.addListener( plugin, events[i].name, events[i].type, events[i].priority )/>
 			</cfloop>
-			
+
 			<cfreturn plugin />
 	</cffunction>
-	
+
+	<cffunction name="getPluginInfo" output="false">
+		<cfargument name="pluginFile" required="true" />
+
+		<cfset var filecontent = '' />
+		<cfset var pluginData = {}/>
+		<cfset var emptyPlugin = { description = '', package = '', provider = '', requires = '0', customPanels = [] } >
+
+		<cffile action="read" file="#pluginFile#" variable="filecontent">
+		<cfif listlast( pluginfile, '.' ) EQ "xml">
+			<cfset pluginData = parseXml(xmlparse(filecontent)) />
+		<cfelse>
+			<cfset pluginData = deserializeJSON( filecontent ) />
+		</cfif>
+		<cfset structAppend( pluginData, emptyPlugin, false )/>
+		<cfreturn pluginData />
+	</cffunction>
 </cfcomponent>

@@ -8,9 +8,9 @@
 		<cfset ancestorlist = getbasetaglist() />
 		<cfset context = structnew() />
 		<cfloop list="#ancestorlist#" index="i">
-			<cfif i EQ "cf_post" OR i EQ "cf_posts" OR i EQ "cf_comment" OR i EQ "cf_category" OR i EQ "cf_page" OR  i EQ "cf_postproperty">			
-				<cfset context = GetBaseTagData(i)/>
-				<cfbreak> 
+			<cfif i EQ "cf_post" OR i EQ "cf_posts" OR i EQ "cf_comment" OR i EQ "cf_category" OR i EQ "cf_page" OR  i EQ "cf_postproperty" OR i EQ "cf_archive">
+				<cfset context = getBaseTagData(i)/>
+				<cfbreak>
 			</cfif>
 		</cfloop>
 		<cfset args = structnew() />
@@ -18,10 +18,10 @@
 		<cfset args.request = request />
 		<cfset args.attributes = attributes />
 		<cfset pluginQueue = request.blogManager.getpluginQueue() />
-		<cfset event = pluginQueue.createEvent(attributes.name,args,"Template") />
+		<cfset event = pluginQueue.createEvent( attributes.name,args, "Template" ) />
 		<cfset event = pluginQueue.broadcastEvent(event) />
 		<cfoutput>#tostring(event.getOutputData())#</cfoutput>
-	</cfif> 
+	</cfif>
 
 </cfif>
 
