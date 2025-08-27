@@ -1,7 +1,7 @@
 # Mango Blog
 
 This is the official source repository for [Mango Blog](http://www.mangoblog.org).
-If you want to download Mango, please use the [zip file](http://mangoblog.riaforge.org/index.cfm?event=action.download).
+If you want to download Mango, please use the [zip file](https://github.com/asfusion/mango/releases/download/version_2.0/Mango_2.zip).
 
 ## How to Contribute
 
