@@ -27,6 +27,7 @@ COMMENTCOUNT-ASC, COMMENTACTIVITY-DESC, COMMENTACTIVITY-ASC --->
 <cfif thisTag.executionMode EQ "start">
 <cfset source = attributes.source />
 <cfset recordsFrom = attributes.from />
+	<cfset posts = []>
 
 	<cfif source EQ "context">
 		<!--- find what the context is --->
@@ -43,7 +44,7 @@ COMMENTCOUNT-ASC, COMMENTACTIVITY-DESC, COMMENTACTIVITY-ASC --->
 		<cfelseif listfindnocase(ancestorlist,"cf_posts")>
 			<cfset data = GetBaseTagData("cf_posts")/>
 			<cfset source = "parent" />
-			
+
 		<!--- inside an archive  --->
 		<cfelseif listfindnocase(ancestorlist,"cf_archive")>
 			<cfset data = GetBaseTagData("cf_archive")/>

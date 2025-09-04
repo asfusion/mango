@@ -305,7 +305,7 @@
 		<cfargument name="password" required="true" type="any" />
 
 		<cfscript>
-			var password = hash( authorId & trim( password ),'SHA');
+			var newpassword = hash( authorId & trim( password ),'SHA');
 			returnObj["status"] = false;
 			returnObj["message"] = "";
 		</cfscript>
@@ -314,7 +314,7 @@
 		<cfquery name="qupdateauthor"  datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
 			UPDATE #variables.prefix#author
 			SET
-				password = <cfqueryparam value="#password#" cfsqltype="CF_SQL_VARCHAR" maxlength="50"/>,
+				password = <cfqueryparam value="#newpassword#" cfsqltype="CF_SQL_VARCHAR" maxlength="50"/>
 			WHERE id = <cfqueryparam value="#arguments.authorId#" cfsqltype="CF_SQL_VARCHAR" maxlength="35"/>
 		</cfquery>
 			<cfset returnObj["status"] = true/>

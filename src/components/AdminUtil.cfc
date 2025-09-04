@@ -1322,19 +1322,6 @@
 	</cffunction>
 
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
-	<cffunction name="getAdminPageTemplates" access="public" output="false" returntype="struct">
-
-			<cfset var templates = {} />
-			<cfset var id = variables.blogManager.getBlog().getSkin() />
-			<cfset skin = getSkin( variables.blogManager.getBlog().getSkin() ) />
-			<cfif structKeyExists( skin, 'adminPageTemplates' )>
-				<cfset templates = getSkin(id).adminPageTemplates />
-			</cfif>
-
-		<cfreturn templates />
-	</cffunction>
-
-<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="downloadSkin" access="public" output="false" returntype="struct">
 		<cfargument name="skin" type="String" required="true" />
 			<cfset var updater = variables.blogManager.getUpdater() />
@@ -1518,6 +1505,26 @@
 	</cffunction>
 
 	<cfscript>
+// ------------------------------------------
+		function getAdminPageTemplates(){
+			var templates = {};
+			var id = variables.blogManager.getBlog().getSkin();
+			var skin = getSkin( variables.blogManager.getBlog().getSkin() );
+			if ( structKeyExists( skin, 'adminPageTemplates' )){
+				templates = getSkin(id).adminPageTemplates;
+			}
+			else if ( structKeyExists( skin, "templates" )){
+				var names = "login,login_reset,login_forgot";
+				for ( var item in skin.templates ){
+					if ( listFindNoCase( names, item )){//it's an admin template
+						templates[ item ] = skin.templates[ item ][ 1 ];//choose the first one in array until we have a template chooser
+					}
+				}
+			}
+
+			return templates;
+		}
+
 	// ------------------------------------------
 	function setupSkinData( data ){
 		if ( structKeyExists( data, "blocks")){
@@ -1606,7 +1613,7 @@
 	function getCurrentTemplates(){
 		var templates = [];
 		var data = getSkin();
-		var names = { "index" = "Home", "archives" = "Archives" };
+		var names = { "index" = "Home", "archives" = "Archives", "login" = "Admin Login" };
 
 		if ( structKeyExists( data, "templates" ) ){
 			for ( var item in data.templates ){ //index, archives, etc

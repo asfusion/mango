@@ -77,11 +77,6 @@ amet nullam sed etiam veroeros.</p>",
 
         admin.saveSetting( 'site/info', 'button-label', "Call me" );
         admin.removeSetting( 'site/info', 'logo' );
-        admin.removeSetting( 'site/info', 'logo' );
-
-        var b = admin.getBlog().clone();
-
-        admin.editBlog( "My portfolio", "Some good tagline",  "Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptas illum quasi facere libero, fugiat laboriosam possimus reprehenderit eveniet vero voluptatum fugit ad quis veritatis suscipit beatae incidunt perferendis tempore earum hic repellendus quisquam recusandae ipsa id esse. Nobis, aut deleniti. Lorem ipsum dolor sit amet consectetur, adipisicing elit. Facere ratione dignissimos.", b.getUrl(), 'augustine' );
 
         return result;
     }

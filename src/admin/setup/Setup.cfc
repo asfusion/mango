@@ -439,6 +439,8 @@
 		<cfset data = new data.monica()>
 		<cfelseif skin EQ "augustine">
 		<cfset data = new data.augustine()>
+		<cfelseif skin EQ "tyndale">
+		<cfset data = new data.tyndale()>
 	</cfif>
 		<cfset var result = data.create( admin, authorId, assetsPath, authors[ 1 ].getEmail(), category, authors[ 1 ].getname() )/>
 		<cfset result.status = true />

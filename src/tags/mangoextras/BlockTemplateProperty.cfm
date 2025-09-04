@@ -104,7 +104,7 @@
             <cfset property = htmleditformat(property)>
         </cfif>
         <cfoutput>#property#</cfoutput>
-        <cfelseif attributes.type EQ "array">
+    <cfelseif attributes.type EQ "array">
 
         <cfif isarray( property )>
             <cfset count = arraylen( property ) />
@@ -118,13 +118,16 @@
         <cfelse>
             <cfsetting enablecfoutputonly="false"><cfexit>
         </cfif>
-    <cfelse>
+    <cfelse><!--- type holder or variable --->
         <cfif attributes.format EQ "paragraph">
             <cfset property = ParagraphFormat2(property) />
             <cfelseif attributes.format EQ "xml">
             <cfset property = xmlformat(property) />
             <cfelseif attributes.format EQ "escapedHtml">
             <cfset property = htmleditformat(property)>
+        </cfif>
+        <cfif attributes.type EQ "variable">
+            <cfset caller.blockproperty[ attributes.name ] = property />
         </cfif>
     </cfif>
 </cfif>

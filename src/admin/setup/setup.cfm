@@ -711,6 +711,15 @@ label {
 								</div>
 							</label>
 						</div>
+							<div class="col-xl-3 col-md-6 mb-4">
+								<label >
+									<input type="radio" name="adddata" class="card-input-element d-none" value="tyndale" >
+									<div class="card shadow border-0 text-center p-0">
+										<img class="card-img-top rounded-top" src="data/tyndale.png">
+										<div class="card-body text-white bg-gray-600 rounded-bottom">Tyndale</div>
+									</div>
+								</label>
+							</div>
 					</div>
 
 					<div class="mt-7">
@@ -742,7 +751,7 @@ label {
 				<form method="post" action="setup.cfm" >
 					<p>Look at the website and decide whether you want to try a different sample</p>
 					<div class="row">
-						<div class="col-xl-3 col-md-6 mb-4">
+						<div class="col-xl-3 col-md-6 mb-8">
 							<label>
 								<input type="radio" name="adddata" class="card-input-element d-none" value="massively" <cfif adddata EQ "massively">checked</cfif>>
 								<div class="card shadow border-0 text-center p-0">
@@ -769,15 +778,24 @@ label {
 								</div>
 							</label>
 						</div>
-				<div class="col-xl-3 col-md-6 mb-4">
-				<label >
-						<input type="radio" name="adddata" class="card-input-element d-none" value="augustine"  <cfif adddata EQ "augustine">checked</cfif>>
-					<div class="card shadow border-0 text-center p-0">
-						<img class="card-img-top rounded-top" src="data/augustine.jpg">
-						<div class="card-body text-white bg-gray-600 rounded-bottom">Augustine</div>
+						<div class="col-xl-3 col-md-6 mb-4">
+						<label >
+								<input type="radio" name="adddata" class="card-input-element d-none" value="augustine"  <cfif adddata EQ "augustine">checked</cfif>>
+							<div class="card shadow border-0 text-center p-0">
+								<img class="card-img-top rounded-top" src="data/augustine.jpg">
+								<div class="card-body text-white bg-gray-600 rounded-bottom">Augustine</div>
+							</div>
+						</label>
+						</div>
+					<div class="col-xl-3 col-md-6 mb-4">
+						<label >
+							<input type="radio" name="adddata" class="card-input-element d-none" value="tyndale"  <cfif adddata EQ "tyndale">checked</cfif>>
+							<div class="card shadow border-0 text-center p-0">
+								<img class="card-img-top rounded-top" src="data/tyndale.png">
+								<div class="card-body text-white bg-gray-600 rounded-bottom">Tyndale</div>
+							</div>
+						</label>
 					</div>
-				</label>
-				</div>
 					</div>
 
 				<div class="mt-7">

@@ -162,7 +162,7 @@ amet nullam sed etiam veroeros.</p>",
 
         var b = admin.getBlog().clone();
 
-        admin.editBlog( "My portfolio", "Some good tagline",  "Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptas illum quasi facere libero, fugiat laboriosam possimus reprehenderit eveniet vero voluptatum fugit ad quis veritatis suscipit beatae incidunt perferendis tempore earum hic repellendus quisquam recusandae ipsa id esse. Nobis, aut deleniti. Lorem ipsum dolor sit amet consectetur, adipisicing elit. Facere ratione dignissimos.", b.getUrl(), 'monica' );
+        admin.editBlog( b.getTitle(), "Some good tagline",  "Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptas illum quasi facere libero, fugiat laboriosam possimus reprehenderit eveniet vero voluptatum fugit ad quis veritatis suscipit beatae incidunt perferendis tempore earum hic repellendus quisquam recusandae ipsa id esse. Nobis, aut deleniti. Lorem ipsum dolor sit amet consectetur, adipisicing elit. Facere ratione dignissimos.", b.getUrl(), 'monica' );
 
         return result;
     }

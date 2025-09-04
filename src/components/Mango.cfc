@@ -1,7 +1,7 @@
 <cfcomponent name="Mango">
 
 	<cfset variables.blog = "" />
-	<cfset variables.version = "2.0" />
+	<cfset variables.version = "2.0.1" />
 	<cfset variables.pluginQueue = "" />
 	<cfset variables.config = "" />
 	<cfset variables.blogId = "default" />
