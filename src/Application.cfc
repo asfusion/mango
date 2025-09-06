@@ -1,6 +1,6 @@
 <cfcomponent displayname="Application">
 	<cfscript>
-		this.name = "mango_#right(hash(GetDirectoryFromPath(GetCurrentTemplatePath())),50)#_v1_8";
+		this.name = "mango_#right(hash(GetDirectoryFromPath(GetCurrentTemplatePath())),50)#_v2_0";
 		this.setclientcookies="no";
 		this.sessionmanagement="yes";
 		this.sessiontimeout= CreateTimeSpan(0,0,60,0);

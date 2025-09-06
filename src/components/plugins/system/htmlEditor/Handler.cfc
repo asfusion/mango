@@ -81,59 +81,35 @@
 		<script type="text/javascript" src="assets/editors/tinymce/tinymce.min.js"></script>
 
 		<script type="text/javascript">
-<!---
-	tinyMCE.init({
-		mode : "specific_textareas",
-		editor_selector : "htmlEditor",
-		theme : "advanced",
-		plugins : "table,save,contextmenu,paste,noneditable,asffileexplorer",
-		entity_encoding : "raw",
-		theme_advanced_toolbar_location : "top",
-		theme_advanced_toolbar_align : "left",
-		theme_advanced_path_location : "bottom",
-		theme_advanced_buttons1 : "bold,italic,formatselect,styleselect,bullist,numlist,del,separator,outdent,indent,separator,undo,redo,separator,link,unlink,anchor,image,cleanup,removeformat,charmap,code,help",
-		theme_advanced_buttons2 : "",
-		theme_advanced_buttons3 : "",
-		paste_remove_spans: true,
-		extended_valid_elements : "span[class|style],code[class]",
-		theme_advanced_resize_horizontal : false,
-		theme_advanced_resizing : true,
-		relative_urls : false,
-		remove_linebreaks : false,
-		strict_loading_mode: tinymce.isWebKit,
-		document_base_url : "#local.basePath#",
-		<cfif len( local.skin.adminEditorCss )>
-		content_css : "#local.basePath#skins/#local.blog.getSkin()#/#local.skin.adminEditorCss#",
-		</cfif>
-		#getSetting('customConfig')#
-		plugin_asffileexplorer_browseurl : '#local.blog.getSetting('urls').admin#assets/editors/tinymce_3/jscripts/tiny_mce/plugins/asffileexplorer/fileexplorer.cfm',
-		plugin_asffileexplorer_assetsUrl:'#local.fileUrl#',
-		file_browser_callback : 'ASFFileExplorerPlugin_browse'
-		,
-		onchange_callback: function(editor) {
-			tinyMCE.triggerSave();
-			$("##" + editor.id).valid();
-		}
-	});
---->
 tinymce.init({
 selector: '.htmlEditor',
-            plugins: [ 'table', 'filemanager' ],
-            toolbar: 'filemanager undo redo | a11ycheck casechange blocks | bold italic backcolor | alignleft aligncenter alignright alignjustify |' +
-            'bullist numlist checklist outdent indent | removeformat | code table help',
+            plugins: [ 'table', 'filemanager', 'link', 'code','numlist', 'codesample' ],
+			menubar: 'edit insert format tools', // exclude 'file'
+            toolbar: 'filemanager undo redo blocks bold italic link blockquote ' +
+            'bullist numlist table codesample removeformat',
 			external_plugins: { "filemanager" : "plugins/filemanager/plugin.min.js"},
-
 			fileManager_path : "assets/editors/tinymce/plugins/FileManager/files.cfm",
 
-	setup: function (editor) {
-		editor.on('change', function () {
-			tinymce.triggerSave();
-		});
-	}
-      });
+			// Control the toolbar that appears when you click a link
+			link_context_toolbar: true, // default: true
+			link_toolbar: 'openlink unlink | link',
+
+			menu: {
+				format: {
+					title: 'Format',
+					items: 'bold italic underline strikethrough superscript subscript | formats styles blocks | bullist numlist | blockquote removeformat'
+				}
+			},
+
+			setup: function (editor) {
+					editor.on('change', function () {
+						tinymce.triggerSave();
+					});
+				}
+			  });
       </script>
 	</cfoutput>
-					</cfsavecontent>
+			</cfsavecontent>
 				<cfelse>
 					<cfset local.data = variables.editors['tinymce'] />
 				</cfif>
