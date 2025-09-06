@@ -92,65 +92,78 @@
 				</cftry>
 				
 				<!--- Locate plugin.xml file --->
-				<cfif FileExists(tempdir & uuid & "/plugin.xml")>
+				<cfif FileExists(tempdir & uuid & "/plugin.json")>
 					<cfset local.pluginDir = tempdir & uuid />
 				<cfelse>
-					<cfdirectory action="list" directory="#tempdir##uuid#/" filter="plugin.xml" recurse="true" name="local.listDir" />
+					<cfdirectory action="list" directory="#tempdir##uuid#/" filter="plugin.json" recurse="true" name="local.listDir" />
 					<cfif local.listDir.recordCount eq 1>
 						<cfset local.pluginDir = local.listDir.directory />
 					<cfelseif local.listDir.recordCount eq 0>
-						<!--- plugin.xml not found --->
-						<cfthrow type="plugin" message="Could not find a plugin.xml file." />
+						<!--- test for plugin.xml --->
+						<cfreturn setupPluginxml( tempdir & uuid )>
 					<cfelseif local.listDir.recordCount gt 1>
 						<!--- More than one plugin.xml file found! --->
-						<cfthrow type="plugin" message="More than one plugin.xml file was found!" />
+						<cfthrow type="plugin" message="More than one plugin file was found!" />
 					</cfif>
 				</cfif>
 				
-				<!--- Get plugin info from xml file --->
+				<!--- Get plugin info from json file --->
 				<cftry>
-					<cffile action="read" file="#local.pluginDir#/plugin.xml" variable="local.xml" />
-					<cfset local.pluginXml = XmlParse(local.xml) />
-					<cfset local.pluginId = local.pluginXml["plugin"].xmlAttributes["id"] />
-					<cfset local.pluginClass = local.pluginXml["plugin"].xmlAttributes["class"] />
+					<cffile action="read" file="#local.pluginDir#/plugin.json" variable="local.json" />
+					<cfset var pluginData = deserializeJSON( local.json )>
+
+					<cfset local.pluginId = pluginData["id"] />
+					<cfset local.pluginClass = pluginData["class"] />
 					<cfset local.plugin = ListFirst(local.pluginClass,".") />
-					<cfset local.pluginName = local.pluginXml["plugin"].xmlAttributes["name"] />
-					<cfset local.pluginVersion = local.pluginXml["plugin"].xmlAttributes["version"] />
-					<cfif StructKeyExists(local.pluginXml["plugin"], "requiresVersion")>
-						<cfset local.pluginRequiresVersion = local.pluginXml["plugin"]["requiresVersion"].xmlText />
+					<cfset local.pluginName = pluginData["name"] />
+					<cfset local.pluginVersion = pluginData["version"] />
+					<cfif structKeyExists( pluginData, 'requires' )>
+						<cfloop array="#pluginData.requires#" item="local.requiresItem">
+							<cfif local.requiresItem.type EQ "engine">
+								<cfset local.pluginRequiresVersion = local.requiresItem.version />
+							</cfif>
+						</cfloop>
 					</cfif>
-					
+
 					<cfcatch type="any">
-						<cfthrow type="plugin" message="Unable to retrieve data from the plugin.xml file." />
+						<cfthrow type="plugin" message="Unable to retrieve data from the plugin.json file. #serializeJSON(local.requiresItem)# #cfcatch.message#" />
 					</cfcatch>
 				</cftry>
 				
 				<!--- Test if downloaded plugin is compatible with current version of Mango Blog --->
-				<cfif StructKeyExists(local,"pluginRequiresVersion") and versionCompare(local.pluginRequiresVersion, variables.blogManager.getVersion()) eq 1>
+				<cfif StructKeyExists(local,"pluginRequiresVersion") and compareVersions(local.pluginRequiresVersion, variables.blogManager.getVersion()) eq 1>
 					<cfthrow type="plugin" message="#local.pluginName# requires version #local.pluginRequiresVersion# of Mango Blog (current version is #variables.blogManager.getVersion()#)." />
 				</cfif>
 				
 				
 				<!--- Delete existing plugin files if found. Deactivate if necessary --->
-				<cfif fileExists("#userPluginsDir##local.plugin#/plugin.xml")>
+				<cfif fileExists("#userPluginsDir##local.plugin#/plugin.json") OR fileExists("#userPluginsDir##local.plugin#/plugin.xml")>
 					<!--- Make sure the updated plugin has the same id as the existing one --->
 					<cftry>
-						<cffile action="read" file="#userPluginsDir##local.plugin#/plugin.xml" variable="local.xml2" />
-						<cfset local.existingPluginXml = XmlParse(local.xml2) />
-						<cfset local.existingPluginId = local.existingPluginXml["plugin"].xmlAttributes["id"] />
-						<cfset local.existingPluginName = local.existingPluginXml["plugin"].xmlAttributes["name"] />
-						<cfset local.existingPluginVersion = local.existingPluginXml["plugin"].xmlAttributes["version"] />
-						
+						<cfif fileExists("#userPluginsDir##local.plugin#/plugin.json")>
+							<cffile action="read" file="#userPluginsDir##local.plugin#/plugin.json" variable="local.json2" />
+							<cfset var pluginData2 = deserializeJSON( local.json2 )>
+							<cfset local.existingPluginId = pluginData2["id"] />
+							<cfset local.existingPluginName = pluginData2["name"] />
+							<cfset local.existingPluginVersion = pluginData2["version"] />
+						<cfelse>
+							<cffile action="read" file="#userPluginsDir##local.plugin#/plugin.xml" variable="local.xml2" />
+							<cfset local.existingPluginXml = XmlParse(local.xml2) />
+							<cfset local.existingPluginId = local.existingPluginXml["plugin"].xmlAttributes["id"] />
+							<cfset local.existingPluginName = local.existingPluginXml["plugin"].xmlAttributes["name"] />
+							<cfset local.existingPluginVersion = local.existingPluginXml["plugin"].xmlAttributes["version"] />
+						</cfif>
+
 						<cfcatch type="any">
 							<cfthrow type="plugin" message="Unable to retrieve data from existing plugin." />
 						</cfcatch>
 					</cftry>
-					
+
 					<cfif not compare(local.pluginId,local.existingPluginId)>
 						<!--- They match! --->
 						
 						<!--- Check for version numbers --->
-						<cfset local.checkVersions = versionCompare(local.pluginVersion, local.existingPluginVersion) />
+						<cfset local.checkVersions = compareVersions(local.pluginVersion, local.existingPluginVersion) />
 						<cfif local.checkVersions eq 0>
 							<cfthrow type="plugin" message="Downloaded plugin is the same version as the existing plugin." />
 						<cfelseif local.checkVersions eq -1>
@@ -218,8 +231,153 @@
 			
 		<cfreturn result />
 	</cffunction>
-	
-	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+	<cffunction name="setupPluginxml" access="public" output="false" returntype="any">
+		<cfargument name="dir" type="string" required="true" />
+		<cfargument name="user" type="any" required="true" />
+		<cfset var blog = variables.blogManager.getBlog() />
+		<cfset var admin = variables.blogManager.getAdministrator() />
+		<cfset var id = blog.getId() />
+		<cfset var userPluginsDir = blog.getSetting("pluginsDir") & "user/" />
+		<cfset var tempdir = GetDirectoryFromPath(GetCurrentTemplatePath()) & "temp/" />
+		<cfset var uuid = CreateUUID() />
+		<cfset var currentlist = blog.plugins />
+		<cfset var result = structnew() />
+		<cfset var local = structnew() />
+
+		<cfset result.message = createObject("component","Message")  />
+
+		<cftry>
+			<!--- Locate plugin.xml file --->
+			<cfif FileExists( arguments.dir & "/plugin.xml")>
+				<cfset local.pluginDir = arguments.dir />
+			<cfelse>
+				<cfdirectory action="list" directory="#arguments.dir#/" filter="plugin.xml" recurse="true" name="local.listDir" />
+				<cfif local.listDir.recordCount eq 1>
+					<cfset local.pluginDir = local.listDir.directory />
+					<cfelseif local.listDir.recordCount eq 0>
+<!--- plugin.xml not found --->
+					<cfthrow type="plugin" message="Could not find a plugin.xml file." />
+					<cfelseif local.listDir.recordCount gt 1>
+<!--- More than one plugin.xml file found! --->
+					<cfthrow type="plugin" message="More than one plugin.xml file was found!" />
+				</cfif>
+			</cfif>
+
+<!--- Get plugin info from xml file --->
+			<cftry>
+				<cffile action="read" file="#local.pluginDir#/plugin.xml" variable="local.xml" />
+				<cfset local.pluginXml = XmlParse(local.xml) />
+				<cfset local.pluginId = local.pluginXml["plugin"].xmlAttributes["id"] />
+				<cfset local.pluginClass = local.pluginXml["plugin"].xmlAttributes["class"] />
+				<cfset local.plugin = ListFirst(local.pluginClass,".") />
+				<cfset local.pluginName = local.pluginXml["plugin"].xmlAttributes["name"] />
+				<cfset local.pluginVersion = local.pluginXml["plugin"].xmlAttributes["version"] />
+				<cfif StructKeyExists(local.pluginXml["plugin"], "requiresVersion")>
+					<cfset local.pluginRequiresVersion = local.pluginXml["plugin"]["requiresVersion"].xmlText />
+				</cfif>
+
+				<cfcatch type="any">
+					<cfthrow type="plugin" message="Unable to retrieve data from the plugin.xml file." />
+				</cfcatch>
+			</cftry>
+
+<!--- Test if downloaded plugin is compatible with current version of Mango Blog --->
+			<cfif StructKeyExists(local,"pluginRequiresVersion") and versionCompare(local.pluginRequiresVersion, variables.blogManager.getVersion()) eq 1>
+				<cfthrow type="plugin" message="#local.pluginName# requires version #local.pluginRequiresVersion# of Mango Blog (current version is #variables.blogManager.getVersion()#)." />
+			</cfif>
+
+
+<!--- Delete existing plugin files if found. Deactivate if necessary --->
+			<cfif fileExists("#userPluginsDir##local.plugin#/plugin.xml")>
+<!--- Make sure the updated plugin has the same id as the existing one --->
+				<cftry>
+					<cffile action="read" file="#userPluginsDir##local.plugin#/plugin.xml" variable="local.xml2" />
+					<cfset local.existingPluginXml = XmlParse(local.xml2) />
+					<cfset local.existingPluginId = local.existingPluginXml["plugin"].xmlAttributes["id"] />
+					<cfset local.existingPluginName = local.existingPluginXml["plugin"].xmlAttributes["name"] />
+					<cfset local.existingPluginVersion = local.existingPluginXml["plugin"].xmlAttributes["version"] />
+
+					<cfcatch type="any">
+						<cfthrow type="plugin" message="Unable to retrieve data from existing plugin." />
+					</cfcatch>
+				</cftry>
+
+				<cfif not compare(local.pluginId,local.existingPluginId)>
+<!--- They match! --->
+
+<!--- Check for version numbers --->
+					<cfset local.checkVersions = versionCompare(local.pluginVersion, local.existingPluginVersion) />
+					<cfif local.checkVersions eq 0>
+						<cfthrow type="plugin" message="Downloaded plugin is the same version as the existing plugin." />
+						<cfelseif local.checkVersions eq -1>
+						<cfthrow type="plugin" message="The existing plugin is newer than the one you are downloading." />
+					</cfif>
+
+<!--- Deactivate plugin if active --->
+					<cfif listFind(currentList,local.plugin)>
+						<cfset admin.deactivatePlugin(local.plugin,local.pluginId,arguments.user) />
+						<cfset local.isActive = true />
+					</cfif>
+<!--- delete the existing plugin --->
+					<cftry>
+						<cfdirectory action="delete" directory="#userPluginsDir##local.plugin#" recurse="true" />
+						<cfcatch type="any"></cfcatch>
+					</cftry>
+					<cfset local.installAction = "updated" />
+				<cfelse>
+<!--- Oops! They don't match... --->
+					<cfthrow type="plugin" message="An existing plug-in, #local.existingPluginName#, has the same directory name but a different ID.<br>You will need to remove the existing plug-in manually before installing the new one." />
+				</cfif>
+			<cfelse>
+				<cfset local.installAction = "installed" />
+			</cfif>
+
+<!--- Move files to plugins/user --->
+			<cftry>
+				<cfdirectory action="rename" newdirectory="#userPluginsDir##local.plugin#" directory="#local.pluginDir#">
+
+				<cfcatch type="any">
+					<cfthrow type="plugin" message="Unable to install the plug-in." />
+				</cfcatch>
+			</cftry>
+
+			<cfif structkeyexists(local,"isActive")>
+<!--- Reactivate plugin if it was previously active --->
+				<cfset admin.activatePlugin(local.plugin,local.pluginId,arguments.user) />
+				<cfset local.upgradeResult = admin.updatePlugin(local.plugin,local.pluginId, local.existingPluginVersion) />
+				<cfif local.upgradeResult.message.status NEQ "success">
+					<cfset result.message.setstatus("error") />
+					<cfset result.message.settext(local.pluginName & " was replaced with new install, but it could not be upgraded: " &
+					local.upgradeResult.message.text) />
+				<cfelse>
+					<cfset result.message.setstatus("success") />
+					<cfset result.message.settext(local.pluginName & " was successfully updated.") />
+				</cfif>
+			<cfelse>
+<!--- Display activation link --->
+				<cfset result.message.setstatus("success") />
+				<cfset result.message.settext("#local.pluginName# was successfully #local.installAction#. Would you like to <a href=""#blog.getBasePath()#admin/addons.cfm?action=activate&id=#local.pluginId#&name=#local.plugin#"">activate it</a>?") />
+			</cfif>
+
+<!--- Display any error message that we've thrown --->
+			<cfcatch type="any">
+				<cfset result.message.setstatus("error") />
+				<cfset result.message.settext(cfcatch.message) />
+			</cfcatch>
+		</cftry>
+
+<!--- delete the temp dir --->
+		<cftry>
+			<cfdirectory action="delete" directory="#tempdir#" recurse="true" />
+			<cfcatch type="any"></cfcatch>
+		</cftry>
+
+		<cfreturn result />
+	</cffunction>
+
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="checkForUpdates" access="public" output="false" returntype="string">
 		<cfset var latestVersion = 0 />
 		<cfset var message = "">
@@ -479,7 +637,38 @@ function unzipFile(zipFilePath, outputPath) {
 	}
 	zipFile.close();
 }
-</cfscript>
+
+
+/**
+* Compare two version strings (e.g., "1.9.1" vs "2.0").
+* Returns:
+*  -1 if versionA < versionB
+*   0 if versionA == versionB
+*   1 if versionA > versionB
+*/
+		function compareVersions(versionA, versionB){
+// Split into arrays
+			var partsA = listToArray(versionA, ".");
+			var partsB = listToArray(versionB, ".");
+
+// Find the longest length
+			var maxLen = max(arrayLen(partsA), arrayLen(partsB));
+
+			for (var i = 1; i <= maxLen; i++) {
+				var valA = (i <= arrayLen(partsA)) ? val(partsA[i]) : 0;
+				var valB = (i <= arrayLen(partsB)) ? val(partsB[i]) : 0;
+
+				if (valA < valB) {
+					return -1;
+				} else if (valA > valB) {
+					return 1;
+				}
+			}
+
+			return 0;
+		}
+
+	</cfscript>
 
 
 
