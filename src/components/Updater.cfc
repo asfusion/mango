@@ -1,234 +1,234 @@
 <cfcomponent>
-	
+
 	<cffunction name="init" access="public" output="false" returntype="any">
 		<cfargument name="applicationManager" required="true" type="any">
 		<cfargument name="configFile" required="false" type="string" default="" hint="Path to config file"/>
 		<cfargument name="baseDirectory" type="string" required="true" />
-			
-			<cfset variables.blogManager = arguments.applicationManager />
-			<cfset variables.configFile = arguments.configFile />
-			<cfset variables.baseDirectory = arguments.baseDirectory />
-			
+
+		<cfset variables.blogManager = arguments.applicationManager />
+		<cfset variables.configFile = arguments.configFile />
+		<cfset variables.baseDirectory = arguments.baseDirectory />
+
 		<cfreturn this />
 	</cffunction>
-	
-	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="downloadSkin" access="public" output="false" returntype="struct">
 		<cfargument name="skin" type="String" required="true" />
-			<cfset var skinInfo = "" />
-			<cfset var skinsDir = variables.blogManager.getBlog().getSetting('skins').directory />
-			<cfset var result = {} />
-			
-			<cfset result.message = createObject("component","Message") />
-			<cfset result.message.setstatus("success") />
-			<cfset result.message.setText("Skin downloaded and available to use") />
-			
-			<cftry>
-				<cfhttp url="https://services.mangoblog.org/skins/#arguments.skin#?engineVersion=#variables.blogManager.getVersion()#" method="get" result="serviceResult" charset="utf-8" />
-				<cfset content = serviceResult.filecontent>
-				<cfset data = deserializeJSON( content ) />
-				<cfset skinInfo = data.data />
+		<cfset var skinInfo = "" />
+		<cfset var skinsDir = variables.blogManager.getBlog().getSetting('skins').directory />
+		<cfset var result = {} />
 
-				<!--- check if this skin is compatible --->
-				<cfif versionCompare(skinInfo.requiresVersion, variables.blogManager.getVersion()) LT 1>
-						<cfset httpDownload( skinInfo.downloadUrl, skinsDir & arguments.skin & "/")>
-				<cfelse>
-					<cfset result.message.setstatus("error") />
-					<cfset result.message.setText("Selected skin requires a newer version of Mango Blog than the one it is installed.") />
-				</cfif>
-			 
-				<cfcatch type="any">
-					<cfset result.message.setstatus("error") />
-					<cfset result.message.setText(cfcatch.Message) />
-				</cfcatch>
-			</cftry>
+		<cfset result.message = createObject("component","Message") />
+		<cfset result.message.setstatus("success") />
+		<cfset result.message.setText("Skin downloaded and available to use") />
+
+		<cftry>
+			<cfhttp url="https://services.mangoblog.org/skins/#arguments.skin#?engineVersion=#variables.blogManager.getVersion()#" method="get" result="serviceResult" charset="utf-8" />
+			<cfset content = serviceResult.filecontent>
+			<cfset data = deserializeJSON( content ) />
+			<cfset skinInfo = data.data />
+
+<!--- check if this skin is compatible --->
+			<cfif versionCompare(skinInfo.requiresVersion, variables.blogManager.getVersion()) LT 1>
+				<cfset httpDownload( skinInfo.downloadUrl, skinsDir & arguments.skin & "/")>
+			<cfelse>
+				<cfset result.message.setstatus("error") />
+				<cfset result.message.setText("Selected skin requires a newer version of Mango Blog than the one it is installed.") />
+			</cfif>
+
+			<cfcatch type="any">
+				<cfset result.message.setstatus("error") />
+				<cfset result.message.setText(cfcatch.Message) />
+			</cfcatch>
+		</cftry>
 		<cfreturn result />
-	</cffunction>	
+	</cffunction>
 
-	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="downloadPlugin" access="public" output="false" returntype="any">
 		<cfargument name="pluginUrl" type="string" required="true" />
 		<cfargument name="user" type="any" required="true" />
-			<cfset var blog = variables.blogManager.getBlog() />
-			<cfset var admin = variables.blogManager.getAdministrator() />
-			<cfset var id = blog.getId() />
-			<cfset var userPluginsDir = blog.getSetting("pluginsDir") & "user/" />
-			<cfset var tempdir = GetDirectoryFromPath(GetCurrentTemplatePath()) & "temp/" />
-			<cfset var uuid = CreateUUID() />
-			<cfset var currentlist = blog.plugins />
-			<cfset var result = structnew() />
-			<cfset var local = structnew() />
-			
-			<cfset result.message = createObject("component","Message")  />
-			
+		<cfset var blog = variables.blogManager.getBlog() />
+		<cfset var admin = variables.blogManager.getAdministrator() />
+		<cfset var id = blog.getId() />
+		<cfset var userPluginsDir = blog.getSetting("pluginsDir") & "user/" />
+		<cfset var tempdir = GetDirectoryFromPath(GetCurrentTemplatePath()) & "temp/" />
+		<cfset var uuid = CreateUUID() />
+		<cfset var currentlist = blog.plugins />
+		<cfset var result = structnew() />
+		<cfset var local = structnew() />
+
+		<cfset result.message = createObject("component","Message")  />
+
+		<cftry>
+<!--- Create temp dir if it doesn't exist --->
+			<cfif NOT directoryexists(tempdir)>
+				<cftry>
+					<cfdirectory action="create" directory="#tempdir#" />
+
+					<cfcatch type="any">
+						<cfthrow type="plugin" message="Unable to create temp directory." />
+					</cfcatch>
+				</cftry>
+			</cfif>
+
+<!--- Download the zip file --->
 			<cftry>
-				<!--- Create temp dir if it doesn't exist --->
-				<cfif NOT directoryexists(tempdir)>
-					<cftry>
-						<cfdirectory action="create" directory="#tempdir#" />
-						
-						<cfcatch type="any">
-							<cfthrow type="plugin" message="Unable to create temp directory." />
-						</cfcatch>
-					</cftry>
-				</cfif>
-				
-				<!--- Download the zip file --->
-				<cftry>
-					<cfhttp url="#arguments.pluginUrl#" method="get" path="#tempdir#" file="#uuid#.tmp" throwOnError="true" />
-					
-					<cfcatch type="any">
-						<cfthrow type="plugin" message="Unable to download the file." />
-					</cfcatch>
-				</cftry>
-				
-				<!--- Unzip file to uniquely named directory --->
-				<cftry>
-					<cfset unzipFile(tempdir & uuid & ".tmp", tempdir & uuid & "/") />
-					
-					<cfcatch type="any">
-						<cfthrow type="plugin" message="Unable to un-zip the file." />
-					</cfcatch>
-				</cftry>
-				
-				<!--- Locate plugin.xml file --->
-				<cfif FileExists(tempdir & uuid & "/plugin.json")>
-					<cfset local.pluginDir = tempdir & uuid />
-				<cfelse>
-					<cfdirectory action="list" directory="#tempdir##uuid#/" filter="plugin.json" recurse="true" name="local.listDir" />
-					<cfif local.listDir.recordCount eq 1>
-						<cfset local.pluginDir = local.listDir.directory />
-					<cfelseif local.listDir.recordCount eq 0>
-						<!--- test for plugin.xml --->
-						<cfreturn setupPluginxml( tempdir & uuid )>
-					<cfelseif local.listDir.recordCount gt 1>
-						<!--- More than one plugin.xml file found! --->
-						<cfthrow type="plugin" message="More than one plugin file was found!" />
-					</cfif>
-				</cfif>
-				
-				<!--- Get plugin info from json file --->
-				<cftry>
-					<cffile action="read" file="#local.pluginDir#/plugin.json" variable="local.json" />
-					<cfset var pluginData = deserializeJSON( local.json )>
+				<cfhttp url="#arguments.pluginUrl#" method="get" path="#tempdir#" file="#uuid#.tmp" throwOnError="true" />
 
-					<cfset local.pluginId = pluginData["id"] />
-					<cfset local.pluginClass = pluginData["class"] />
-					<cfset local.plugin = ListFirst(local.pluginClass,".") />
-					<cfset local.pluginName = pluginData["name"] />
-					<cfset local.pluginVersion = pluginData["version"] />
-					<cfif structKeyExists( pluginData, 'requires' )>
-						<cfloop array="#pluginData.requires#" item="local.requiresItem">
-							<cfif local.requiresItem.type EQ "engine">
-								<cfset local.pluginRequiresVersion = local.requiresItem.version />
-							</cfif>
-						</cfloop>
-					</cfif>
-
-					<cfcatch type="any">
-						<cfthrow type="plugin" message="Unable to retrieve data from the plugin.json file. #serializeJSON(local.requiresItem)# #cfcatch.message#" />
-					</cfcatch>
-				</cftry>
-				
-				<!--- Test if downloaded plugin is compatible with current version of Mango Blog --->
-				<cfif StructKeyExists(local,"pluginRequiresVersion") and compareVersions(local.pluginRequiresVersion, variables.blogManager.getVersion()) eq 1>
-					<cfthrow type="plugin" message="#local.pluginName# requires version #local.pluginRequiresVersion# of Mango Blog (current version is #variables.blogManager.getVersion()#)." />
-				</cfif>
-				
-				
-				<!--- Delete existing plugin files if found. Deactivate if necessary --->
-				<cfif fileExists("#userPluginsDir##local.plugin#/plugin.json") OR fileExists("#userPluginsDir##local.plugin#/plugin.xml")>
-					<!--- Make sure the updated plugin has the same id as the existing one --->
-					<cftry>
-						<cfif fileExists("#userPluginsDir##local.plugin#/plugin.json")>
-							<cffile action="read" file="#userPluginsDir##local.plugin#/plugin.json" variable="local.json2" />
-							<cfset var pluginData2 = deserializeJSON( local.json2 )>
-							<cfset local.existingPluginId = pluginData2["id"] />
-							<cfset local.existingPluginName = pluginData2["name"] />
-							<cfset local.existingPluginVersion = pluginData2["version"] />
-						<cfelse>
-							<cffile action="read" file="#userPluginsDir##local.plugin#/plugin.xml" variable="local.xml2" />
-							<cfset local.existingPluginXml = XmlParse(local.xml2) />
-							<cfset local.existingPluginId = local.existingPluginXml["plugin"].xmlAttributes["id"] />
-							<cfset local.existingPluginName = local.existingPluginXml["plugin"].xmlAttributes["name"] />
-							<cfset local.existingPluginVersion = local.existingPluginXml["plugin"].xmlAttributes["version"] />
-						</cfif>
-
-						<cfcatch type="any">
-							<cfthrow type="plugin" message="Unable to retrieve data from existing plugin." />
-						</cfcatch>
-					</cftry>
-
-					<cfif not compare(local.pluginId,local.existingPluginId)>
-						<!--- They match! --->
-						
-						<!--- Check for version numbers --->
-						<cfset local.checkVersions = compareVersions(local.pluginVersion, local.existingPluginVersion) />
-						<cfif local.checkVersions eq 0>
-							<cfthrow type="plugin" message="Downloaded plugin is the same version as the existing plugin." />
-						<cfelseif local.checkVersions eq -1>
-							<cfthrow type="plugin" message="The existing plugin is newer than the one you are downloading." />
-						</cfif>
-						
-						<!--- Deactivate plugin if active --->
-						<cfif listFind(currentList,local.plugin)>
-							<cfset admin.deactivatePlugin(local.plugin,local.pluginId,arguments.user) />
-							<cfset local.isActive = true />
-						</cfif>
-						<!--- delete the existing plugin --->
-						<cftry>
-							<cfdirectory action="delete" directory="#userPluginsDir##local.plugin#" recurse="true" />
-							<cfcatch type="any"></cfcatch>
-						</cftry>
-						<cfset local.installAction = "updated" />
-					<cfelse>
-						<!--- Oops! They don't match... --->
-						<cfthrow type="plugin" message="An existing plug-in, #local.existingPluginName#, has the same directory name but a different ID.<br>You will need to remove the existing plug-in manually before installing the new one." />
-					</cfif>
-				<cfelse>
-					<cfset local.installAction = "installed" />
-				</cfif>
-				
-				<!--- Move files to plugins/user --->
-				<cftry>
-					<cfdirectory action="rename" newdirectory="#userPluginsDir##local.plugin#" directory="#local.pluginDir#">
-					
-					<cfcatch type="any">
-						<cfthrow type="plugin" message="Unable to install the plug-in." />
-					</cfcatch>
-				</cftry>
-				
-				<cfif structkeyexists(local,"isActive")>
-					<!--- Reactivate plugin if it was previously active --->
-					<cfset admin.activatePlugin(local.plugin,local.pluginId,arguments.user) />
-					<cfset local.upgradeResult = admin.updatePlugin(local.plugin,local.pluginId, local.existingPluginVersion) />
-					<cfif local.upgradeResult.message.status NEQ "success">
-						<cfset result.message.setstatus("error") />
-						<cfset result.message.settext(local.pluginName & " was replaced with new install, but it could not be upgraded: " &
-								local.upgradeResult.message.text) />
-					<cfelse>
-						<cfset result.message.setstatus("success") />
-						<cfset result.message.settext(local.pluginName & " was successfully updated.") />
-					</cfif>
-				<cfelse>
-					<!--- Display activation link --->
-					<cfset result.message.setstatus("success") />
-					<cfset result.message.settext("#local.pluginName# was successfully #local.installAction#. Would you like to <a href=""#blog.getBasePath()#admin/addons.cfm?action=activate&id=#local.pluginId#&name=#local.plugin#"">activate it</a>?") />
-				</cfif>
-				
-				<!--- Display any error message that we've thrown --->
 				<cfcatch type="any">
-					<cfset result.message.setstatus("error") />
-					<cfset result.message.settext(cfcatch.message) />
+					<cfthrow type="plugin" message="Unable to download the file." />
 				</cfcatch>
 			</cftry>
-			
-			<!--- delete the temp dir --->
+
+<!--- Unzip file to uniquely named directory --->
 			<cftry>
-				<cfdirectory action="delete" directory="#tempdir#" recurse="true" />
-				<cfcatch type="any"></cfcatch>
+				<cfset unzipFile(tempdir & uuid & ".tmp", tempdir & uuid & "/") />
+
+				<cfcatch type="any">
+					<cfthrow type="plugin" message="Unable to un-zip the file." />
+				</cfcatch>
 			</cftry>
-			
+
+<!--- Locate plugin.xml file --->
+			<cfif FileExists(tempdir & uuid & "/plugin.json")>
+				<cfset local.pluginDir = tempdir & uuid />
+			<cfelse>
+				<cfdirectory action="list" directory="#tempdir##uuid#/" filter="plugin.json" recurse="true" name="local.listDir" />
+				<cfif local.listDir.recordCount eq 1>
+					<cfset local.pluginDir = local.listDir.directory />
+					<cfelseif local.listDir.recordCount eq 0>
+<!--- test for plugin.xml --->
+					<cfreturn setupPluginxml( tempdir & uuid )>
+					<cfelseif local.listDir.recordCount gt 1>
+<!--- More than one plugin.xml file found! --->
+					<cfthrow type="plugin" message="More than one plugin file was found!" />
+				</cfif>
+			</cfif>
+
+<!--- Get plugin info from json file --->
+			<cftry>
+				<cffile action="read" file="#local.pluginDir#/plugin.json" variable="local.json" />
+				<cfset var pluginData = deserializeJSON( local.json )>
+
+				<cfset local.pluginId = pluginData["id"] />
+				<cfset local.pluginClass = pluginData["class"] />
+				<cfset local.plugin = ListFirst(local.pluginClass,".") />
+				<cfset local.pluginName = pluginData["name"] />
+				<cfset local.pluginVersion = pluginData["version"] />
+				<cfif structKeyExists( pluginData, 'requires' )>
+					<cfloop array="#pluginData.requires#" item="local.requiresItem">
+						<cfif local.requiresItem.type EQ "engine">
+							<cfset local.pluginRequiresVersion = local.requiresItem.version />
+						</cfif>
+					</cfloop>
+				</cfif>
+
+				<cfcatch type="any">
+					<cfthrow type="plugin" message="Unable to retrieve data from the plugin.json file. #serializeJSON(local.requiresItem)# #cfcatch.message#" />
+				</cfcatch>
+			</cftry>
+
+<!--- Test if downloaded plugin is compatible with current version of Mango Blog --->
+			<cfif StructKeyExists(local,"pluginRequiresVersion") and compareVersions(local.pluginRequiresVersion, variables.blogManager.getVersion()) eq 1>
+				<cfthrow type="plugin" message="#local.pluginName# requires version #local.pluginRequiresVersion# of Mango Blog (current version is #variables.blogManager.getVersion()#)." />
+			</cfif>
+
+
+<!--- Delete existing plugin files if found. Deactivate if necessary --->
+			<cfif fileExists("#userPluginsDir##local.plugin#/plugin.json") OR fileExists("#userPluginsDir##local.plugin#/plugin.xml")>
+<!--- Make sure the updated plugin has the same id as the existing one --->
+				<cftry>
+					<cfif fileExists("#userPluginsDir##local.plugin#/plugin.json")>
+						<cffile action="read" file="#userPluginsDir##local.plugin#/plugin.json" variable="local.json2" />
+						<cfset var pluginData2 = deserializeJSON( local.json2 )>
+						<cfset local.existingPluginId = pluginData2["id"] />
+						<cfset local.existingPluginName = pluginData2["name"] />
+						<cfset local.existingPluginVersion = pluginData2["version"] />
+					<cfelse>
+						<cffile action="read" file="#userPluginsDir##local.plugin#/plugin.xml" variable="local.xml2" />
+						<cfset local.existingPluginXml = XmlParse(local.xml2) />
+						<cfset local.existingPluginId = local.existingPluginXml["plugin"].xmlAttributes["id"] />
+						<cfset local.existingPluginName = local.existingPluginXml["plugin"].xmlAttributes["name"] />
+						<cfset local.existingPluginVersion = local.existingPluginXml["plugin"].xmlAttributes["version"] />
+					</cfif>
+
+					<cfcatch type="any">
+						<cfthrow type="plugin" message="Unable to retrieve data from existing plugin." />
+					</cfcatch>
+				</cftry>
+
+				<cfif not compare(local.pluginId,local.existingPluginId)>
+<!--- They match! --->
+
+<!--- Check for version numbers --->
+					<cfset local.checkVersions = compareVersions(local.pluginVersion, local.existingPluginVersion) />
+					<cfif local.checkVersions eq 0>
+						<cfthrow type="plugin" message="Downloaded plugin is the same version as the existing plugin." />
+						<cfelseif local.checkVersions eq -1>
+						<cfthrow type="plugin" message="The existing plugin is newer than the one you are downloading." />
+					</cfif>
+
+<!--- Deactivate plugin if active --->
+					<cfif listFind(currentList,local.plugin)>
+						<cfset admin.deactivatePlugin(local.plugin,local.pluginId,arguments.user) />
+						<cfset local.isActive = true />
+					</cfif>
+<!--- delete the existing plugin --->
+					<cftry>
+						<cfdirectory action="delete" directory="#userPluginsDir##local.plugin#" recurse="true" />
+						<cfcatch type="any"></cfcatch>
+					</cftry>
+					<cfset local.installAction = "updated" />
+				<cfelse>
+<!--- Oops! They don't match... --->
+					<cfthrow type="plugin" message="An existing plug-in, #local.existingPluginName#, has the same directory name but a different ID.<br>You will need to remove the existing plug-in manually before installing the new one." />
+				</cfif>
+			<cfelse>
+				<cfset local.installAction = "installed" />
+			</cfif>
+
+<!--- Move files to plugins/user --->
+			<cftry>
+				<cfdirectory action="rename" newdirectory="#userPluginsDir##local.plugin#" directory="#local.pluginDir#">
+
+				<cfcatch type="any">
+					<cfthrow type="plugin" message="Unable to install the plug-in." />
+				</cfcatch>
+			</cftry>
+
+			<cfif structkeyexists(local,"isActive")>
+<!--- Reactivate plugin if it was previously active --->
+				<cfset admin.activatePlugin(local.plugin,local.pluginId,arguments.user) />
+				<cfset local.upgradeResult = admin.updatePlugin(local.plugin,local.pluginId, local.existingPluginVersion) />
+				<cfif local.upgradeResult.message.status NEQ "success">
+					<cfset result.message.setstatus("error") />
+					<cfset result.message.settext(local.pluginName & " was replaced with new install, but it could not be upgraded: " &
+					local.upgradeResult.message.text) />
+				<cfelse>
+					<cfset result.message.setstatus("success") />
+					<cfset result.message.settext(local.pluginName & " was successfully updated.") />
+				</cfif>
+			<cfelse>
+<!--- Display activation link --->
+				<cfset result.message.setstatus("success") />
+				<cfset result.message.settext("#local.pluginName# was successfully #local.installAction#. Would you like to <a href=""#blog.getBasePath()#admin/addons.cfm?action=activate&id=#local.pluginId#&name=#local.plugin#"">activate it</a>?") />
+			</cfif>
+
+<!--- Display any error message that we've thrown --->
+			<cfcatch type="any">
+				<cfset result.message.setstatus("error") />
+				<cfset result.message.settext(cfcatch.message) />
+			</cfcatch>
+		</cftry>
+
+<!--- delete the temp dir --->
+		<cftry>
+			<cfdirectory action="delete" directory="#tempdir#" recurse="true" />
+			<cfcatch type="any"></cfcatch>
+		</cftry>
+
 		<cfreturn result />
 	</cffunction>
 
@@ -249,7 +249,7 @@
 		<cfset result.message = createObject("component","Message")  />
 
 		<cftry>
-			<!--- Locate plugin.xml file --->
+<!--- Locate plugin.xml file --->
 			<cfif FileExists( arguments.dir & "/plugin.xml")>
 				<cfset local.pluginDir = arguments.dir />
 			<cfelse>
@@ -381,7 +381,7 @@
 	<cffunction name="checkForUpdates" access="public" output="false" returntype="string">
 		<cfset var latestVersion = 0 />
 		<cfset var message = "">
-		
+
 		<cftry>
 			<cfhttp url="https://services.mangoblog.org/updates/check?engineVersion=#variables.blogManager.getVersion()#" method="get" result="result" charset="utf-8" />
 			<cfset var content = result.filecontent>
@@ -389,157 +389,162 @@
 			<cfset message = data.data />
 			<cfcatch type="any"></cfcatch>
 		</cftry>
-		
+
 		<cfreturn message />
-		
+
 	</cffunction>
-	
-	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="executeUpdate" access="public" output="true">
 		<cfset var updatePlan = arraynew(1) />
 		<cfset var i = 0 />
 		<cfset var stepResult = structnew() />
 		<cfset var serverVersion = structnew() />
-		
+
 		<cfset stepResult.message = createObject("component","Message") />
-					
+
 		<cfset stepResult.message.setstatus("success") />
 		<cfset stepResult.message.setText('Update done') />
-		
+
 		<cftry>
 			<cfif structkeyexists(server, "coldfusion")>
 				<cfset serverVersion.productname = server.coldfusion.productname />
 				<cfset serverVersion.productversion = server.coldfusion.productversion />
 			</cfif>
-			
-			<!--- call Mango services to get the upgrade plan --->
+
+<!--- call Mango services to get the upgrade plan --->
 			<cfhttp url="https://services.mangoblog.org/updates?engineVersion=#variables.blogManager.getVersion()#" method="get" result="result" charset="utf-8" />
 			<cfset var content = result.filecontent>
 			<cfset var data = deserializeJSON( content ) />
 			<cfset updatePlan = data.data />
 
-				
+
 			<cfloop from="1" to="#arraylen(updatePlan)#" index="i">
-			<p>	<strong>Updating to version #updatePlan[i].updatesToVersion#</strong><br /><br /></p>
-				<cfset stepResult = downloadUpdate(updatePlan[i].updateFileUrl, 
-										updatePlan[i].runnerFile,
-										updatePlan[i].fileIsZip) />
-				
+				<p>	<strong>Updating to version #updatePlan[i].updatesToVersion#</strong><br /><br /></p>
+				<cfset stepResult = downloadUpdate(updatePlan[i].updateFileUrl,
+					updatePlan[i].runnerFile,
+					updatePlan[i].fileIsZip) />
+
 				<cfif stepResult.message.getStatus() NEQ "success">
 					<cfreturn stepResult />
-				</cfif>	
+				</cfif>
 			</cfloop>
-			
-			<cfset variables.blogManager.reloadConfig() />
-			<cfset variables.blogManager.removeCurrentUser() />
-			
+
+			<cftry>
+				<cfset variables.blogManager.reloadConfig() />
+				<cfcatch type="any">
+					<cfset stepResult.message.setstatus("error") />
+					<cfset stepResult.message.setText("Upgrade finished, but it needs a restart" )/>
+				</cfcatch>
+			</cftry>
+
 			<cfcatch type="any">
 				<cfset stepResult.message.setstatus("error") />
 				<cfset stepResult.message.setText("Upgrade could not be performed: " & cfcatch.Detail) />
-				<!--- log the complete error --->
+<!--- log the complete error --->
 				<cfset variables.blogManager.getLogger().logObject("error",cfcatch,"Upgrade error","upgrade",'Updater') />
 			</cfcatch>
 		</cftry>
-	
+
 		<cfreturn stepResult />
 	</cffunction>
-	
-	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
-	<!--- very important function. It will download and replace files and do everything needed to
-	update mango's version --->
+
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- very important function. It will download and replace files and do everything needed to
+update mango's version --->
 	<cffunction name="downloadUpdate" access="public" output="true" returntype="struct">
 		<cfargument name="remoteUpdateFile" type="string" required="true" />
 		<cfargument name="runnerFile" type="string" required="true" />
 		<cfargument name="isZipped" type="boolean" required="false" default="false" />
-		
+
 		<cfset var tempDir = GetDirectoryFromPath(GetCurrentTemplatePath()) & "updater_temp/" />
 		<cfset var result = structnew()/>
 		<cfset var local = structnew() />
-		
+
 		<cfset local.baseDirectory = variables.baseDirectory />
 		<cfset local.configFile = variables.configFile />
 		<cfset local.componentsPath = GetDirectoryFromPath(GetCurrentTemplatePath()) />
 
 		<cfset result.message = createObject("component","Message") />
-					
+
 		<cfset result.message.setstatus("success") />
 		<cfset result.message.setText('<br /><strong>Updated done!</strong><br />
 		You will now be logged out. <a href="files.cfm">Click here to continue</a>.') />
-		
+
 		<cftry>
-			<p>Downloading files... 
-			
-			<!--- the simplest way is to download one file and then simply include it and run it... --->
+			<p>Downloading files...
+
+<!--- the simplest way is to download one file and then simply include it and run it... --->
 			<cfset httpDownload(arguments.remoteUpdateFile, tempDir, arguments.isZipped) />
-			done <br />
-			Starting the update</p>
+				done <br />
+				Starting the update</p>
 			<cfinclude template="updater_temp/#runnerFile#" />
-			
-			
-			<!--- remove update files --->
+
+
+<!--- remove update files --->
 			<p>Deleting temporary files...
 			<cfdirectory action="delete" directory="#tempDir#" recurse="true">
-			done
+				done
 			</p>
 			<cfcatch type="any">
 				<cfset result.message.setstatus("error") />
 				<cfset result.message.setText("Upgrade could not be performed: " & cfcatch.Message) />
-				<!--- log the complete error --->
+<!--- log the complete error --->
 				<cfset variables.blogManager.getLogger().logObject("error",cfcatch,"Upgrade error","upgrade",'Updater') />
 			</cfcatch>
 		</cftry>
-		
+
 		<cfreturn result />
 	</cffunction>
-	
-	
-	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+
+
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="ftpcopy" access="private" output="false">
 		<cfargument name="server" required="true" type="any">
 		<cfargument name="username" required="true" type="string">
 		<cfargument name="password" required="true" type="string">
 		<cfargument name="dir" required="true" type="any">
 		<cfargument name="localdir" required="true" type="string">
-		
+
 		<cfset var dirs = "" />
-		
-		<!--- create local dir if needed --->
+
+<!--- create local dir if needed --->
 		<cfif NOT directoryExists(arguments.localdir & arguments.dir)>
 			<cfdirectory action="create" directory="#arguments.localdir##arguments.dir#">
 		</cfif>
-		
+
 		<cfftp server="#arguments.server#"  username="#arguments.username#"  passive="true"
 				password="#arguments.password#" action="listdir" name="dirs" directory="#arguments.dir#">
-				
+
 		<cfoutput query="dirs">
 			<cfif isDirectory>
-				<!--- copy folder --->
+<!--- copy folder --->
 				<cfset ftpcopy(arguments.server, arguments.username, arguments.password,
 						Path, arguments.localdir)>
 			<cfelse>
-				<!--- copy file --->
-				<cfftp server="#arguments.server#"  username="#arguments.username#" 
-				password="#arguments.password#"  passive="true"
-				action="getFile" localfile="#arguments.localdir##path#"
-				remotefile="#path#"
- 				failifexists="No">
+<!--- copy file --->
+				<cfftp server="#arguments.server#"  username="#arguments.username#"
+						password="#arguments.password#"  passive="true"
+						action="getFile" localfile="#arguments.localdir##path#"
+						remotefile="#path#"
+						failifexists="No">
 			</cfif>
-			
+
 		</cfoutput>
-		
+
 	</cffunction>
 
-	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->	
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="httpDownload" access="private" output="true">
 		<cfargument name="zipAddress" required="true" type="any">
 		<cfargument name="localdir" required="true" type="string">
 		<cfargument name="isZip" required="false" type="boolean" default="true">
-		
+
 		<cfset var tempdir = gettempdirectory()>
 		<cfset var zip = "" />
 		<cfset var filename = listlast(zipaddress,"/") />
 		<cfset var downloadresult = {} />
-		
+
 		<cfhttp url="#arguments.zipAddress#" method="get" path="#tempdir#" file="#filename#" result="downloadresult">
 		<cfif downloadresult.status_code EQ "200">
 			<cfif NOT directoryexists(localdir)>
@@ -552,9 +557,9 @@
 				<cffile action="copy" source="#tempdir##filename#" destination="#localdir#">
 			</cfif>
 
-			<!--- delete the zip file --->
+<!--- delete the zip file --->
 			<cftry>
-				<!--- if we did everything but couldn't delete the zip, no big deal --->
+<!--- if we did everything but couldn't delete the zip, no big deal --->
 				<cffile action="delete" file="#tempdir##filename#" />
 				<cfcatch type="any"></cfcatch>
 			</cftry>
@@ -563,9 +568,9 @@
 		</cfif>
 		<cfreturn />
 	</cffunction>
-	
 
-<cfscript>
+
+	<cfscript>
 /**
  * Unzips a file to the specified directory.
  * 
@@ -575,68 +580,68 @@
  * @author Samuel Neff (sam@serndesign.com) 
  * @version 1, September 1, 2003 
  */
-function unzipFile(zipFilePath, outputPath) {
-	var zipFile = ""; // ZipFile
-	var entries = ""; // Enumeration of ZipEntry
-	var entry = ""; // ZipEntry
-	var fil = ""; //File
-	var inStream = "";
-	var filOutStream = "";
-	var bufOutStream = "";
-	var nm = "";
-	var pth = "";
-	var lenPth = "";
-	var buffer = "";
-	var l = 0;
-     
-	zipFile = createObject("java", "java.util.zip.ZipFile");
-	zipFile.init(zipFilePath);
-	
-	entries = zipFile.entries();
-	
-	while(entries.hasMoreElements()) {
-		entry = entries.nextElement();
-		if(NOT entry.isDirectory()) {
-			nm = entry.getName(); 
-			
-			lenPth = len(nm) - len(getFileFromPath(nm));
-			
-			if (lenPth) {
-			pth = outputPath & left(nm, lenPth);
-		} else {
-			pth = outputPath;
+		function unzipFile(zipFilePath, outputPath) {
+			var zipFile = ""; // ZipFile
+			var entries = ""; // Enumeration of ZipEntry
+			var entry = ""; // ZipEntry
+			var fil = ""; //File
+			var inStream = "";
+			var filOutStream = "";
+			var bufOutStream = "";
+			var nm = "";
+			var pth = "";
+			var lenPth = "";
+			var buffer = "";
+			var l = 0;
+
+			zipFile = createObject("java", "java.util.zip.ZipFile");
+			zipFile.init(zipFilePath);
+
+			entries = zipFile.entries();
+
+			while(entries.hasMoreElements()) {
+				entry = entries.nextElement();
+				if(NOT entry.isDirectory()) {
+					nm = entry.getName();
+
+					lenPth = len(nm) - len(getFileFromPath(nm));
+
+					if (lenPth) {
+						pth = outputPath & left(nm, lenPth);
+					} else {
+						pth = outputPath;
+					}
+					if (NOT directoryExists(pth)) {
+						fil = createObject("java", "java.io.File");
+						fil.init(pth);
+						fil.mkdirs();
+					}
+					filOutStream = createObject(
+							"java",
+							"java.io.FileOutputStream");
+
+					filOutStream.init(outputPath & nm);
+
+					bufOutStream = createObject(
+							"java",
+							"java.io.BufferedOutputStream");
+
+					bufOutStream.init(filOutStream);
+
+					inStream = zipFile.getInputStream(entry);
+					buffer = repeatString(" ",1024).getBytes();
+
+					l = inStream.read(buffer);
+					while(l GTE 0) {
+						bufOutStream.write(buffer, 0, l);
+						l = inStream.read(buffer);
+					}
+					inStream.close();
+					bufOutStream.close();
+				}
+			}
+			zipFile.close();
 		}
-		if (NOT directoryExists(pth)) {
-			fil = createObject("java", "java.io.File");
-			fil.init(pth);
-			fil.mkdirs();
-		}
-		filOutStream = createObject(
-			"java", 
-			"java.io.FileOutputStream");
-		
-		filOutStream.init(outputPath & nm);
-		
-		bufOutStream = createObject(
-			"java", 
-			"java.io.BufferedOutputStream");
-		
-		bufOutStream.init(filOutStream);
-		
-		inStream = zipFile.getInputStream(entry);
-		buffer = repeatString(" ",1024).getBytes(); 
-		
-		l = inStream.read(buffer);
-		while(l GTE 0) {
-			bufOutStream.write(buffer, 0, l);
-			l = inStream.read(buffer);
-		}
-		inStream.close();
-		bufOutStream.close();
-		}
-	}
-	zipFile.close();
-}
 
 
 /**
@@ -673,43 +678,43 @@ function unzipFile(zipFilePath, outputPath) {
 
 
 
-<cffunction name="versionCompare" returntype="numeric" access="public">
-	<cfargument name="version1">
-	<cfargument name="version2">
+	<cffunction name="versionCompare" returntype="numeric" access="public">
+		<cfargument name="version1">
+		<cfargument name="version2">
 
-	<cfset var len1 = listlen(arguments.version1,".") />
-	<cfset var len2 = listlen(arguments.version2,".") />
-	<cfset var i = 0/>
-	<cfset var piece1 = ""/>
-	<cfset var piece2 = ""/>
-	
-	<cfif len1 GT len2>
-		<cfset arguments.version2 = arguments.version2 & repeatstring(".0",len1-len2) />
-	</cfif>
-	
-	<cfif len1 LT len2>
-		<cfset arguments.version1 = arguments.version1 & repeatstring(".0",len2-len1) />
-	</cfif>
-	
-	<cfloop from="1" to="#listlen(arguments.version1,".")#" index="i">
-		<cfset piece1 = listgetat(arguments.version1,i,".")/>
-		<cfset piece2 = listgetat(arguments.version2,i,".")/>
-		
-		<cfif piece1 NEQ piece2>
-			<!--- we need to compare --->
-			<cfif piece1 GT piece2>
-				<cfreturn 1/>
-			<cfelse>
-				<cfreturn -1/>
-			</cfif>
+		<cfset var len1 = listlen(arguments.version1,".") />
+		<cfset var len2 = listlen(arguments.version2,".") />
+		<cfset var i = 0/>
+		<cfset var piece1 = ""/>
+		<cfset var piece2 = ""/>
+
+		<cfif len1 GT len2>
+			<cfset arguments.version2 = arguments.version2 & repeatstring(".0",len1-len2) />
 		</cfif>
-	</cfloop>
-	
-	<!--- they were equal --->
-	<cfreturn 0/>
-	
-</cffunction>
+
+		<cfif len1 LT len2>
+			<cfset arguments.version1 = arguments.version1 & repeatstring(".0",len2-len1) />
+		</cfif>
+
+		<cfloop from="1" to="#listlen(arguments.version1,".")#" index="i">
+			<cfset piece1 = listgetat(arguments.version1,i,".")/>
+			<cfset piece2 = listgetat(arguments.version2,i,".")/>
+
+			<cfif piece1 NEQ piece2>
+<!--- we need to compare --->
+				<cfif piece1 GT piece2>
+					<cfreturn 1/>
+				<cfelse>
+					<cfreturn -1/>
+				</cfif>
+			</cfif>
+		</cfloop>
+
+<!--- they were equal --->
+		<cfreturn 0/>
+
+	</cffunction>
 
 
-	
+
 </cfcomponent>
