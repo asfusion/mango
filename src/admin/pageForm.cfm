@@ -38,13 +38,13 @@
 	<div class="col-12 col-xl-4">
 		<cfif listfind(showFields,'parent') OR listfind(showFields,'template') OR listfind(showFields,"sortOrder")>
 		<div class="card card-body border-0 shadow mb-4">
-			<h2 class="h5 mb-4">Settings</h2>
+			<h2 class="h5 mb-4">#request.i18n.getValue("Settings")#</h2>
 
 			<cfif listfind(showFields,'parent')>
 				<div class="mb-3">
-					<label for="parentPage">Parent Page</label>
+					<label for="parentPage">#request.i18n.getValue("Parent Page")#</label>
 					<select class="form-select mb-0" name="parentPage" id="parentPage">
-						<option value="">None</option>
+						<option value="">#request.i18n.getValue("None")#</option>
 				<cfloop from="1" to="#arraylen(pages)#" index="i">
 						<option value="#pages[i].getId()#" <cfif parent EQ pages[i].getId()>selected="selected"</cfif>>#xmlformat(pages[i].getTitle())#</option></cfloop>
 				</select>
@@ -54,9 +54,9 @@
 			</cfif>
 			<cfif arraylen(templates) AND listfind(showFields,'template')>
 				<div class="mb-3">
-					<label for="template">Skin template</label>
+					<label for="template">#request.i18n.getValue("Skin template")#</label>
 					<select class="form-select mb-0"  id="template" name="template">
-						<option value="" <cfif template EQ "">selected="selected"</cfif>>Regular page</option>
+						<option value="" <cfif template EQ "">selected="selected"</cfif>>#request.i18n.getValue("Regular page")#</option>
 						<cfloop from="1" to="#arraylen(templates)#" index="i">
 						<option value="#templates[i].file#" <cfif templates[i].file EQ template>selected="selected"</cfif>>#xmlformat(templates[i].name)#</option></cfloop>
 					</select>
@@ -66,7 +66,7 @@
 			</cfif>
 			<cfif listfind(showFields,'sortOrder')>
 				<div class="mb-3">
-					<label for="sortOrder">Sort order</label>
+					<label for="sortOrder">#request.i18n.getValue("Sort order")#</label>
 					<input type="text" id="sortOrder" name="sortOrder" value="#sortOrder#" size="2" class="form-control"/></span>
 				</div>
 			<cfelse>
@@ -82,14 +82,14 @@
 	<!--- COMMENTS --->
 		<cfif listfind(showFields,'comments_allowed')>
 				<div class="card card-body border-0 shadow mb-4">
-					<h2 class="h5 mb-4">Comments</h2>
+					<h2 class="h5 mb-4">#request.i18n.getValue("Comments")#</h2>
 
 				<div class="form-check form-switch">
 						<input class="form-check-input" type="checkbox" value="yes" id="allowComments" name="allowComments" <cfif allowComments>checked="checked"</cfif>/>
-				<label class="form-check-label" for="allowComments">Allow comments</label>
+				<label class="form-check-label" for="allowComments">#request.i18n.getValue("Allow comments")#</label>
 			</div>
 
-				<p class="form-text">Should reader comments be permitted on this post?</p>
+				<p class="form-text">#request.i18n.getValue("Should reader comments be permitted on this post?")#</p>
 			</div>
 		<cfelse>
 				<input type="hidden" name="allowComments" value="#allowComments#" />
@@ -99,15 +99,15 @@
 	</cfif>
 		<cfif listfind(showFields,'status')>
 			<div class="card card-body border-0 shadow mb-4">
-				<h2 class="h5 mb-4">Publish status</h2>
+				<h2 class="h5 mb-4">#request.i18n.getValue("Publish status")#</h2>
 
 				<div class="form-check">
 						<input class="form-check-input" type="radio" value="published" id="published" name="publish" <cfif publish EQ "published">checked="checked"</cfif>>
-				<label class="form-check-label" for="published">Published</label>
+				<label class="form-check-label" for="published">#request.i18n.getValue("Published")#</label>
 			</div>
 			<div class="form-check">
 					<input class="form-check-input" type="radio" value="draft" id="draft" name="publish" <cfif publish EQ "draft">checked="checked"</cfif>>
-					<label class="form-check-label" for="draft">Draft</label>
+					<label class="form-check-label" for="draft">#request.i18n.getValue("Draft")#</label>
 			</div>
 			<!-- End of Radio -->
 			</div>

@@ -5,7 +5,7 @@
 
 <cfif len(url.filename)>
 	<cftry>
-		<cfset filecontent = CreateObject("component", "MainFileExplorer").getInstance().getFileManager().getFile(url.path, url.filename)/>
+		<cfset filecontent = request.blogManager.getFileManager().getFile(url.path, url.filename)/>
 		
 		<!--- method for getting mime type taken from UDF getFileMimeType() at cflib.org --->
 		<cfif len(getPageContext().getServletContext().getMimeType(url.filename))>

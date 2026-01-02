@@ -17,6 +17,7 @@
 <cfparam name="attributes.permalink" default="false">
 <cfparam name="attributes.customfield" default="">
 <cfparam name="attributes.currentCount" default="false">
+<cfparam name="attributes.variable" default="">
 
 <!--- IF attributes --->
 <cfparam name="attributes.ifcommentsallowed" default="false">
@@ -41,7 +42,7 @@
 //now fix tabs
 		str = replace(str,chr(9),"&nbsp;&nbsp;&nbsp;","ALL");
 //now return the text formatted in HTML
-		return replace(str,chr(10),"<br />","ALL");
+		return replace(str,chr(10),"<br>","ALL");
 	}</cfscript>
 
 <cfif attributes.format EQ "default">
@@ -179,7 +180,10 @@
 		<cfelseif attributes.format EQ "escapedHtml">
 		<cfset prop = htmleditformat( prop )>
 	</cfif>
-	<cfoutput>#prop#</cfoutput>
+	<cfif NOT len(attributes.variable)>
+		<cfoutput>#prop#</cfoutput>
+	<cfelse><cfset caller[attributes.variable] = prop />
+	</cfif>
 
 </cfif>
 

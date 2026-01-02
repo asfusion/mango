@@ -36,23 +36,23 @@
 		<div class="col-12 col-xl-4">
 			<cfif listfind(showFields,'posted_on') OR listfind(showFields,'status')>
 		<div class="card card-body border-0 shadow mb-4">
-			<h2 class="h5 mb-4">Publish status</h2>
+			<h2 class="h5 mb-4">#request.i18n.getValue("Publish status")#</h2>
 
 		<cfif listfind(showFields,'status')>
 					<div class="form-check">
 						<input class="form-check-input" type="radio" value="published" id="published" name="publish" <cfif publish EQ "published">checked="checked"</cfif>>
-						<label class="form-check-label" for="published">Published</label>
+						<label class="form-check-label" for="published">#request.i18n.getValue("Published")#</label>
 					</div>
 					<div class="form-check">
 						<input class="form-check-input" type="radio" value="draft" id="draft" name="publish" <cfif publish EQ "draft">checked="checked"</cfif>>
-						<label class="form-check-label" for="draft">Draft</label>
+						<label class="form-check-label" for="draft">#request.i18n.getValue("Draft")#</label>
 					</div>
 					<!-- End of Radio -->
 		<cfelse>
 				<input type="hidden" name="publish" value="#publish#" />
 		</cfif>
 		<cfif listfind(showFields,'posted_on')>
-				<label for="postedOn">Publishing date</label>
+				<label for="postedOn">#request.i18n.getValue("Publishing date")#</label>
 				<input type="text" id="postedOn" name="postedOn" value="#postedOn#" size="18" class="date form-control" />
 	<cfelse>
 				<input type="hidden" name="postedOn" value="#postedOn#" />
@@ -65,8 +65,8 @@
 			<cfif listfind(showFields,'categories')>
 	<div class="col-12">
 		<div class="card card-body border-0 shadow mb-4">
-			<h2 class="h5 mb-4">Categories</h2>
-			<p class="form-text">File this post under:</p>
+			<h2 class="h5 mb-4">#request.i18n.getValue("Categories")#</h2>
+			<p class="form-text">#request.i18n.getValue("File this post under:")#</p>
 
 		<cfloop from="1" to="#arraylen(categories)#" index="i">
 			<div class="form-check">
@@ -78,7 +78,7 @@
 		</cfloop>
 
 		<div>
-			<label for="new_category">New category</label>
+			<label for="new_category">#request.i18n.getValue("New category")#</label>
 			<input class="form-control" type="text" name="new_category" id="newcategory" />
 		</div>
 
@@ -92,14 +92,14 @@
 			<cfif listfind(showFields,'comments_allowed')>
 				<div class="col-12">
 				<div class="card card-body border-0 shadow mb-4">
-					<h2 class="h5 mb-4">Comments</h2>
+					<h2 class="h5 mb-4">#request.i18n.getValue("Comments")#</h2>
 
 					<div class="form-check form-switch">
 							<input class="form-check-input" type="checkbox" value="yes" id="allowComments" name="allowComments" <cfif allowComments>checked="checked"</cfif>/>
-						<label class="form-check-label" for="allowComments">Allow comments</label>
+						<label class="form-check-label" for="allowComments">#request.i18n.getValue("Allow comments")#</label>
 					</div>
 
-				<p class="form-text">Should reader comments be permitted on this post?</p>
+				<p class="form-text">#request.i18n.getValue("Should reader comments be permitted on this post?")#</p>
 			</div>
 				</div>
 		<cfelse>
@@ -122,7 +122,7 @@
 
 	<div class="row">
 		<div class="col-4 col-md-2">
-			<input type="submit" class="btn btn-primary d-inline-flex align-items-center my-3 animate-up-2" name="submit" value="Save" />
+			<input type="submit" class="btn btn-primary d-inline-flex align-items-center my-3 animate-up-2" name="submit" value="#request.i18n.getValue("Save")#" />
 		</div>
 	</div>
 </cfoutput>

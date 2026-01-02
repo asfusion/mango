@@ -28,12 +28,12 @@
 		<!--- get the system file separator --->
 		<cfset variables.fileSeparator = '/' />
 
-		<cfset variables.resizer = createObject("component", "utilities.Thumbnailer") />
+		<cfset variables.resizer = createObject("component", "Thumbnailer") />
 
 		<cfreturn this />
 </cffunction>
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="getResolvedPath" output="false" description="Returns the aboslute path"
 			access="private" returntype="string">
 		<cfargument name="path" required="true" type="string"  />

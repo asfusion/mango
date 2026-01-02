@@ -28,7 +28,7 @@
                             <i class="bi bi-chevron-right fs-4 pe-3"></i>
                          </a>
                          <a data-bs-toggle="collapse" href="###blockPrefix#" role="button" aria-expanded="false" aria-controls="#blockPrefix#" class=" flex-fill">
-                            <h2 class="card-label fs-5 fw-bold mb-0">#block.title#</h2>
+                            <h2 class="card-label fs-5 fw-bold mb-0">#request.i18n.getValue(block.title)#</h2>
                          </a>
                     </div>
                     <!--- right tools --->

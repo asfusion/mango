@@ -1,4 +1,4 @@
-<<cfsilent>
+<cfsilent>
 	<cfimport prefix="mangoAdmin" taglib="tags">
 	<cfparam name="error" default="">
 	<cfparam name="message" default="">
@@ -28,43 +28,43 @@
 	<cfset skinSettings = blog.getSetting('skins') />
 	<cfset currentSkin = request.administrator.getSkin( skin ) />
 	<cfset currentTemplates = request.administrator.getCurrentTemplates() />
-	<cfset breadcrumb = [ { 'link' = 'skins.cfm', 'title' = "Design" },
-	{ 'title' = "Theme chooser" } ] />
+	<cfset breadcrumb = [ { 'link' = 'skins.cfm', 'title' = request.i18n.getValue("Design") },
+	{ 'title' = request.i18n.getValue("Theme chooser") } ] />
 </cfsilent>
 
 <cf_layout page="Themes" title="Design" hierarchy="#breadcrumb#">
-
+<cfoutput>
 	<nav class="nav navbar-dashboard navbar-dark flex-column flex-sm-row mb-4">
 		<a href="skins.cfm" class="active nav-link">
 			<span class="sidebar-icon">
 				<i class="bi icon icon-xs"></i>
 			</span>
-			<span class="sidebar-text">Themes</span>
+			<span class="sidebar-text">#request.i18n.getValue("Themes")#</span>
 		</a>
 	<cfif arraylen( currentSkin.settings )>
 		<a href="skins_settings.cfm" class="nav-link">
 			<span class="sidebar-icon">
 				<i class="bi icon icon-xs"></i>
 			</span>
-			<span class="sidebar-text">Theme settings</span>
+			<span class="sidebar-text">#request.i18n.getValue("Theme settings")#</span>
 		</a>
 	</cfif>
 	<cfif arraylen( currentTemplates )>
-		<cfoutput>
+		
 			<cfloop array="#currentTemplates#" item="templateitem">
 					<a href="skins_settings.cfm?template=#templateitem.template#" class="nav-link">
 					<span class="sidebar-icon">
 				<i class="bi icon icon-xs"></i>
 			</span>
-				<span class="sidebar-text">#templateitem.label# settings</span>
+				<span class="sidebar-text">#request.i18n.getValue("{1} settings", [templateitem.label])#</span>
 				</a>
 			</cfloop>
-		</cfoutput>
+		
 	</cfif>
 		<mangoAdmin:SecondaryMenuEvent name="skinsNav" includewrapper="false" />
 	</nav>
 	<cfif listfind(currentRole.permissions, "manage_themes") OR listfind(currentRole.permissions, "set_themes")>
-		<cfoutput>
+		
 			<cfif len(message)><div class="alert alert-success" role="alert">#message#</div></cfif>
 			<cfif len(error)><div class="alert alert-danger" role="alert">#error#</div></cfif>
 
@@ -84,10 +84,10 @@
 					<div class="card-body">
 					<h4 class="card-title h3">#skins[i].name# <cfif len(skins[i].version)><span class="badge bg-info">#skins[i].version#</cfif></h4>
 					<template x-if="hasUpdate">
-					<div class="alert alert-secondary mt-3">There is an update available for this theme. <a class="btn btn-outline-primary mt-1" href="#cgi.script_name#?action=download&amp;skin=#skins[i].id#">Download</a></div>
+					<div class="alert alert-secondary mt-3">#request.i18n.getValue("There is an update available for this theme.")# <a class="btn btn-outline-primary mt-1" href="#cgi.script_name#?action=download&amp;skin=#skins[i].id#">#request.i18n.getValue("Download")#</a></div>
 					</template>
 					</div>
-						<div class="card-body text-white bg-gray-600 rounded-bottom">Current theme</div>
+						<div class="card-body text-white bg-gray-600 rounded-bottom">#request.i18n.getValue("Current theme")#</div>
 
 					</div>
 					</div>
@@ -109,10 +109,10 @@
 					<h4 class="card-title h3">#skins[i].name# <cfif len(skins[i].version)><span class="badge bg-info">#skins[i].version#</cfif></h4>
 					</div>
 					<div class="card-footer">
-							<a href="#cgi.script_name#?action=set&amp;skin=#skins[i].id#" class="btn btn-sm btn-primary d-inline-flex align-items-center me-2">Use this theme</a>
-							<a class="btn btn-sm btn-outline-danger deleteButton" href="#cgi.script_name#?action=delete&amp;skin=#skins[i].id#">Delete</a>
+							<a href="#cgi.script_name#?action=set&amp;skin=#skins[i].id#" class="btn btn-sm btn-primary d-inline-flex align-items-center me-2">#request.i18n.getValue("Use this theme")#</a>
+							<a class="btn btn-sm btn-outline-danger deleteButton" href="#cgi.script_name#?action=delete&amp;skin=#skins[i].id#">#request.i18n.getValue("Delete")#</a>
 					<template x-if="hasUpdate">
-					<div class="alert alert-secondary mt-3">There is an update available for this theme. <a class="btn btn-outline-primary mt-1" href="#cgi.script_name#?action=download&amp;skin=#skins[i].id#">Download</a></div>
+					<div class="alert alert-secondary mt-3">#request.i18n.getValue("There is an update available for this theme.")# <a class="btn btn-outline-primary mt-1" href="#cgi.script_name#?action=download&amp;skin=#skins[i].id#">#request.i18n.getValue("Download")#</a></div>
 					</template>
 					</div>
 					</div>
@@ -123,7 +123,7 @@
 
 			<cfif listfind(currentRole.permissions, "manage_themes")>
 				<hr />
-				<h2 class="h4 m-4">Download themes</h2>
+				<h2 class="h4 m-4">#request.i18n.getValue("Download themes")#</h2>
 				<div x-data="data()">
 					<div class="d-flex justify-content-center">
 						<div class="pt-4" x-show="loading">
@@ -140,7 +140,7 @@
 										<h4 class="card-title h3" x-text="item.name"></h4>
 									</div>
 									<div class="card-footer">
-										<a @click="download( item.id )" class="btn btn-sm btn-primary d-inline-flex align-items-center me-2">Download</a>
+										<a @click="download( item.id )" class="btn btn-sm btn-primary d-inline-flex align-items-center me-2">#request.i18n.getValue("Download")#</a>
 									</div>
 								</div>
 							</div>
@@ -148,11 +148,11 @@
 					</div>
 				</div>
 			</cfif>
-		</cfoutput>
 
 	<cfelse><!--- not authorized --->
-		<div class="alert alert-info" role="alert">Your role does not allow editing themes</div>
+		<div class="alert alert-info" role="alert">#request.i18n.getValue("Your role does not allow editing themes")#</div>
 	</cfif>
+</cfoutput>
 </cf_layout>
 <script type="text/javascript">
 	function data() {

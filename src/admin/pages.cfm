@@ -5,7 +5,7 @@
 	<cfparam name="panel" default="">
 	<cfparam name="ownerMainMenu" default="Pages">
 	
-	<cfset pagetitle = "All Pages" />
+	<cfset pagetitle = request.i18n.getValue("All Pages") />
 	<cfset currentAuthor = request.blogManager.getCurrentUser() />
 	<cfset currentBlogId = request.blogManager.getBlog().getId() />
 	<cfset currentRole = currentAuthor.getCurrentRole(currentBlogId)/>
@@ -33,7 +33,7 @@
 		</cfif>
 	<cfelse>		
 		<cfset posts = pagesManager.getPagesByCustomField("entryType",panel,1,0,true,false) />
-		<cfset pageTitle = "#panelData.label#: All" />
+		<cfset pageTitle = request.i18n.getValue("{1}: All", panelData.label) />
 	</cfif>
 
 	<cfif panelData.showInMenu EQ "primary">
@@ -52,7 +52,7 @@
 				<div class="col-4 col-md-2 ">
 				<cfif NOT len(preferences) OR listfind(preferences,"categories_new")>
 					<a href="page.cfm?panel=#panel#&amp;owner=#panel#"><button class="btn btn-secondary" type="button">
-								<i class="bi bi-plus"></i>Create New<cfif panel EQ ""> Page</cfif></button></a>
+								<i class="bi bi-plus"></i><cfif panel EQ "">#request.i18n.getValue("Create New Page")#<cfelse>#request.i18n.getValue("Create New")#</cfif></button></a>
 				</cfif>
 				</div>
 			</div>
@@ -63,10 +63,10 @@
 		<table class="table table-hover">
 			<thead>
 			<tr>
-				<th class="border-gray-200">Title</th>
-				<th class="border-gray-200">Status</th>
-				<th class="border-gray-200">Comments</th>
-				<th class="border-gray-200">Actions</th>
+				<th class="border-gray-200">#request.i18n.getValue("Title")#</th>
+				<th class="border-gray-200">#request.i18n.getValue("Status")#</th>
+				<th class="border-gray-200">#request.i18n.getValue("Comments")#</th>
+				<th class="border-gray-200">#request.i18n.getValue("Actions")#</th>
 			</tr>
 			</thead>
 		<tbody>
@@ -78,10 +78,10 @@
 					<cfset status = posts[i].getStatus() />
 					<tr>
 					<td><a href="page.cfm?id=#posts[i].getId()#&amp;owner=#panel#" class="fw-bold">#currentTitle#</a></td>
-				<td><span class="fw-normal <cfif status EQ "published">text-success<cfelse>text-warning</cfif>">#posts[i].getStatus()#</span></td>
+				<td><span class="fw-normal <cfif status EQ "published">text-success<cfelse>text-warning</cfif>">#request.i18n.getValue(posts[i].getStatus())#</span></td>
 				<td><span class="fw-normal badge bg-info"><a href="comments.cfm?entry_id=#posts[i].getId()#">#posts[i].getCommentCount()#</a></span></td>
 				<td>
-						<a href="pages.cfm?action=delete&amp;id=#posts[i].getId()#&amp;panel=#panel#&amp;owner=#panel#"  class="deleteButton"><button class="btn btn-outline-danger btn-sm" type="button">Delete</button></a>
+						<a href="pages.cfm?action=delete&amp;id=#posts[i].getId()#&amp;panel=#panel#&amp;owner=#panel#"  class="deleteButton"><button class="btn btn-outline-danger btn-sm" type="button">#request.i18n.getValue("Delete")#</button></a>
 				</td>
 				</tr>
 				</cfif>
@@ -95,6 +95,6 @@
 		</cfoutput>
 
 <cfelse><!--- not authorized --->
-	<div class="alert alert-info" role="alert">Your role does not allow you to edit posts</div>
+	<div class="alert alert-info" role="alert">#request.i18n.getValue("Your role does not allow you to edit posts")#</div>
 </cfif>
 </cf_layout>

@@ -1,5 +1,5 @@
 <cf_layout page="Files" title="Files">
-
+<cfoutput>
 <div x-data="data" data-reflect-root="">
 	<div class="card"
 		 @dragover.prevent="highlight = true"
@@ -24,7 +24,7 @@
 						<div class="d-flex ms-xl-3">
 							<div class="d-flex">
 								<input  class="form-control" type="file" name="file_input" id="file_input" :disabled="uploadComponent.uploading" @change="fileInputChange()">
-								<button type="button" class="btn btn-primary mr-2"><i class="ion ion-md-cloud-upload"></i>&nbsp; Upload</button>
+								<button type="button" class="btn btn-primary mr-2"><i class="ion ion-md-cloud-upload"></i>&nbsp; #request.i18n.getValue("Upload")#</button>
 							</div>
 						</div>
 					</div>
@@ -36,20 +36,20 @@
 						</div>
 					</div>
 					<div class="col align-items-end col-auto">
-						<button type="button" class="btn btn-outline-primary mr-2" data-bs-toggle="modal" data-bs-target="#createFolderModal"><i class="bi bi-folder-fill"></i> Create folder</button>
-						<button type="button" class="btn btn-outline-info ms-2" @click="deleteDir( )" x-show="!isRoot"><i class="bi bi-x-circle-fill"></i> Delete</button>
+						<button type="button" class="btn btn-outline-primary mr-2" data-bs-toggle="modal" data-bs-target="##createFolderModal"><i class="bi bi-folder-fill"></i> #request.i18n.getValue("Create folder")#</button>
+						<button type="button" class="btn btn-outline-info ms-2" @click="deleteDir( )" x-show="!isRoot"><i class="bi bi-x-circle-fill"></i> #request.i18n.getValue("Delete")#</button>
 					</div>
 				</div>
 			</div>
 			<div class="file-manager-container file-manager-col-view">
 				<div class="file-item" x-show="!isRoot" @click="directoryUp()" >
 					<div class="file-item-icon file-item-level-up bi-arrow-90deg-up text-secondary"></div>
-					<a class="file-item-name">Go up</a>
+					<a class="file-item-name">#request.i18n.getValue("Go up")#</a>
 				</div>
 				<div class="file-item" x-show="loading">
 					<div class="file-item-icon text-secondary">
 						<div class="spinner-border" role="status">
-							<span class="sr-only">Loading...</span>
+							<span class="sr-only">#request.i18n.getValue("Loading")#...</span>
 						</div>
 					</div>
 				</div>
@@ -63,8 +63,8 @@
 							<div class="dropdown me-1">
 								<button type="button" class="btn btn-default btn-sm rounded-pill icon-btn borderless md-btn-flat hide-arrow dropdown-toggle" data-bs-toggle="dropdown"><i class="ion ion-ios-more"></i></button>
 								<ul class="dropdown-menu py-0" aria-labelledby="dropdownMenuOffset">
-									<li><a class="dropdown-item" @click="openRenameDir( dir.name )">Rename</a></li>
-									<li><a class="dropdown-item rounded-bottom" @click="deleteDir( dir.name )">Delete</a></li>
+									<li><a class="dropdown-item" @click="openRenameDir( dir.name )">#request.i18n.getValue("Rename")#</a></li>
+									<li><a class="dropdown-item rounded-bottom" @click="deleteDir( dir.name )">#request.i18n.getValue("Delete")#</a></li>
 								</ul>
 							</div>
 						</div>
@@ -90,7 +90,7 @@
 									<li><a class="dropdown-item" href="javascript:void(0)">Move</a></li>
 									<li><a class="dropdown-item" href="javascript:void(0)">Copy</a></li>
 									--->
-									<li><a class="dropdown-item rounded-bottom" @click="deleteFile( item.name )">Delete</a></li>
+									<li><a class="dropdown-item rounded-bottom" @click="deleteFile( item.name )">#request.i18n.getValue("Delete")#</a></li>
 								</ul>
 							</div>
 						</div>
@@ -110,10 +110,10 @@
 			<div class="modal-footer">
 				<button class="btn btn-primary" x-show="uploadComponent.uploading" type="button" disabled>
 					<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-					Uploading...
+					#request.i18n.getValue("Uploading")#...
 				</button>
-				<button @click="upload();" x-show="!uploadComponent.uploading" class="btn btn-primary">Upload</button>
-				<button @click="cancelUpload()" type="button" x-show="uploadComponent.uploading" class="btn btn-secondary">Cancel upload</button>
+				<button @click="upload();" x-show="!uploadComponent.uploading" class="btn btn-primary">#request.i18n.getValue("Upload")#</button>
+				<button @click="cancelUpload()" type="button" x-show="uploadComponent.uploading" class="btn btn-secondary">#request.i18n.getValue("Cancel upload")#</button>
 			</div>
 		</div>
 	</div>
@@ -135,9 +135,9 @@
 									</div>
 								</div>
 								<template class="d-flex justify-content-end align-items-center" x-if="createModel.loading">
-									<span class="me-3 text-gray-500 fs-6">Creating folder...</span>
+									<span class="me-3 text-gray-500 fs-6">#request.i18n.getValue("Creating folder")#...</span>
 									<div class="spinner-border" role="status">
-										<span class="sr-only">Creating folder...</span>
+										<span class="sr-only">#request.i18n.getValue("Creating folder")#...</span>
 									</div>
 								</template>
 								<div id="alert_wrapper" x-show="createModel.alertActive">
@@ -150,7 +150,7 @@
 					</div>
 				</div>
 				<div class="modal-footer">
-					<button @click="createDir()" class="btn btn-primary">Create</button>
+					<button @click="createDir()" class="btn btn-primary">#request.i18n.getValue("Create")#</button>
 				</div>
 			</div>
 		</div>
@@ -172,9 +172,9 @@
 										</div>
 									</div>
 									<template class="d-flex justify-content-end align-items-center" x-if="renameModel.loading">
-										<span class="me-3 text-gray-500 fs-6">Updating folder...</span>
+										<span class="me-3 text-gray-500 fs-6">#request.i18n.getValue("Updating folder")#...</span>
 										<div class="spinner-border" role="status">
-											<span class="sr-only">Updating folder...</span>
+											<span class="sr-only">#request.i18n.getValue("Updating folder")#...</span>
 										</div>
 									</template>
 									<div id="alert_wrapper" x-show="renameModel.alertActive">
@@ -187,7 +187,7 @@
 						</div>
 					</div>
 					<div class="modal-footer">
-						<button @click="renameDir()" class="btn btn-primary">Rename</button>
+						<button @click="renameDir()" class="btn btn-primary">#request.i18n.getValue("Rename")#</button>
 					</div>
 				</div>
 			</div>
@@ -429,7 +429,7 @@
 									this.refresh();
 									this.createModel.input = '';
 									this.createModel.alertActive = false
-									$('#createFolderModal').modal('hide');
+									$('##createFolderModal').modal('hide');
 									notifySuccess(data.message);
 								} else {
 									this.showDirAlert(data.message, "danger");
@@ -440,7 +440,7 @@
 				openRenameDir(dir) {
 					this.renameModel.currentDir = dir;
 					this.renameModel.title = `Rename folder ${this.path}/${dir}`;
-					$('#renameFolderModal').modal('show');
+					$('##renameFolderModal').modal('show');
 					this.renameModel.input = dir;
 				},
 				renameDir() {
@@ -461,7 +461,7 @@
 									this.refresh();
 									this.renameModel.input = '';
 									this.renameModel.alertActive = false
-									$('#renameFolderModal').modal('hide');
+									$('##renameFolderModal').modal('hide');
 									notifySuccess(data.message);
 								} else {
 									this.showDirAlert(data.message, "danger");
@@ -507,7 +507,7 @@
 									this.refresh();
 									this.createModel.input = '';
 									this.createModel.alertActive = false
-									$('#createFolderModal').modal('hide');
+									$('##createFolderModal').modal('hide');
 									notifySuccess(data.message);
 								} else {
 									notifyFailure(data.message);
@@ -585,4 +585,5 @@
 			}
 		}
 	</script>
+	</cfoutput>
 </cf_layout>

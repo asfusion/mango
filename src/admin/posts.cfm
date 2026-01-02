@@ -45,7 +45,7 @@
 	<cfset request.panelData = panelData />
 	
 	<cfset totalPosts = 0 />
-	
+
 	<!--- get posts --->
 	<cfif NOT len(panel)>
 		<cfif len(search)>
@@ -53,20 +53,22 @@
 			<!--- since I can't get the total, I'll make another query for the first next item,
 			if there is one, then there are more pages --->
 			<cfset hasNextPage = arraylen(postsManager.getPostsByKeyword(search, ((page + 1) * itemsPerPage) + 1, 1,true)) />
-			<cfset pageTitle = 'Searching posts for "#search#"' />
+			<cfset pageTitle = request.i18n.getValue('Searching posts for "{1}"', search) />
 		<cfelseif listfind(currentRole.permissions, "manage_all_posts")>
 			<cfset totalPosts = postsManager.getPostCount(true) />
 			<cfset posts = postsManager.getPosts((page * itemsPerPage) + 1, itemsPerPage, true, false) />
 			<cfset hasNextPage = totalPosts GT ((page + 1) * itemsPerPage)>
+			<cfset pageTitle = request.i18n.getValue("All Posts") />
 		<cfelse>
 			<cfset posts = postsManager.getPostsByAuthor(currentAuthor.id, (page * itemsPerPage) + 1, itemsPerPage,true) />
 			<!--- since I can't get the total, I'll make another query for the first next item,
 			if there is one, then there are more pages --->
 			<cfset hasNextPage = arraylen(postsManager.getPostsByAuthor(currentAuthor.id, ((page + 1) * itemsPerPage) + 1, 1,true)) />
+			<cfset pageTitle = request.i18n.getValue("All Posts") />
 		</cfif>
 	<cfelse>
 		<cfset posts = postsManager.getPostsByCustomField("entryType",panel, (page * itemsPerPage) + 1, itemsPerPage,true,false) />
-		<cfset pageTitle = "#panelData.label#: All" />
+		<cfset pageTitle = request.i18n.getValue("{1}: All", panelData.label) />
 		<!--- since I can't get the total, I'll make another query for the first next item,
 			if there is one, then there are more pages --->
 		<cfset hasNextPage = arraylen(postsManager.getPostsByCustomField("entryType",panel, ((page + 1) * itemsPerPage) + 1, 1,true,false)) />
@@ -84,25 +86,25 @@
 	<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
 		<div>
 		<cfif NOT len(preferences) OR listfind(preferences,"posts_new")>
-			<button class="btn btn-secondary" type="button"><a href="post.cfm?panel=#panel#&amp;owner=#panel#"><svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Add New</a></button>
+			<button class="btn btn-secondary" type="button"><a href="post.cfm?panel=#panel#&amp;owner=#panel#"><svg class="icon icon-xs me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>#request.i18n.getValue("Add New")#</a></button>
 		</cfif>
 		</div>
 		<div class="btn-toolbar ">
 			<form action="posts.cfm">
 				<div class="input-group me-2 me-lg-3 fmxw-400">
 					<span class="input-group-text"> <i class="bi bi-search icon icon-xs"></i> </span>
-					<input type="text" class="form-control" placeholder="Search posts" name="search" id="search">
+					<input type="text" class="form-control" placeholder="#request.i18n.getValue("Search posts")#" name="search" id="search">
 				</div>
 			</form>
 
 		<cfif showMenuItem("manage_categories","categories")>
 			<button class="btn btn-gray-800 d-inline-flex align-items-center dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-				Post categories <svg class="icon icon-xs ms-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg></button>
+				#request.i18n.getValue("Post categories")# <svg class="icon icon-xs ms-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg></button>
 				<div class="dropdown-menu dashboard-dropdown dropdown-menu-start mt-2 py-1">
 					<a class="dropdown-item d-flex align-items-center" href="categories.cfm">
-						<i class="bi bi-folder icon icon-xs me-2"></i>View and edit </a>
+						<i class="bi bi-folder icon icon-xs me-2"></i>#request.i18n.getValue("View and edit")# </a>
 					<a class="dropdown-item d-flex align-items-center" href="category.cfm"><i class="bi bi-plus icon icon-xs
-					 me-2"></i> New category </a>
+					 me-2"></i> #request.i18n.getValue("New category")# </a>
 				</div>
 			</cfif>
 		</div>
@@ -130,7 +132,7 @@
 					we need to check if the user has enough permissions --->
 						<cfif listfind(currentRole.permissions, "manage_all_posts") OR posts[i].getauthorId() EQ currentAuthor.id>
 							<cfset currentTitle = xmlformat(posts[i].getTitle()) />
-							<cfif NOT len(currentTitle)><cfset currentTitle = "--Untitled--"/></cfif>
+							<cfif NOT len(currentTitle)><cfset currentTitle = "--" & request.i18n.getValue("Untitled") & "--"/></cfif>
 							<cfset status = posts[i].getStatus() />
 						<tr>
 							<td>
@@ -139,12 +141,12 @@
 							<td>
 								<span class="fw-normal">#lsdateformat(posts[i].getPostedOn(),'short')#</span>
 							</td>
-							<td><span class="fw-normal <cfif status EQ "published">text-success<cfelse>text-warning</cfif>">#posts[i].getStatus()#</span></td>
+							<td><span class="fw-normal <cfif status EQ "published">text-success<cfelse>text-warning</cfif>">#request.i18n.getValue(uCase(left(status,1)) & right(status,len(status)-1))#</span></td>
 							<td><span class="fw-normal badge bg-info"><a href="comments.cfm?entry_id=#posts[i].getId()#">#posts[i].getCommentCount()#</a></span></td>
 							<td><span class="fw-bold">#posts[i].getAuthor()#</span></td>
 						<td>
-						<a href="posts.cfm?action=delete&amp;id=#posts[i].getId()#&amp;panel=#panel#&amp;owner=#panel#"  class="deleteButton"><button class="btn btn-outline-danger btn-sm" type="button">Delete</button></a>
-								<a href="#request.blogManager.getBlog().geturl()##posts[i].getUrl()#"><button class="btn btn-outline-info btn-sm" type="button">View</button></a>
+						<a href="posts.cfm?action=delete&amp;id=#posts[i].getId()#&amp;panel=#panel#&amp;owner=#panel#"  class="deleteButton"><button class="btn btn-outline-danger btn-sm" type="button">#request.i18n.getValue("Delete")#</button></a>
+								<a href="#request.blogManager.getBlog().geturl()##posts[i].getUrl()#"><button class="btn btn-outline-info btn-sm" type="button">#request.i18n.getValue("View")#</button></a>
 						</td>
 						</tr>
 						</cfif>
@@ -157,11 +159,11 @@
 						<ul class="pagination mb-0">
 
 							<cfif page NEQ 0>
-								<li class="page-item"><a class="page-link" href="posts.cfm?panel=#panel#&amp;owner=#panel#&page=#page-1#">Previous</a></li>
+								<li class="page-item"><a class="page-link" href="posts.cfm?panel=#panel#&amp;owner=#panel#&page=#page-1#">#request.i18n.getValue("Previous")#</a></li>
 							</cfif>
 		<cfif hasNextPage>
 							<li class="page-item">
-								<a class="page-link" href="posts.cfm?panel=#panel#&amp;owner=#panel#&page=#page+1#">Next</a>
+								<a class="page-link" href="posts.cfm?panel=#panel#&amp;owner=#panel#&page=#page+1#">#request.i18n.getValue("Next")#</a>
 							</li>
 		</cfif>
 

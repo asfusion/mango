@@ -61,28 +61,29 @@
 		<div class="card card-body">
 			<div class="row">
 				<div class="mb-3 col">
-					<label for="creatorName">Name</label>
+					<label for="creatorName">#request.i18n.getValue("Name")#</label>
 					<input type="text" id="creatorName" name="creatorName" value="#htmleditformat(name)#" size="40" class="required form-control" required />
 				</div>
 				<div class="mb-3 col">
-					<label for="creatorEmail">Email</label>
+					<label for="creatorEmail">#request.i18n.getValue("Email")#</label>
 					<input type="email" id="creatorEmail" name="creatorEmail" value="#htmleditformat(email)#" size="40" class="required form-control" required/>
 				</div>
 		</div>
 
 		<div class="mb-3">
-				<label for="creatorUrl">Website</label>
+				<label for="creatorUrl">#request.i18n.getValue("Website")#</label>
 				<input type="text" id="creatorUrl" name="creatorUrl" value="#htmleditformat(website)#" size="40" class="form-control"/>
 			</div>
 
 	<div class="mb-3">
-				<label for="content">Comment</label>
+				<label for="content">#request.i18n.getValue("Comment")#</label>
 				<span class="field">
 					<textarea cols="80" rows="10" id="content" name="content" class="required form-control" required>#htmleditformat(content)#</textarea></span>
 			</div>
 
 			<div class="mb-3 form-check form-switch">
-				<input type="checkbox" id="approved" name="approved" class="form-check-input" value="yes" <cfif approved>checked="checked"</cfif>/><label for="approved">Approved?</label>
+				<input type="checkbox" id="approved" name="approved" class="form-check-input" value="yes" <cfif approved>checked="checked"</cfif>/>
+				<label for="approved">#request.i18n.getValue("Approved")#</label>
 			</div>
 
 	</div>

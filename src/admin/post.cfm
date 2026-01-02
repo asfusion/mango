@@ -19,7 +19,7 @@
 	<cfparam name="panel" default="">
 	<cfparam name="ownerMainMenu" default="Posts">
 	
-	<cfset pagetitle = "New post" />
+	<cfset pagetitle = request.i18n.getValue("New post") />
 	<cfset pluginQueue = request.blogManager.getpluginQueue() />
 	<cfset currentAuthor = request.blogManager.getCurrentUser() />
 	<cfset currentBlogId = request.blogManager.getBlog().getId() />
@@ -63,9 +63,9 @@
 				<cfelse>
 					<cfset postUrl = postUrl & "&preview=1">
 				</cfif>
-			</cfif>
-			<cfset pagetitle = 'Editing "#htmlEditFormat(post.getTitle())#"'>
-		<cfelse>
+				</cfif>
+				<cfset pagetitle = request.i18n.getValue("Editing {1}", htmlEditFormat(post.getTitle()))>
+			<cfelse>
 			<cfset post = request.blogManager.getObjectFactory().createPost() />
 		</cfif>	
 		
@@ -132,7 +132,7 @@
 		<cfset hiddenPanelField = structnew() />
 		<cfset hiddenPanelField["id"] = "entryType" />
 		<cfset hiddenPanelField["value"] = panel />
-		<cfset hiddenPanelField["name"] = "Entry Type"/>
+		<cfset hiddenPanelField["name"] = request.i18n.getValue("Entry Type")/>
 		<cfset hiddenPanelField["inputType"] = "hidden">
 		<cfset arrayappend( customFormFields, hiddenPanelField )>
 		
@@ -177,7 +177,7 @@
 		<cfset ownerMainMenu = panel />
 	</cfif>
 	<cfset breadcrumb = [ { 'link' = 'posts.cfm?panel=#panel#&amp;owner=#panel#', 'title' = panelData.label },
-	{ 'title' = ( mode EQ "update" ) ? 'Edit' : 'New' } ] />
+	{ 'title' = ( mode EQ "update" ) ? request.i18n.getValue("Edit") : request.i18n.getValue("New") } ] />
 </cfsilent>
 <cf_layout page="#ownerMainMenu#" title="#pagetitle#" hierarchy="#breadcrumb#">
 	<script type="text/javascript" src="assets/scripts/keep-alive.js" ></script>
@@ -193,9 +193,9 @@
 				<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
 					<h4 class="h4">#pageTitle#</h4>
 					<div>
-						<input type="submit" class="btn btn-primary d-inline-flex align-items-center me-2 animate-up-2" name="submit" value="Save" />
+						<input type="submit" class="btn btn-primary d-inline-flex align-items-center me-2 animate-up-2" name="submit" value="#request.i18n.getValue("Save")#" />
 						<cfif len( postUrl )>
-							<a href="#postUrl#" target="_blank"><button type="button" class="btn btn-outline-info d-inline-flex align-items-center me-2">View</button></a>
+							<a href="#postUrl#" target="_blank"><button type="button" class="btn btn-outline-info d-inline-flex align-items-center me-2">#request.i18n.getValue("View")#</button></a>
 						</cfif>
 					</div>
 				</div>
@@ -209,6 +209,6 @@
 		</form>
 		</cfoutput>
 	<cfelse><!--- not authorized --->
-		<div class="alert alert-info" role="alert">Your role does not allow <cfif mode EQ "new">adding new posts<cfelse>editing this post</cfif></div>
+		<div class="alert alert-info" role="alert"><cfif mode EQ "new">#request.i18n.getValue("Your role does not allow adding new posts")#<cfelse>#request.i18n.getValue("Your role does not allow editing this post")#</cfif></div>
 	</cfif>
 </cf_layout>

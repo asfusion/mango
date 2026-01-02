@@ -15,6 +15,7 @@
 <cfparam name="attributes.ifCountGT" type="string" default="">
 <cfparam name="attributes.ifCountLT" type="string" default="">
 <cfparam name="attributes.loopAtLeastOnce" type="boolean" default="false">
+<cfparam name="attributes.ids" type="string" default="">
 <!--- at this moment only recent posts support the sorting attribute.
 Options are: DATE-DESC (default), DATE-ASC, TITLE-ASC, TITLE-DESC, COMMENTCOUNT-DESC,
 COMMENTCOUNT-ASC, COMMENTACTIVITY-DESC, COMMENTACTIVITY-ASC --->
@@ -111,6 +112,9 @@ COMMENTCOUNT-ASC, COMMENTACTIVITY-DESC, COMMENTACTIVITY-ASC --->
 		</cfcase>
 		<cfcase value="parent">			<!---	
 			<cfset posts = data.posts />--->
+		</cfcase>
+		<cfcase value="ids">
+			<cfset posts = request.blogManager.getPostsManager().getPostsByIds(attributes.ids,recordsFrom,attributes.count )/>
 		</cfcase>
 	</cfswitch>
 	

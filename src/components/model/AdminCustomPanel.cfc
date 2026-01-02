@@ -23,6 +23,7 @@
 		this.goTo = "list";	//list, new
 		this.template = '';
 		this.requiresPermission = '';
+		this.templates = [];
 	</cfscript>
 	
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
@@ -195,6 +196,7 @@
 			myClone.iconImage = this.iconImage;
 			myClone.goTo = this.goTo;
 			myClone.template = this.template;
+			myClone.templates = this.templates;
 			
 			return myClone;
 		</cfscript>

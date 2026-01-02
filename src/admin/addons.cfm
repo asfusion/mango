@@ -55,9 +55,9 @@
 <table class="table table-hover">
 	<thead>
 	<tr>
-		<th class="border-gray-200">Name</th>
-		<th class="border-gray-200">Decription</th>
-		<th class="border-gray-200">Actions</th>
+		<th class="border-gray-200">#request.i18n.getValue("Name")#</th>
+		<th class="border-gray-200">#request.i18n.getValue("Description")#</th>
+		<th class="border-gray-200">#request.i18n.getValue("Actions")#</th>
 	</tr>
 	</thead>
 <tbody>

@@ -49,13 +49,13 @@ Use this application at your own risk
 		<!--- get the system file separator --->
 		<cfset variables.fileSeparator = createObject("java","java.io.File").separator />
 
-		<cfset variables.resizer = createObject("component", "utilities.Thumbnailer") />
+		<cfset variables.resizer = createObject("component", "Thumbnailer") />
 
 		<cfreturn this />
 </cffunction>
 
 	
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- :::::::::::::::::::::::::::::::::::::::::::::::\::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 <cffunction name="getFiles" output="false" description="Returns the list of files in given path - starting from root path" 
 					access="public" returntype="struct">
 	<cfargument name="path" required="false" type="string" default=""/>
@@ -89,7 +89,7 @@ Use this application at your own risk
 </cffunction>
 
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 <cffunction name="getDirectories" output="false" description="Returns the list of directories in given path - starting from root path" 
 					access="public" returntype="struct">
 	<cfargument name="path" required="false" type="string" default=""/>
@@ -139,7 +139,7 @@ Use this application at your own risk
 		
 </cffunction>
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 <cffunction name="createFolder" output="false" description="Creates a folder under the given path" 
 					access="remote" returntype="struct">
 	<cfargument name="path" required="false" type="string" default=""/>
@@ -256,7 +256,7 @@ Use this application at your own risk
 		
 </cffunction>
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 <cffunction name="removeFile" output="false" description="Deletes a file" 
 					access="remote" returntype="struct">
 	<cfargument name="path" required="false" type="string" default=""/>
@@ -288,7 +288,7 @@ Use this application at your own risk
 		
 </cffunction>
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 <cffunction name="renameFile" output="false" description="Renames a file" 
 					access="remote" returntype="struct">
 	<cfargument name="path" required="false" type="string" default=""/>
@@ -334,20 +334,21 @@ Use this application at your own risk
 </cffunction>
 
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
-<cffunction name="uploadFile" output="false" description="Uploads a file in the given folder" 
-					access="public" returntype="void">
+<cffunction name="uploadFile" output="false" description="Uploads a file in the given folder" access="public">
 	<cfargument name="filefield" required="true" />
 	<cfargument name="path" required="false" type="string" default=""/>	
 	<cfargument name="filename" type="string" required="true" />
+	<cfargument name="accept" type="string" required="false" default="" />
 
-	<cfset var basedir = getResolvedPathWithValidation(arguments.path, true) />
-		<cfif len(arguments.filename) AND isAllowedExtension(arguments.filename)>
-			<cffile action="UPLOAD" filefield="#arguments.filefield#" 
-					destination="#basedir##variables.fileSeparator#" nameconflict="OVERWRITE">  
-		<cfelse>
-			<cfthrow message='"#getExtension(arguments.filename)#" is not a valid extension.' />
-		</cfif>
-		
+	<cfscript>
+		var result = {};
+		if ( len(arguments.filename) AND isAllowedExtension(arguments.filename) ) {
+			result = fileUpload( getResolvedPathWithValidation(arguments.path, true) & variables.fileSeparator, arguments.filefield, arguments.accept, "overwrite" );
+		} else {
+			throw( message='"#getExtension(arguments.filename)#" is not a valid extension.' );
+		}
+		return result;
+	</cfscript>
 </cffunction>
 
 <!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
@@ -396,7 +397,7 @@ Use this application at your own risk
 		
 </cffunction>
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 <cffunction name="getFile" output="false" description="Downloads a file" 
 					access="public" returntype="any">
 	<cfargument name="path" required="false" type="string" default=""/>	
@@ -420,7 +421,7 @@ Use this application at your own risk
 	<cfreturn filecontent />
 </cffunction>
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 <cffunction name="getResolvedPathWithValidation" output="false" description="Returns the aboslute path if is it valid (within root)" 
 					access="private" returntype="string">
 	<cfargument name="path" required="true" type="string"  />
@@ -434,7 +435,7 @@ Use this application at your own risk
 		</cfif>
 </cffunction>
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 <cffunction name="getResolvedPath" output="false" description="Returns the aboslute path" 
 					access="private" returntype="string">
 	<cfargument name="path" required="true" type="string"  />
@@ -444,7 +445,7 @@ Use this application at your own risk
 		
 </cffunction>
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 <cffunction name="isAllowedExtension" output="false" description="Checks whether this is not an allowed extension" 
 					access="private" returntype="boolean">
 	<cfargument name="filename" type="string" required="true" />
@@ -456,7 +457,7 @@ Use this application at your own risk
 		
 </cffunction>
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 <cffunction name="getExtension" output="false" description="Returns the extension of a file" 
 					access="public" returntype="string">
 	<cfargument name="name" type="string" required="true" />
@@ -521,4 +522,26 @@ Use this application at your own risk
 		<cfreturn filecontent />
 
 	</cffunction>
+
+	<cfscript>
+
+// _______________________________________________________________________
+		// brings a given file (by complete file name) to the assets folder
+		public function importFile( path, name, file ) {
+
+			var result = { 'status' = true, 'data' = {}, args: arguments };
+
+			var dir = getResolvedPath( path );
+			if ( NOT directoryExists( dir )) {
+				directoryCreate( dir );
+			}
+
+			var newfilename = dir & variables.fileSeparator & arguments.name;
+			newfilename = replace(newfilename, '//','/');
+
+			fileMove( file, newfilename );
+			result['data']['path'] = replace( path & variables.fileSeparator & arguments.name, '//','/');
+			return result;
+		}
+	</cfscript>
 </cfcomponent>

@@ -27,6 +27,7 @@
 <cfparam name="attributes.ifHasCustomField" type="string" default="">
 <cfparam name="attributes.ifNotHasCustomField" type="string" default="">
 <cfparam name="attributes.ifCustomFieldEQ" type="string" default="">
+<cfparam name="attributes.variable" default="">
 
 <cfif thisTag.executionmode is 'start'>
 <cfif attributes.format EQ "default">
@@ -153,6 +154,14 @@
 		<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
 	</cfif>
 
+	<!--- to allow for not having multiple fields, separate by & ---->
+	<cfif listlen( attributes.ifNotHasCustomField, '&' ) GT 1>
+		<cfloop list="#attributes.ifNotHasCustomField#" delimiters="&" item="customFieldItem">
+		<cfif currentPage.customFieldExists( customFieldItem )>
+			<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
+		</cfif>
+		</cfloop>
+	</cfif>
 	<cfif len(attributes.ifNotHasCustomField) AND currentPage.customFieldExists(attributes.ifNotHasCustomField)>
 		<cfsetting enablecfoutputonly="false"><cfexit method="exittag">
 	</cfif>
@@ -217,7 +226,11 @@
 	<cfelseif attributes.format EQ "escapedHtml">
 		<cfset prop = htmleditformat( prop )>
 	</cfif>
-	<cfoutput>#prop#</cfoutput>
+	<cfif NOT len(attributes.variable)>
+		<cfoutput>#prop#</cfoutput>
+	<cfelse><cfset caller[attributes.variable] = prop />
+	</cfif>
+
 </cfif>
 
 <cfsetting enablecfoutputonly="false">

@@ -429,7 +429,6 @@
 	
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="newAuthor" access="public" output="false" returntype="struct">		
-		<cfargument name="username" type="string" required="true" />
 		<cfargument name="password" type="string" required="true" />
 		<cfargument name="name" type="string" required="true"  />
 		<cfargument name="email" type="string" required="true" />
@@ -453,7 +452,8 @@
 			<cfset blogsArray = arraynew(1) />
 			<cfset blogsArray[1] = blog />
 			<cfset author.setBlogs(blogsArray) />
-			<cfset author.setUsername(arguments.username)/>
+		<!--- mango  no longer has an input for username, but we are leaving it for backward compat --->
+			<cfset author.setUsername( createUUID() )/>
 			<cfset author.setPassword(arguments.password) />
 			<cfset author.setName(arguments.name) />
 			<cfset author.setEmail(arguments.email) />
@@ -493,7 +493,6 @@
 					</cfif>
 				</cfloop>
 			</cfif>
-			<cfset author.setUsername(arguments.username)/>
 			<cfset author.setPassword(arguments.password) />
 			<cfset author.setName(arguments.name) />
 			<cfset author.setEmail(arguments.email) />
@@ -513,6 +512,7 @@
 		<cfargument name="description" type="string" required="false" default="" />
 		<cfargument name="url" type="string" required="false" default="true" hint="" />		
 		<cfargument name="skin" type="string" required="false" default="" hint="" />
+		<cfargument name="locale" required="false" type="string" default="en">
 		<cfargument name="user" required="false" type="any">
 
 			<cfset var blog = variables.blogManager.getBlog().clone() />
@@ -526,6 +526,7 @@
 				<cfset blog.setTitle(arguments.title) />
 				<cfset blog.setdescription(arguments.description) />
 				<cfset blog.setUrl(arguments.url) />
+				<cfset blog.setLocale(arguments.locale) />
 				
 				<cfif len(arguments.skin)>
 					<cfset blog.setSkin(arguments.skin) />
@@ -1302,9 +1303,9 @@
 <!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="getPageTemplates" access="public" output="false" returntype="array">
 
-			<cfset var templates = [] />
-			<cfset var template = "" />
-			<cfset var templateInfo = getSkin( )/>
+		<cfset var templates = [] />
+		<cfset var template = "" />
+		<cfset var templateInfo = getSkin( )/>
 		<!--- old skins --->
 		<cfif structKeyExists( templateInfo, "pageTemplates" )>
 			<cfset templates = templateInfo.pageTemplates />
@@ -1318,6 +1319,24 @@
 			<cfset template.isDefault = template.file EQ "page.cfm" />
 			<cfset template.hasBlocks = structKeyExists( template, 'blocks' ) AND arraylen( template.blocks )>
 		</cfloop>
+		<cfreturn templates />
+	</cffunction>
+
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+	<cffunction name="getAllTemplates" access="public" output="false">
+
+		<cfset var templates = {} />
+		<cfset var template = "" />
+		<cfset var templateInfo = getSkin( )/>
+		<cfif structKeyExists( templateInfo, "templates" )>
+			<cfloop collection="#templateInfo.templates#" item="category">
+				<cfloop array="#templateInfo.templates[category]#" item="template">
+					<cfset template['isDefault'] = template.file EQ "page.cfm" />
+					<cfset template['hasBlocks'] = structKeyExists( template, 'blocks' ) AND arraylen( template.blocks )>
+				</cfloop>
+			</cfloop>
+			<cfreturn templateInfo.templates />
+		</cfif>
 		<cfreturn templates />
 	</cffunction>
 
@@ -1563,10 +1582,25 @@
 	}
 
 	// ------------------------------------------
-	function getPageSkinInfo( pageObject ){
-		var pageTemplates = getPageTemplates();
+	function getPageSkinInfo( pageObject )
+	{
 		var pageCurrent = pageObject.getTemplate();
 		var result = { 'template' = pageCurrent, 'hasBlocks' = false, 'availableTemplates' = [], 'definition' = {} };
+		var panelId = '';
+		var panelDef = {};
+		var templateRef = '';
+		var pageTemplates = getPageTemplates();
+		//check if has entry type and entry type has its own templates
+		if (pageObject.customFieldExists("entryType")){
+			panelId = pageObject.getCustomField("entryType").value;
+			panelDef = getCustomPanel(panelId,'page');
+		}
+		result.panelDef = panelDef;
+		if ( len( panelId ) AND arraylen( panelDef.templates )){
+			pageTemplates = panelDef.templates;
+			result.rr = pageTemplates;
+		}
+
 		for ( var info in pageTemplates ){
 			if ( NOT info.isDefault ){
 				arrayappend( result.availableTemplates, info );
@@ -1793,6 +1827,15 @@
 							customPanelObj.icon = 'bi-file-earmark-text-fill';
 					}
 					customPanelObj.label = i18n.getValue(customPanelObj.label);
+
+					//add info from templates reference
+					var alltemplates = getAllTemplates();
+					if ( structKeyExists( panel, "templates" )){
+						customPanelObj.templates = alltemplates[ panel.templates ];
+					}
+					else if ( structKeyExists( alltemplates, panel.type )){
+						customPanelObj.templates = alltemplates[ panel.type ];
+					}
 					addCustomPanel( customPanelObj );
 				}
 			}

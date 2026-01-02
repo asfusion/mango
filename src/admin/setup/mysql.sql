@@ -10,6 +10,7 @@ CREATE TABLE #prefix#author (
   `picture` varchar(100) NOT NULL default '',
   `alias` varchar(100) NOT NULL default '',
   `active` tinyint(1) default '1',
+    `preferences` text,
   PRIMARY KEY  (`id`),
   UNIQUE KEY `IX_#prefix#author` (`username`),
   KEY `IX_#prefix#author_1` (`alias`)

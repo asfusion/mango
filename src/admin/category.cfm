@@ -81,13 +81,13 @@
 		<div class="card card-body border-0 shadow mb-4">
 			<div class="mb-3">
 			<div>
-				<label for="title">Title</label>
+				<label for="title">#request.i18n.getValue("Title")#</label>
 				<input class="form-control" id="title" type="text" name="title" value="#htmleditformat(title)#" placeholder="Enter post title" required>
 			</div>
 			</div>
 
 			<div class="mb-3">
-				<label for="description">Description</label>
+				<label for="description">#request.i18n.getValue("Description")#</label>
 				<textarea class="form-control" id="description" name="description" rows="4">#htmleditformat(description)#</textarea>
 
 			<div class="form-text hint">What this category is about. Whether or not this is shown in the blog depends on the skin used</div>

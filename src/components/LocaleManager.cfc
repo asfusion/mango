@@ -1,8 +1,9 @@
 component {
-    this.bunl = variables.bundles = {};
+    variables.bundles = {};
     variables.currentLocale = '';
     variables.fallbackLocale = '';
     variables.systemLocale = '';
+    variables.availableLocales = {};
 
     // -------------------------------------------
     public function init( locale = '', resourcesDir = '' ){
@@ -64,6 +65,12 @@ component {
     }
 
     // -------------------------------------------
+    public function getLocale()
+    {
+        return variables.currentLocale;
+    }
+
+    // -------------------------------------------
     public function getValue( required key, values = '' )
     {
         var locale = variables.currentLocale;
@@ -77,6 +84,16 @@ component {
     }
 
     // -------------------------------------------
+    public function getLoadedBundles(){
+        var result = [];
+        for ( var code in variables.availableLocales ){
+            var name = getLocaleDisplayName( code );
+            arrayAppend( result, { locale = code, name = name } );
+        }
+        return result;
+    }
+
+    // -------------------------------------------
     private function autoLoad( dir )
     {
        if ( directoryExists( dir )) {
@@ -87,6 +104,7 @@ component {
                    if ( listFirst( filelocale, '_') EQ listFirst( variables.currentLocale, "_" )) {
                        registerLocale( dir & file, filelocale );
                    }
+                   availableLocales[ filelocale ] = '';
                }
            }
        }

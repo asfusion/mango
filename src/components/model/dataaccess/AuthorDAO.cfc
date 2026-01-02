@@ -134,7 +134,6 @@
 		<cfquery name="qupdateauthor"  datasource="#variables.dsn#" username="#variables.username#" password="#variables.password#">
 		UPDATE #variables.prefix#author
 		SET
-		username = <cfqueryparam value="#arguments.author.getUsername()#" cfsqltype="CF_SQL_VARCHAR" maxlength="50"/>,
 		password = <cfqueryparam value="#password#" cfsqltype="CF_SQL_VARCHAR" maxlength="50"/>,
 		name = <cfqueryparam value="#arguments.author.getname()#" cfsqltype="CF_SQL_VARCHAR" maxlength="100"/>,
 		email = <cfqueryparam value="#arguments.author.getemail()#" cfsqltype="CF_SQL_VARCHAR" maxlength="255"/>,

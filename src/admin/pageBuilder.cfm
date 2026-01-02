@@ -6,7 +6,7 @@
 <cfparam name="form.block_count" default="0" />
 <cfparam name="ownerMainMenu" default="Pages">
 
-	<cfset templates = request.administrator.getPageTemplates() />
+	<cfset templates = request.administrator.getAllTemplates() />
 	<cfset pagetitle = "" />
 	<cfset pluginQueue = request.blogManager.getpluginQueue() />
 	<cfset currentAuthor = request.blogManager.getCurrentUser() />
@@ -58,7 +58,7 @@
 		<cfset pageUrl = pageUrl & "&preview=1">
 	</cfif>
 </cfif>
-<cfset pagetitle = 'Editing "#xmlformat(page.getTitle())#"'>
+<cfset pagetitle = request.i18n.getValue("Editing {1}", xmlformat(page.getTitle()))>
 <cfset skinBlockInfo = request.administrator.getPageSkinInfo( page )>
 
 <cfset pageBlocks = "*" />
@@ -82,11 +82,11 @@
 
 <cfset blocks = request.administrator.prepareBlocksForEdit( skinBlockInfo.definition, pageBlocks ) />
 
-<cfset breadcrumb = [ { 'link' = 'pages.cfm?panel=#panel#&amp;owner=#panel#', 'title' = 'Pages' },
-{ 'link' = 'page.cfm?id=#id#&amp;owner=#panel#', 'title' = 'Edit' },
-{ 'title' = 'Page Designer' } ] />
+<cfset breadcrumb = [ { 'link' = 'pages.cfm?panel=#panel#&amp;owner=#panel#', 'title' = request.i18n.getValue("Pages") },
+{ 'link' = 'page.cfm?id=#id#&amp;owner=#panel#', 'title' = request.i18n.getValue("Edit") },
+{ 'title' = request.i18n.getValue("Page Designer") } ] />
 
-<cf_layout page="#ownerMainMenu#" title="Page Designer" hierarchy="#breadcrumb#">
+<cf_layout page="#ownerMainMenu#" title="#request.i18n.getValue("Page Designer")#" hierarchy="#breadcrumb#">
 <script type="text/javascript" src="assets/scripts/keep-alive.js" ></script>
 <cfif listfind(currentRole.permissions, "manage_all_pages") OR
 (listfind(currentRole.permissions, "manage_pages") AND (mode EQ "new" OR page.authorId EQ currentAuthor.id))>
@@ -96,9 +96,9 @@
 		<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
 			<h4 class="h4">#pageTitle#</h4>
 			<div>
-				<input type="submit" class="btn btn-primary d-inline-flex align-items-center me-2 animate-up-2" name="submit" value="Save all" />
-				<a href="#pageUrl#" target="_blank"><button type="button" class="btn btn-outline-info d-inline-flex align-items-center me-2">View</button></a>
-				<a href="page.cfm?id=#id#&amp;owner=#panel#" class="text-primary d-inline-flex align-items-center">Back to Page Settings <i class="bi bi-arrow-right-circle p-2"></i></a>
+				<input type="submit" class="btn btn-primary d-inline-flex align-items-center me-2 animate-up-2" name="submit" value="#request.i18n.getValue("Save all")#" />
+				<a href="#pageUrl#" target="_blank"><button type="button" class="btn btn-outline-info d-inline-flex align-items-center me-2">#request.i18n.getValue("View")#</button></a>
+				<a href="page.cfm?id=#id#&amp;owner=#panel#" class="text-primary d-inline-flex align-items-center">#request.i18n.getValue("Back to Page Settings")# <i class="bi bi-arrow-right-circle p-2"></i></a>
 			</div>
 		</div>
 

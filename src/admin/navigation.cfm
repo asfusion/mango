@@ -24,13 +24,13 @@
 	<cfreturn show AND (NOT len(arguments.preferenceAllowed) OR listfind(preferences,arguments.preferenceAllowed) OR preferences EQ "all") />
 </cffunction>
 
-
+<cfoutput>
 <nav class="navbar navbar-dark navbar-theme-primary px-4 col-12 d-lg-none">
 	<a class="navbar-brand me-lg-5" href="index.cfm">
 		<img class="navbar-brand-dark" src="assets/images/logo.svg" /> <img class="navbar-brand-light" src="assets/images/logo.svg" alt="Volt logo" />
 	</a>
 	<div class="d-flex align-items-center">
-		<button class="navbar-toggler d-lg-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+		<button class="navbar-toggler d-lg-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="##sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
 			<span class="navbar-toggler-icon"></span>
 		</button>
 	</div>
@@ -41,23 +41,22 @@
 		<div class="user-card d-flex d-md-none align-items-center justify-content-between justify-content-md-center pb-4">
 			<div class="d-flex align-items-center">
 				<div class="d-block">
-					<h2 class="h5 mb-3">Hi, <cfoutput>#currentAuthor.name#</cfoutput></h2>
+					<h2 class="h5 mb-3">#request.i18n.getValue("Hi")#, #currentAuthor.name#</h2>
 					<a href="index.cfm?logout=1" class="btn btn-secondary btn-sm d-inline-flex align-items-center">
 						<svg class="icon icon-xxs me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-						Sign Out
+						#request.i18n.getValue("Sign Out")#
 					</a>
 				</div>
 			</div>
 			<div class="collapse-close d-md-none">
-				<a href="#sidebarMenu" data-bs-toggle="collapse"
-				   data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="true"
+				<a href="##sidebarMenu" data-bs-toggle="collapse"
+				   data-bs-target="##sidebarMenu" aria-controls="sidebarMenu" aria-expanded="true"
 				   aria-label="Toggle navigation">
 					<svg class="icon icon-xs" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
 				</a>
 			</div>
 		</div>
 
-<cfoutput>
 		<ul class="nav flex-column pt-3 pt-md-0">
 <li class="nav-item">
 		<a href="index.cfm" class="nav-link d-flex align-items-center">
@@ -67,32 +66,9 @@
 			<span class="mt-1 ms-1 sidebar-text">#request.i18n.getValue("Dashboard")#</span>
 		</a>
 	</li>
-		<!---<cfif showMenuItem("manage_all_posts,manage_posts","posts")>
-			<li id="postsMenuItem" class="nav-item <cfif attributes.page is "posts"> active</cfif>">
-				<a href="posts.cfm" class="nav-link">
-				  <span class="sidebar-icon">
-					  <i class="bi bi-file-earmark-fill icon icon-xs"></i>
-				  </span>
-					<span class="sidebar-text">#request.i18n.getValue("Posts")#</span>
-				</a>
-			</li>
-		</cfif>
-		--->
 		<cfif showMenuItem("manage_all_posts,manage_posts","")>
 				<mangoAdmin:MenuEvent name="mainPostsNav" />
 		</cfif>
-<!---
-	<cfif showMenuItem("manage_all_pages,manage_pages","pages")>
-			<li id="pagesMenuItem" class="nav-item <cfif attributes.page is "pages"> active</cfif>">
-			<a href="pages.cfm" class="nav-link d-flex justify-content-between">
-				<span>
-			  	<span class="sidebar-icon"><i class="bi bi-file-earmark-text-fill icon icon-xs"></i></span>
-				<span class="sidebar-text">#request.i18n.getValue("Pages")#</span>
-					</span>
-			</a>
-		</li>
-	</cfif>
-	--->
 	<cfif showMenuItem("manage_all_pages,manage_pages","")>
 		<mangoAdmin:MenuEvent name="mainPagesNav" />
 	</cfif>
@@ -123,15 +99,15 @@
 	<li id="pluginsMenuItem" class="nav-item <cfif attributes.page is "Plugins"> active</cfif>">
 	<a href="addons.cfm" class="nav-link">
         <span class="sidebar-icon"><i class="bi bi-plugin icon icon-xs"></i></span>
-		<span class="sidebar-text">Plugins</span>
+		<span class="sidebar-text">#request.i18n.getValue("Plugins")#</span>
 	</a>
 </li>
 </cfif>
 
 <cfif showMenuItem("manage_users","users")>
-	<cfset usersTitle = #request.i18n.getValue("Users")#>
+	<cfset usersTitle = request.i18n.getValue("Users")>
 	<cfelseif showMenuItem("set_profile","")>
-	<cfset usersTitle = #request.i18n.getValue("My Profile")#>
+	<cfset usersTitle = request.i18n.getValue("My Profile")>
 </cfif>
 <cfif showMenuItem("manage_users,set_profile","users")>
 	<li id="authorsMenuItem" class="nav-item <cfif attributes.page is "Users"> active</cfif>">
@@ -143,12 +119,6 @@
 </cfif>
 
 <li role="separator" class="dropdown-divider mt-4 mb-3 border-gray-700"></li>
-
-<!---
-<cfif showMenuItem("manage_system","cache")>
-		<li id="cacheMenuItem"<cfif attributes.page is "Cache"> class="current"</cfif>><a href="cache.cfm">Cache</a></li>
-</cfif>
---->
 
 <cfif showMenuItem("manage_settings,manage_plugin_prefs","settings")>
 	<li id="settingsMenuItem" class="nav-item <cfif attributes.page is "settings"> active</cfif>">

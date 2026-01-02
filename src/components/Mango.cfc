@@ -1,7 +1,7 @@
 <cfcomponent name="Mango">
 
 	<cfset variables.blog = "" />
-	<cfset variables.version = "2.0.2" />
+	<cfset variables.version = "2.1" />
 	<cfset variables.pluginQueue = "" />
 	<cfset variables.config = "" />
 	<cfset variables.blogId = "default" />
@@ -321,6 +321,14 @@
 	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="getBlogId" access="public" output="false" returntype="string">		
 		<cfreturn variables.blogId />
+	</cffunction>
+	
+	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+	<cffunction name="getFileManager" access="public" output="false" returntype="any">
+		<cfif NOT structkeyexists(variables, "fileExplorer")>
+			<cfset variables.fileExplorer = createObject("component", "utilities.filemanager.MainFileExplorer").init(this) />
+		</cfif>
+		<cfreturn variables.fileExplorer />
 	</cffunction>
 	
 	<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->

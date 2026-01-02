@@ -206,10 +206,6 @@
 			<cfset returnObj.status = false />
 			<cfset arrayappend(returnObj.errors,"Email is not valid")/>			
 		</cfif>
-		<cfif NOT len(this.username)>
-			<cfset returnObj.status = false />
-			<cfset arrayappend(returnObj.errors,"Username is required")/>			
-		</cfif>
 
 		<cfreturn returnObj />
 		

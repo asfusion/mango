@@ -9,7 +9,7 @@
 <cfset currentAuthor = request.blogManager.getCurrentUser() />
 
 <cfcontent reset="false"><!DOCTYPE html>
-	<html lang="en">
+	<html lang="#request.i18n.getLocale()#">
 	<head><cfoutput>
 		<meta http-equiv="Content-Type" content="text/html;charset=#blog.getCharset()#" />
 		<!-- Primary Meta Tags -->
@@ -59,7 +59,7 @@
 	<nav class="navbar navbar-top navbar-expand navbar-dashboard ps-0 pe-2 pb-0">
 	<div class="container-fluid px-0">
 	<div class="d-flex justify-content-between w-100" id="navbarSupportedContent">
-		<nav aria-label="breadcrumb" class="d-none d-md-inline-block">
+		<nav aria-label="#request.i18n.getValue('Breadcrumb')#" class="d-none d-md-inline-block">
 			<ol class="breadcrumb breadcrumb-dark breadcrumb-transparent mb-0">
 				<li class="breadcrumb-item">
 					<a href="index.cfm">
@@ -114,6 +114,7 @@
 </cfif>
 
 <cfif thisTag.executionMode is "end">
+	<cfoutput>
 	<!---<div id="footer"><a href="http://www.mangoblog.org" id="mangolink"><span>Powered by Mango Blog></span></a> <span class="footer_version">&nbsp;&nbsp;<cfoutput>#request.blogManager.getVersion()#</cfoutput></span></div>
 --->
 	<div class="modal fade" id="filesModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -121,16 +122,17 @@
 		<div class="modal-dialog modal-dialog-centered" role="document">
 			<div class="modal-content">
 				<div class="modal-header">
-					<p class="modal-title" id="modalTitleNotify">Files</p>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					<p class="modal-title" id="modalTitleNotify">#request.i18n.getValue("Files")#</p>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="#request.i18n.getValue("Close")#"></button>
 				</div>
 				<div class="modal-body">
-					<p>Loading...</p>
+					<p>#request.i18n.getValue("Loading...")#</p>
 				</div>
 			</div>
 		</div>
 
 	</div>
+	</cfoutput>
 	</main>
 
 <!-- Core -->

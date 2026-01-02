@@ -298,6 +298,7 @@
 			<cfset data.tagline = trim(arguments.formFields.tagline) />
 			<cfset data.url = trim(arguments.formFields.address) />
 			<cfset data.user = variables.user />
+			<cfset data.locale = arguments.formFields.locale />
 					
 			<cfset result = variables.administrator.editBlog(argumentCollection=data) />
 
@@ -690,7 +691,9 @@
 				var baseStruct = blocks[ levels[ 1 ]];
 				arrayDeleteAt( levels, 1 );
 				arrayDeleteAt( levels, 1 );
-
+				if ( NOT structKeyExists( formFields, path & '_value' )){
+					formFields[ path & '_value' ] = '';
+				}
 				var newElement = makeElement( baseStruct.values, levels, formFields[ path & '_value' ], baseStruct.values );
 			}
 

@@ -1,30 +1,11 @@
 <cfcomponent>
-	<cfset variables.arrayUtil = createObject( 'utilities.ArrayUtil' ) />
 
 	<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
-	<cffunction name="getInstance" output="false" description="Returns an object of this class" 
-					access="public" returntype="any">
-						
-		<cfset var newinstance = "" />
-		<cfset var currentBlogId = application.blogFacade.getMango().getBlog().getId() />
-		
-		<cfif NOT structkeyexists(application,"_fileExplorerInstances")>
-			<cfset application._fileExplorerInstances = structnew() />
-		</cfif>
-		
-		<cfif NOT structkeyexists(application._fileExplorerInstances, currentBlogId)> 
-			<cfset newinstance = createObject("component", "MainFileExplorer").init() />
-			<cfset application._fileExplorerInstances[currentBlogId] = newinstance />
-		 </cfif> 
-
-		<cfreturn application._fileExplorerInstances[currentBlogId] />
-	</cffunction>	
-
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="init" output="false" returntype="any">
-		<!--- making a dependency on Mango here, but at least I can remove the 
-		reference in application.cfc --->
-		<cfset var blogManager = application.blogFacade.getMango() />
+		<cfargument name="mainManager" type="any" required="false" />
+		
+		<cfset blogManager = arguments.mainManager />
+
 		<cfset var blog = blogManager.getBlog() />
 		<cfset var assetsInfo = blog.getSetting('assets') />
 		
@@ -54,7 +35,7 @@
 		</cfif>
 
 	 	<cfset variables.settings.fileManager = assetsInfo.fileManager />
-		<cfset getFileManager() /><!--- @todo remove --->
+		<cfset getFileManager()>
 		<cfreturn this>
 	</cffunction>
 
@@ -72,7 +53,7 @@
 		<cfset variables.fileManager = arguments.filemanager>
 	</cffunction>
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="getDirectories" output="false" description="Returns the list of directories in given path - starting from root path"
 			access="public">
 		<cfargument name="path" required="false" type="string" default=""/>
@@ -97,7 +78,7 @@
 
 	</cffunction>
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="getFiles" output="false" description="Returns the list of files in given path - starting from root path"
 			access="public">
 		<cfargument name="path" required="false" type="string" default=""/>
@@ -136,7 +117,7 @@
 
 	</cffunction>
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
+<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
 	<cffunction name="removeFile" output="false" description="Deletes a file">
 	<cfargument name="path" required="false" type="string" default=""/>
 	<cfargument name="name" required="false" type="string" default=""/>
@@ -144,27 +125,22 @@
 		<cfreturn result = variables.filemanager.removeFile( path, name )/>
 	</cffunction>
 
-<!--- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: --->
-	<cffunction name="uploadFile" output="false" description="Uploads a file in the given folder" access="public" >
-		<cfargument name="filefield" required="true" />
-		<cfargument name="path" required="false" type="string" default=""/>
-		<cfargument name="filename" type="string" required="true" />
-
-		<cfset result["status"] = true />
-		<cfset result["message"] = "File uploaded" />
-
-		<cftry>
-		<cfset variables.fileManager.uploadFile( filefield, path, filename) />
-			<cfcatch type="any">
-				<cfset result["status"] = false />
-				<cfset result["message"] = cfcatch.message />
-			</cfcatch>
-		</cftry>
-
-		<cfreturn result />
-	</cffunction>
-
 	<cfscript>
+		// -----------------------------------------------------------
+		function uploadFile( filefield, path="", filename, accept = '' ) {
+			var result = { "status" = true, "message" = "File uploaded" };
+			try {
+				var uploadedFile = variables.fileManager.uploadFile( filefield, path, filename, accept );
+				result['data'] = {'url': getUrl( path & uploadedFile.serverfile )};
+			}
+			catch( any e ){
+				result["status"] = false;
+				result["message"] = cfcatch.message;
+			}
+
+			return result;
+		}
+		// -----------------------------------------------------------
 		function createFolder( path, name ) {
 			try {
 				result = variables.fileManager.createFolder( path, name );
@@ -199,6 +175,30 @@
 			}
 
 			return result;
+		}
+		// -----------------------------------------------------------
+		public function importFile( path, name, file ) {
+			try {
+				result = variables.fileManager.importFile( path, name, file );
+				result['data'] = {'url': getUrl( result.data.path )};
+			}
+			catch( any e ){
+				result["status"] = false;
+				result["message"] = cfcatch.message;
+			}
+
+			return result;
+		}
+
+		// -----------------------------------------------------------
+		public function getUrl( filename, relative = false ) {
+			var rootUrlContainsSlash = right( variables.settings.rootUrl, 1 ) eq '/';
+			var base = variables.settings.rootUrl;
+
+			if ( rootUrlContainsSlash && find( "/", filename ) == 1 ) {
+				filename = removeChars( filename, 1, 1 );
+			}
+			return base & filename;
 		}
 	</cfscript>
 </cfcomponent>

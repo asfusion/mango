@@ -82,7 +82,9 @@
 
 		<script type="text/javascript">
 tinymce.init({
-selector: '.htmlEditor',
+			selector: '.htmlEditor',
+			convert_urls: false,
+			relative_urls: false,
             plugins: [ 'table', 'filemanager', 'link', 'code','lists', 'codesample' ],
 			menubar: 'edit insert format tools', // exclude 'file'
             toolbar: 'filemanager undo redo blocks bold italic link blockquote ' +

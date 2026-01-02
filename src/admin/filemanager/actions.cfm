@@ -1,4 +1,4 @@
-<cfset explorer = createObject( 'MainFileExplorer').getInstance()>
+<cfset explorer = request.blogManager.getFileManager()>
 <cfset result = { 'status' = false } />
 <cfif url.action EQ "DELETE">
     <cfset result = serializeJSON( explorer.removeFile( form.path, form.name )) />

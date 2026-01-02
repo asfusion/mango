@@ -11,6 +11,7 @@
 
         <cfif NOT structKeyExists( field, 'size')><cfset field.size = 'fluid' /></cfif>
         <cfif NOT structKeyExists( field, 'hint')><cfset field.hint = '' /></cfif>
+        <cfif NOT structKeyExists( field, 'checkvalue')><cfset field.checkvalue = '' /></cfif>
         <cfif NOT structKeyExists( field, 'value')><cfset field.value = structKeyExists( field, 'default') ? field.default : '' /></cfif>
         <cfif NOT structKeyExists( field, 'options')><cfset field.options = [] /></cfif>
 
@@ -19,10 +20,10 @@
             <input type="hidden" name="#field.form_id#_path" value='#field.path#'/>
                 <input type="hidden" name="#field.form_id#_basepath" value='#field.basepath#'/>
             <cf_form_field id="#field.form_id#_value" type="#field.type#" options="#field.options#"
-                    label="#field.name#" size="#field.size#" hint="#field.hint#" value="#field.value#">
+                    label="#request.i18n.getValue(field.name)#" size="#field.size#" hint="#field.hint#" value="#field.value#" checkvalue="#field.checkvalue#">
         <cfelse>
             <fieldset class="mb-3">
-                <legend class="h5 my-4">#field.name#</legend>
+                <legend class="h5 my-4">#request.i18n.getValue(field.name)#</legend>
                 <ol class="list-group list-group-numbered list-group-flush">
                 <cfset fielditemcount = 0 />
                 <cfloop array="#field.fields#" item="fieldset">

@@ -22,7 +22,7 @@
 
 	<cfset pageUrl = '' />
 
-	<cfset pagetitle = "New page" />
+	<cfset pagetitle = request.i18n.getValue("New page") />
 	<cfset pluginQueue = request.blogManager.getpluginQueue() />
 	<cfset currentAuthor = request.blogManager.getCurrentUser() />
 	<cfset currentBlogId = request.blogManager.getBlog().getId() />
@@ -67,7 +67,7 @@
 					<cfset pageUrl = pageUrl & "&preview=1">
 				</cfif>
 			</cfif>
-			<cfset pagetitle = 'Editing "#htmlEditFormat(page.getTitle())#"'>
+			<cfset pagetitle = request.i18n.getValue("Editing {1}", htmlEditFormat(page.getTitle()))>
 			
 		<cfelse>
 			<cfset page = request.blogManager.getObjectFactory().createPage() />
@@ -176,7 +176,7 @@
 <cfset templates = skinBlockInfo.availableTemplates />
 <!--- </cfsilent> --->
 <cfset breadcrumb = [ { 'link' = 'pages.cfm?panel=#panel#&amp;owner=#panel#', 'title' = panelData.label },
-{ 'title' = ( mode EQ "update" ) ? 'Edit' : 'New' } ] />
+{ 'title' = ( mode EQ "update" ) ? request.i18n.getValue("Editing") : request.i18n.getValue("New") } ] />
 
 <cf_layout page="#ownerMainMenu#" title="#panelData.label#" hierarchy="#breadcrumb#">
 	<script type="text/javascript" src="assets/scripts/keep-alive.js" ></script>
@@ -190,12 +190,12 @@
 		<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center py-4">
 			<h4 class="h4">#pageTitle#</h4>
 			<div>
-				<input type="submit" class="btn btn-primary d-inline-flex align-items-center me-2 animate-up-2" name="submit" value="Save" />
+				<input type="submit" class="btn btn-primary d-inline-flex align-items-center me-2 animate-up-2" name="submit" value="#request.i18n.getValue("Save")#" />
 				<cfif mode EQ "update" AND skinBlockInfo.hasBlocks>
-						<a href="pageBuilder.cfm?panel=#panel#&amp;owner=#ownerMainMenu#&id=#id#"><button type="button" class="btn btn-tertiary d-inline-flex align-items-center me-2">Designer</button></a>
+						<a href="pageBuilder.cfm?panel=#panel#&amp;owner=#ownerMainMenu#&id=#id#"><button type="button" class="btn btn-tertiary d-inline-flex align-items-center me-2">#request.i18n.getValue("Designer")#</button></a>
 				</cfif>
 				<cfif len( pageUrl )>
-					<a href="#pageUrl#" target="_blank"><button type="button" class="btn btn-outline-info d-inline-flex align-items-center me-2">View</button></a>
+					<a href="#pageUrl#" target="_blank"><button type="button" class="btn btn-outline-info d-inline-flex align-items-center me-2">#request.i18n.getValue("View")#</button></a>
 				</cfif>
 			</div>
 		</div>
@@ -209,6 +209,6 @@
 		</form>
 		</cfoutput>
 <cfelse><!--- not authorized --->
-	<div class="alert alert-info" role="alert">Your role does not allow <cfif mode EQ "new">adding new pages<cfelse>editing this page</cfif></div>
+	<div class="alert alert-info" role="alert"><cfif mode EQ "new">#request.i18n.getValue("Your role does not allow adding new pages")#<cfelse>#request.i18n.getValue("Your role does not allow editing this page")#</cfif></div>
 </cfif>
 </cf_layout>

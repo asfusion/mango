@@ -21,7 +21,7 @@
 //now fix tabs
         str = replace(str,chr(9),"&nbsp;&nbsp;&nbsp;","ALL");
 //now return the text formatted in HTML
-        return replace(str,chr(10),"<br />","ALL");
+        return replace(str,chr(10),"<br>","ALL");
     }</cfscript>
 
     <cfif attributes.format EQ "default">

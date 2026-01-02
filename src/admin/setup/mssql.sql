@@ -11,7 +11,8 @@ CREATE TABLE #prefix#author (
 	shortdescription ntext NULL ,
 	picture varchar (100) NULL ,
 	alias varchar (100) NULL,
-	active bit NULL DEFAULT 1
+	active bit NULL DEFAULT 1,
+    preferences ntext
 ) 
 
 CREATE TABLE #prefix#permission (
@@ -135,7 +136,8 @@ CREATE TABLE #prefix#blog (
 	charset varchar (50) NULL ,
 	basePath varchar (255) NULL ,
 	plugins ntext,
-  	systemplugins ntext
+  	systemplugins ntext,
+    locale varchar (10) NULL
 ) 
 
 CREATE TABLE #prefix#author_blog (
