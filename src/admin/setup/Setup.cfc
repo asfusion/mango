@@ -123,7 +123,7 @@
 			<cfset result.message =  "" />
 		<cftry>
 			<cfset admin = variables.blog.getAdministrator()>
-			<cfset result = admin.newAuthor(arguments.email,arguments.password,arguments.name,arguments.email,'','','','administrator') />
+			<cfset result = admin.newAuthor(arguments.password,arguments.name,arguments.email,'','','','administrator') />
 
 			<cfset result.status = result.message.getstatus() EQ "success">
 			<cfset result.message = result.message.getText() />
